@@ -1,0 +1,50 @@
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+
+@Component({
+  selector: 'app-header',
+  imports: [CommonModule, RouterLink],
+  templateUrl: './header.html',
+  styleUrl: './header.css'
+})
+export class Header {
+  readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly isMobileMenuOpen = signal(false);
+  readonly isDropdownOpen = signal(false);
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen.update(value => !value);
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen.set(false);
+  }
+
+  openDropdown(): void {
+    this.isDropdownOpen.set(true);
+  }
+
+  closeDropdown(): void {
+    this.isDropdownOpen.set(false);
+  }
+
+  toggleDropdown(): void {
+    this.isDropdownOpen.update(v => !v);
+  }
+
+  goToProfile(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.router.navigate(['/perfil']);
+  }
+
+  logout(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.authService.logout();
+  }
+}

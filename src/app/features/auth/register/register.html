@@ -1,0 +1,377 @@
+<!-- Register Screen Container -->
+<div class="min-h-screen flex flex-col justify-between bg-surface bg-grid-pattern relative overflow-hidden">
+
+  <!-- Ambient Glowing Background Orbs -->
+  <div class="absolute -top-32 -right-32 w-96 h-96 bg-secondary-container/40 rounded-full filter blur-3xl pointer-events-none opacity-50 animate-pulse-glow"></div>
+  <div class="absolute top-1/2 -left-32 w-96 h-96 bg-primary-fixed/50 rounded-full filter blur-3xl pointer-events-none opacity-40 animate-pulse-glow" style="animation-delay: 2s;"></div>
+  <div class="absolute -bottom-20 right-1/3 w-80 h-80 bg-primary-fixed-dim/30 rounded-full filter blur-3xl pointer-events-none opacity-30 animate-pulse-glow" style="animation-delay: 4s;"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="w-full bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 z-30 sticky top-0">
+    <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop h-20 flex justify-between items-center">
+      <!-- Logo & Brand -->
+      <a routerLink="/" class="flex items-center gap-3 cursor-pointer group">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform duration-300">
+          <span class="material-symbols-outlined text-[26px]">local_hospital</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-title-md md:font-headline-lg font-bold text-primary tracking-tight leading-none group-hover:text-secondary transition-colors">
+            Hospital San Juan de Dios
+          </span>
+          <span class="text-[11px] font-medium tracking-wider uppercase text-on-surface-variant/80 mt-0.5">
+            Portal de Telemedicina
+          </span>
+        </div>
+      </a>
+
+      <!-- Back to Home Link -->
+      <a routerLink="/" class="text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md flex items-center gap-2 py-2 px-3.5 rounded-xl hover:bg-surface-container-high/60 border border-transparent hover:border-outline-variant/40 cursor-pointer">
+        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        <span class="hidden sm:inline font-medium">Volver al inicio</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main class="flex-grow flex items-center justify-center py-10 px-margin-mobile md:px-margin-desktop relative z-10">
+    <div class="w-full max-w-[620px]">
+      
+      <!-- Register Card -->
+      <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-10 relative border border-white/80 transition-all duration-300">
+        
+        <!-- Header -->
+        <div class="mb-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px]">person_add</span>
+            <span>Nueva Cuenta de Paciente</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-primary tracking-tight mb-1.5 font-headline-lg">
+            Crear tu Cuenta
+          </h1>
+          <p class="text-on-surface-variant text-sm sm:text-base font-body-md">
+            Completa tus datos para acceder al portal médico y agendar consultas virtuales.
+          </p>
+        </div>
+
+        <!-- Error Notification Banner -->
+        @if (errorMessage()) {
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+            <span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
+            <div class="flex-grow">
+              <p class="font-semibold">No se pudo crear la cuenta</p>
+              <p class="text-red-700 text-xs mt-0.5">{{ errorMessage() }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Reactive Form -->
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4.5" novalidate>
+          
+          <!-- Nombres y Apellidos (2 Columns) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Nombres -->
+            <div class="flex flex-col gap-1.5">
+              <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="nombres">
+                Nombres <span class="text-error">*</span>
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">badge</span>
+                </div>
+                <input
+                  id="nombres"
+                  type="text"
+                  formControlName="nombres"
+                  placeholder="Ej. Juan Carlos"
+                  autocomplete="given-name"
+                  class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                  [class.border-error]="isFieldInvalid('nombres')"
+                  [class.focus:ring-4]="true"
+                  [class.focus:ring-error/15]="isFieldInvalid('nombres')"
+                  [class.focus:border-error]="isFieldInvalid('nombres')"
+                  [class.border-outline-variant/60]="!isFieldInvalid('nombres')"
+                  [class.focus:border-secondary]="!isFieldInvalid('nombres')"
+                  [class.focus:ring-secondary/10]="!isFieldInvalid('nombres')"
+                />
+              </div>
+              @if (isFieldInvalid('nombres')) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Ingresa tus nombres (mín. 2 letras).</span>
+                </span>
+              }
+            </div>
+
+            <!-- Apellidos -->
+            <div class="flex flex-col gap-1.5">
+              <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="apellidos">
+                Apellidos <span class="text-error">*</span>
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">badge</span>
+                </div>
+                <input
+                  id="apellidos"
+                  type="text"
+                  formControlName="apellidos"
+                  placeholder="Ej. Pérez Gómez"
+                  autocomplete="family-name"
+                  class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                  [class.border-error]="isFieldInvalid('apellidos')"
+                  [class.focus:ring-4]="true"
+                  [class.focus:ring-error/15]="isFieldInvalid('apellidos')"
+                  [class.focus:border-error]="isFieldInvalid('apellidos')"
+                  [class.border-outline-variant/60]="!isFieldInvalid('apellidos')"
+                  [class.focus:border-secondary]="!isFieldInvalid('apellidos')"
+                  [class.focus:ring-secondary/10]="!isFieldInvalid('apellidos')"
+                />
+              </div>
+              @if (isFieldInvalid('apellidos')) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Ingresa tus apellidos (mín. 2 letras).</span>
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Correo y Teléfono (2 Columns) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Correo Electrónico -->
+            <div class="flex flex-col gap-1.5">
+              <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="correo">
+                Correo Electrónico <span class="text-error">*</span>
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">mail</span>
+                </div>
+                <input
+                  id="correo"
+                  type="email"
+                  formControlName="correo"
+                  placeholder="juan@ejemplo.com"
+                  autocomplete="email"
+                  class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                  [class.border-error]="isFieldInvalid('correo')"
+                  [class.focus:ring-4]="true"
+                  [class.focus:ring-error/15]="isFieldInvalid('correo')"
+                  [class.focus:border-error]="isFieldInvalid('correo')"
+                  [class.border-outline-variant/60]="!isFieldInvalid('correo')"
+                  [class.focus:border-secondary]="!isFieldInvalid('correo')"
+                  [class.focus:ring-secondary/10]="!isFieldInvalid('correo')"
+                />
+              </div>
+              @if (isFieldInvalid('correo')) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Ingresa un correo electrónico válido.</span>
+                </span>
+              }
+            </div>
+
+            <!-- Teléfono (Opcional) -->
+            <div class="flex flex-col gap-1.5">
+              <div class="flex justify-between items-center">
+                <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="telefono">
+                  Teléfono
+                </label>
+                <span class="text-[11px] text-on-surface-variant font-medium">Opcional</span>
+              </div>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">call</span>
+                </div>
+                <input
+                  id="telefono"
+                  type="tel"
+                  formControlName="telefono"
+                  placeholder="+591 70000000"
+                  autocomplete="tel"
+                  class="w-full bg-white border border-outline-variant/60 rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:border-secondary focus:ring-4 focus:ring-secondary/10"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Contraseña y Confirmar Contraseña (2 Columns) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Contraseña -->
+            <div class="flex flex-col gap-1.5">
+              <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="password">
+                Contraseña <span class="text-error">*</span>
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">key</span>
+                </div>
+                <input
+                  id="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  placeholder="Mín. 6 caracteres"
+                  autocomplete="new-password"
+                  class="w-full bg-white border rounded-xl pl-11 pr-10 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                  [class.border-error]="isFieldInvalid('password')"
+                  [class.focus:ring-4]="true"
+                  [class.focus:ring-error/15]="isFieldInvalid('password')"
+                  [class.focus:border-error]="isFieldInvalid('password')"
+                  [class.border-outline-variant/60]="!isFieldInvalid('password')"
+                  [class.focus:border-secondary]="!isFieldInvalid('password')"
+                  [class.focus:ring-secondary/10]="!isFieldInvalid('password')"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-outline hover:text-primary transition-colors focus:outline-none cursor-pointer"
+                  [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'"
+                >
+                  <span class="material-symbols-outlined text-[20px]">
+                    {{ showPassword() ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+              </div>
+
+              <!-- Password Strength Bar -->
+              @if (registerForm.get('password')?.value) {
+                <div class="mt-1 flex items-center gap-2 animate-fadeIn">
+                  <div class="flex-grow flex gap-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-300"
+                      [ngClass]="getPasswordStrength().color"
+                      [style.width.%]="getPasswordStrength().level === 1 ? 33 : getPasswordStrength().level === 2 ? 66 : 100"
+                    ></div>
+                  </div>
+                  <span class="text-[11px] font-semibold text-on-surface-variant">
+                    {{ getPasswordStrength().label }}
+                  </span>
+                </div>
+              }
+
+              @if (isFieldInvalid('password')) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Mínimo 6 caracteres.</span>
+                </span>
+              }
+            </div>
+
+            <!-- Confirmar Contraseña -->
+            <div class="flex flex-col gap-1.5">
+              <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="confirmar_password">
+                Confirmar Contraseña <span class="text-error">*</span>
+              </label>
+              <div class="relative group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+                </div>
+                <input
+                  id="confirmar_password"
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  formControlName="confirmar_password"
+                  placeholder="Repite tu contraseña"
+                  autocomplete="new-password"
+                  class="w-full bg-white border rounded-xl pl-11 pr-10 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                  [class.border-error]="isFieldInvalid('confirmar_password') || hasPasswordMismatch()"
+                  [class.focus:ring-4]="true"
+                  [class.focus:ring-error/15]="isFieldInvalid('confirmar_password') || hasPasswordMismatch()"
+                  [class.focus:border-error]="isFieldInvalid('confirmar_password') || hasPasswordMismatch()"
+                  [class.border-outline-variant/60]="!isFieldInvalid('confirmar_password') && !hasPasswordMismatch()"
+                  [class.focus:border-secondary]="!isFieldInvalid('confirmar_password') && !hasPasswordMismatch()"
+                  [class.focus:ring-secondary/10]="!isFieldInvalid('confirmar_password') && !hasPasswordMismatch()"
+                />
+                <button
+                  type="button"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-outline hover:text-primary transition-colors focus:outline-none cursor-pointer"
+                  [attr.aria-label]="showConfirmPassword() ? 'Ocultar contraseña' : 'Ver contraseña'"
+                >
+                  <span class="material-symbols-outlined text-[20px]">
+                    {{ showConfirmPassword() ? 'visibility' : 'visibility_off' }}
+                  </span>
+                </button>
+              </div>
+              @if (hasPasswordMismatch()) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Las contraseñas no coinciden.</span>
+                </span>
+              } @else if (isFieldInvalid('confirmar_password')) {
+                <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+                  <span class="material-symbols-outlined text-[14px]">error</span>
+                  <span>Confirma tu contraseña.</span>
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Términos y Condiciones Checkbox -->
+          <div class="flex flex-col gap-1 mt-2 p-3 bg-surface-container-low/60 rounded-xl border border-outline-variant/30">
+            <label class="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                formControlName="acceptTerms"
+                class="mt-0.5 w-4 h-4 text-secondary rounded border-outline-variant focus:ring-secondary/20 bg-white cursor-pointer transition-all"
+              />
+              <span class="text-xs text-on-surface-variant leading-relaxed">
+                Acepto los <a href="#" class="text-primary font-semibold hover:underline">Términos de Servicio</a> y la <a href="#" class="text-primary font-semibold hover:underline">Política de Privacidad Médica</a> del Hospital San Juan de Dios.
+              </span>
+            </label>
+            @if (isFieldInvalid('acceptTerms')) {
+              <span class="text-xs text-error flex items-center gap-1 mt-1 animate-fadeIn font-medium pl-6">
+                <span class="material-symbols-outlined text-[14px]">error</span>
+                <span>Debes aceptar los términos para continuar.</span>
+              </span>
+            }
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="isLoading()"
+            class="w-full bg-gradient-to-r from-secondary via-secondary to-[#005048] text-white rounded-xl py-3.5 mt-2 font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 hover:shadow-lg hover:shadow-secondary/25 transition-all duration-300 active:scale-[0.99] min-h-[50px] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            @if (isLoading()) {
+              <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Registrando cuenta...</span>
+            } @else {
+              <span>Registrarme como Paciente</span>
+              <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+            }
+          </button>
+        </form>
+
+        <!-- Secondary Action / Link to Login -->
+        <div class="mt-6 pt-5 border-t border-outline-variant/30 text-center">
+          <p class="text-on-surface-variant text-sm font-body-md">
+            ¿Ya tienes una cuenta registrada?
+          </p>
+          <a
+            [routerLink]="['/login']"
+            (click)="goToLogin()"
+            class="inline-flex items-center justify-center gap-2 mt-2 py-2 px-4 rounded-xl border border-primary/20 text-primary hover:bg-primary/5 font-semibold text-sm transition-all duration-200 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">login</span>
+            <span>Iniciar sesión</span>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Bottom Footer -->
+  <footer class="w-full py-4 text-center text-xs text-on-surface-variant/70 border-t border-outline-variant/20 relative z-10 bg-surface/50 backdrop-blur-sm">
+    <div class="max-w-container-max mx-auto px-margin-mobile flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>© 2026 Hospital San Juan de Dios. Todos los derechos reservados.</p>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-primary transition-colors">Términos de Uso</a>
+        <a href="#" class="hover:text-primary transition-colors">Privacidad de Datos</a>
+        <a href="#" class="hover:text-primary transition-colors">Ayuda</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
