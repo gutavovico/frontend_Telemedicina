@@ -20,6 +20,8 @@ export class Login implements OnInit {
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly resetMessage = signal<string | null>(null);
+  readonly expiredMessage = signal<string | null>(null);
 
   private returnUrl = '/';
 
@@ -36,6 +38,16 @@ export class Login implements OnInit {
     // Check if user was just registered
     if (this.route.snapshot.queryParams['registered'] === 'true') {
       this.successMessage.set('¡Cuenta creada exitosamente! Por favor inicia sesión.');
+    }
+
+    // Contraseña restablecida correctamente (CU23)
+    if (this.route.snapshot.queryParams['reset'] === 'true') {
+      this.resetMessage.set('Tu contraseña fue actualizada. Inicia sesión con la nueva contraseña.');
+    }
+
+    // Sesión cerrada por inactividad (CU23)
+    if (this.route.snapshot.queryParams['expired'] === 'true') {
+      this.expiredMessage.set('Tu sesión expiró por inactividad. Inicia sesión nuevamente para continuar.');
     }
   }
 
@@ -61,10 +73,12 @@ export class Login implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
+    this.resetMessage.set(null);
+    this.expiredMessage.set(null);
 
-    const { email, password } = this.loginForm.value;
+    const { email, password, rememberMe } = this.loginForm.value;
 
-    this.authService.login(email, password).subscribe({
+    this.authService.login(email, password, rememberMe).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.router.navigateByUrl(this.returnUrl);

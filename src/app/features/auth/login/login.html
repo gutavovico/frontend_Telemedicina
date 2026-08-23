@@ -65,6 +65,28 @@
             </div>
           }
 
+          <!-- Password Reset Success Banner (CU23) -->
+          @if (resetMessage()) {
+            <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+              <span class="material-symbols-outlined text-emerald-600 text-[22px] shrink-0 mt-0.5">password</span>
+              <div class="flex-grow">
+                <p class="font-semibold">¡Contraseña actualizada!</p>
+                <p class="text-emerald-700 text-xs mt-0.5">{{ resetMessage() }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Session Expired Banner (CU23) -->
+          @if (expiredMessage()) {
+            <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+              <span class="material-symbols-outlined text-amber-600 text-[22px] shrink-0 mt-0.5">timer</span>
+              <div class="flex-grow">
+                <p class="font-semibold">Sesión expirada</p>
+                <p class="text-amber-700 text-xs mt-0.5">{{ expiredMessage() }}</p>
+              </div>
+            </div>
+          }
+
           <!-- Error Notification Banner -->
           @if (errorMessage()) {
             <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
@@ -118,7 +140,7 @@
                 <label class="font-label-md text-sm font-semibold text-on-surface" for="password">
                   Contraseña
                 </label>
-                <a href="#" class="text-xs font-semibold text-primary hover:text-secondary transition-colors">
+                <a routerLink="/recuperar" class="text-xs font-semibold text-primary hover:text-secondary transition-colors">
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>

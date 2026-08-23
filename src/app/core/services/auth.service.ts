@@ -9,8 +9,12 @@ import {
   RegisterRequest,
   RefreshTokenRequest,
   TokenResponse,
-  UsuarioResponse
+  UsuarioResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest
 } from '../models/auth.models';
+import { InactivityService } from './inactivity.service';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +23,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly inactivity = inject(InactivityService);
 
   private readonly apiUrl = environment.apiUrl;
   private readonly isBrowser = isPlatformBrowser(this.platformId);
@@ -68,7 +73,17 @@ export class AuthService {
     // If authenticated on initial load, fetch the fresh user profile
     if (this.isBrowser && this.hasValidToken()) {
       this.fetchUserProfile().subscribe();
+      // Reanuda el control de inactividad con la preferencia guardada (CU23)
+      this.inactivity.start(this.getRememberMe());
     }
+
+    // Cierre de sesión automático por inactividad (CU23)
+    this.inactivity.expired$.subscribe(() => this.onInactivityExpired());
+  }
+
+  private onInactivityExpired(): void {
+    this.clearTokens();
+    this.router.navigate(['/login'], { queryParams: { expired: 'true' } });
   }
 
   private hasValidToken(): boolean {
@@ -86,11 +101,11 @@ export class AuthService {
     }
   }
 
-  login(correo: string, password: string): Observable<TokenResponse> {
+  login(correo: string, password: string, rememberMe: boolean = false): Observable<TokenResponse> {
     const payload: LoginRequest = { correo, password };
     return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((response) => {
-        this.saveTokens(response.access_token, response.refresh_token);
+        this.saveTokens(response.access_token, response.refresh_token, rememberMe);
         
         // Initial fallback user from email until backend profile loads
         if (!this.currentUser()) {
@@ -112,6 +127,16 @@ export class AuthService {
 
   register(datos: RegisterRequest): Observable<UsuarioResponse> {
     return this.http.post<UsuarioResponse>(`${this.apiUrl}/auth/register`, datos);
+  }
+
+  requestPasswordReset(correo: string): Observable<ForgotPasswordResponse> {
+    const payload: ForgotPasswordRequest = { correo };
+    return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/auth/forgot-password`, payload);
+  }
+
+  resetPassword(correo: string, codigo: string, nuevaPassword: string): Observable<{ detail: string }> {
+    const payload: ResetPasswordRequest = { correo, codigo, nueva_password: nuevaPassword };
+    return this.http.post<{ detail: string }>(`${this.apiUrl}/auth/reset-password`, payload);
   }
 
   fetchUserProfile(): Observable<UsuarioResponse | null> {
@@ -149,7 +174,7 @@ export class AuthService {
     }
   }
 
-  saveTokens(accessToken: string, refreshToken: string): void {
+  saveTokens(accessToken: string, refreshToken: string, rememberMe: boolean = false): void {
     if (this.isBrowser) {
       if (accessToken) {
         localStorage.setItem('access_token', accessToken);
@@ -157,11 +182,15 @@ export class AuthService {
       if (refreshToken) {
         localStorage.setItem('refresh_token', refreshToken);
       }
+      localStorage.setItem('remember_me', String(rememberMe));
       this.isAuthenticated.set(true);
+      // Inicia el control de inactividad para cerrar sesión automáticamente (CU23)
+      this.inactivity.start(rememberMe);
     }
   }
 
   logout(): void {
+    this.inactivity.stop();
     this.clearTokens();
     this.router.navigate(['/login']);
   }
@@ -171,9 +200,16 @@ export class AuthService {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user_profile');
+      localStorage.removeItem('remember_me');
       this.currentUser.set(null);
       this.isAuthenticated.set(false);
+      this.inactivity.stop();
     }
+  }
+
+  getRememberMe(): boolean {
+    if (!this.isBrowser) return false;
+    return localStorage.getItem('remember_me') === 'true';
   }
 
   getAccessToken(): string | null {

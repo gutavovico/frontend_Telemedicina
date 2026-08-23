@@ -15,6 +15,21 @@ export interface RefreshTokenRequest {
   refresh_token: string;
 }
 
+export interface ForgotPasswordRequest {
+  correo: string;
+}
+
+export interface ForgotPasswordResponse {
+  detail: string;
+  debug_code?: string | null;
+}
+
+export interface ResetPasswordRequest {
+  correo: string;
+  codigo: string;
+  nueva_password: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;

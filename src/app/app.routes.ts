@@ -17,6 +17,16 @@ export const routes: Routes = [
     title: 'Hospital San Juan de Dios - Crear Cuenta'
   },
   {
+    path: 'recuperar',
+    loadComponent: () => import('./features/auth/recover/recover').then(m => m.Recover),
+    title: 'Hospital San Juan de Dios - Recuperar Contraseña'
+  },
+  {
+    path: 'recuperar-contrasena',
+    loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPassword),
+    title: 'Hospital San Juan de Dios - Restablecer Contraseña'
+  },
+  {
     path: '**',
     redirectTo: ''
   }
