@@ -1,0 +1,180 @@
+<form [formGroup]="medicoForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4.5" novalidate>
+
+  <!-- Banner de error -->
+  @if (errorMessage()) {
+    <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+      <span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
+      <div class="flex-grow">
+        <p class="font-semibold">No se pudo guardar el perfil</p>
+        <p class="text-red-700 text-xs mt-0.5">{{ errorMessage() }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Banner de éxito -->
+  @if (successMessage()) {
+    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+      <span class="material-symbols-outlined text-emerald-600 text-[22px] shrink-0 mt-0.5">check_circle</span>
+      <p class="flex-grow">{{ successMessage() }}</p>
+    </div>
+  }
+
+  <!-- Matrícula profesional -->
+  <div class="flex flex-col gap-1.5">
+    <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="matricula">
+      Matrícula profesional <span class="text-error">*</span>
+    </label>
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+        <span class="material-symbols-outlined text-[20px]">badge</span>
+      </div>
+      <input
+        id="matricula"
+        type="text"
+        formControlName="matricula_profesional"
+        placeholder="Ej. MAT-00001"
+        class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+        [class.border-error]="isFieldInvalid('matricula_profesional')"
+        [class.focus:ring-error/15]="isFieldInvalid('matricula_profesional')"
+        [class.focus:border-error]="isFieldInvalid('matricula_profesional')"
+        [class.border-outline-variant/60]="!isFieldInvalid('matricula_profesional')"
+        [class.focus:border-secondary]="!isFieldInvalid('matricula_profesional')"
+        [class.focus:ring-secondary/10]="!isFieldInvalid('matricula_profesional')"
+      />
+    </div>
+    @if (isFieldInvalid('matricula_profesional')) {
+      <span class="text-xs text-error flex items-center gap-1 mt-0.5 animate-fadeIn font-medium">
+        <span class="material-symbols-outlined text-[14px]">error</span>
+        <span>Ingresa la matrícula profesional (entre 4 y 30 caracteres).</span>
+      </span>
+    }
+  </div>
+
+  <!-- Descripción profesional -->
+  <div class="flex flex-col gap-1.5">
+    <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="descripcion">
+      Descripción profesional
+    </label>
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+        <span class="material-symbols-outlined text-[20px]">medical_information</span>
+      </div>
+      <textarea
+        id="descripcion"
+        formControlName="descripcion_profesional"
+        rows="3"
+        placeholder="Ej. Médico cirujano con 10 años de experiencia en consulta general y urgencias."
+        class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4 resize-none"
+        [class.border-error]="isFieldInvalid('descripcion_profesional')"
+        [class.focus:ring-error/15]="isFieldInvalid('descripcion_profesional')"
+        [class.focus:border-error]="isFieldInvalid('descripcion_profesional')"
+        [class.border-outline-variant/60]="!isFieldInvalid('descripcion_profesional')"
+        [class.focus:border-secondary]="!isFieldInvalid('descripcion_profesional')"
+        [class.focus:ring-secondary/10]="!isFieldInvalid('descripcion_profesional')"
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- Experiencia -->
+  <div class="flex flex-col gap-1.5">
+    <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="experiencia">
+      Experiencia
+    </label>
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+        <span class="material-symbols-outlined text-[20px]">work_history</span>
+      </div>
+      <textarea
+        id="experiencia"
+        formControlName="experiencia"
+        rows="3"
+        placeholder="Ej. Hospital San Juan de Dios, 2016-2026. Consulta externa y guardias de urgencias."
+        class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4 resize-none"
+        [class.border-error]="isFieldInvalid('experiencia')"
+        [class.focus:ring-error/15]="isFieldInvalid('experiencia')"
+        [class.focus:border-error]="isFieldInvalid('experiencia')"
+        [class.border-outline-variant/60]="!isFieldInvalid('experiencia')"
+        [class.focus:border-secondary]="!isFieldInvalid('experiencia')"
+        [class.focus:ring-secondary/10]="!isFieldInvalid('experiencia')"
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- Foto de perfil (URL) -->
+  <div class="flex flex-col gap-1.5">
+    <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="foto">
+      Foto de perfil (URL)
+    </label>
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+        <span class="material-symbols-outlined text-[20px]">photo_camera</span>
+      </div>
+      <input
+        id="foto"
+        type="url"
+        formControlName="foto_perfil"
+        placeholder="https://ejemplo.com/fotos/dr-perez.jpg"
+        class="w-full bg-white border rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+        [class.border-error]="isFieldInvalid('foto_perfil')"
+        [class.focus:ring-error/15]="isFieldInvalid('foto_perfil')"
+        [class.focus:border-error]="isFieldInvalid('foto_perfil')"
+        [class.border-outline-variant/60]="!isFieldInvalid('foto_perfil')"
+        [class.focus:border-secondary]="!isFieldInvalid('foto_perfil')"
+        [class.focus:ring-secondary/10]="!isFieldInvalid('foto_perfil')"
+      />
+    </div>
+  </div>
+
+  <!-- Especialidades (solo modo creación) -->
+  @if (!esEdicion()) {
+    <div class="flex flex-col gap-2">
+      <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface">
+        Especialidades <span class="text-error">*</span>
+      </label>
+      <p class="text-xs text-on-surface-variant -mt-1 mb-1">
+        Selecciona tus especialidades. La <span class="font-semibold text-primary">primera seleccionada</span> quedará como la principal.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        @for (esp of especialidades(); track esp.id_especialidad) {
+          <label
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all duration-150 select-none"
+            [class]="estaSeleccionada(esp.id_especialidad)
+              ? 'bg-primary-fixed/40 border-primary/40 shadow-sm'
+              : 'bg-white border-outline-variant/50 hover:border-primary/30 hover:bg-surface-container-lowest/50'"
+          >
+            <input
+              type="checkbox"
+              [value]="esp.id_especialidad"
+              [checked]="estaSeleccionada(esp.id_especialidad)"
+              (change)="toggleEspecialidad(esp.id_especialidad, $event)"
+              class="w-4 h-4 accent-[#003667] cursor-pointer"
+            />
+            <span class="text-sm font-medium text-on-surface">{{ esp.nombre }}</span>
+            @if (especialidadesSeleccionadas()[0] === esp.id_especialidad) {
+              <span class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wide border border-primary/20">
+                <span class="material-symbols-outlined text-[12px]">star</span>
+                Principal
+              </span>
+            }
+          </label>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Botón de envío -->
+  <button
+    type="submit"
+    [disabled]="isLoading()"
+    class="min-h-[48px] w-full px-6 py-3 rounded-xl bg-primary hover:bg-primary-container text-white font-label-md text-label-md transition-all duration-300 shadow-level-1 hover:shadow-level-2 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-2"
+  >
+    @if (isLoading()) {
+      <span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+      <span>Guardando...</span>
+    } @else {
+      <span class="material-symbols-outlined text-[20px]">{{ esEdicion() ? 'save' : 'person_add' }}</span>
+      <span>{{ esEdicion() ? 'Guardar cambios' : 'Crear perfil profesional' }}</span>
+    }
+  </button>
+
+</form>

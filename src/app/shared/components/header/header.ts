@@ -39,7 +39,14 @@ export class Header {
   goToProfile(): void {
     this.closeDropdown();
     this.closeMobileMenu();
-    this.router.navigate(['/perfil']);
+    // Perfil profesional del médico autenticado (CU04)
+    this.router.navigate(['/mi-perfil-medico']);
+  }
+
+  goToMedicos(): void {
+    this.closeMobileMenu();
+    // Listado de perfiles profesionales (CU04)
+    this.router.navigate(['/medicos']);
   }
 
   logout(): void {

@@ -22,6 +22,16 @@
       <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
         Seguridad
       </a>
+      <!-- Acceso al módulo de médicos (CU04), solo para usuarios autenticados -->
+      @if (authService.isAuthenticated()) {
+        <button
+          type="button"
+          (click)="goToMedicos()"
+          class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+        >
+          Médicos
+        </button>
+      }
     </nav>
 
     <!-- Actions / Auth Area -->
@@ -226,6 +236,16 @@
         <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
           Seguridad
         </a>
+        @if (authService.isAuthenticated()) {
+          <button
+            type="button"
+            (click)="goToMedicos()"
+            class="text-left text-on-surface py-2 font-medium hover:text-primary transition-colors cursor-pointer flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[20px] text-primary">medical_information</span>
+            <span>Médicos</span>
+          </button>
+        }
       </nav>
     </div>
   }

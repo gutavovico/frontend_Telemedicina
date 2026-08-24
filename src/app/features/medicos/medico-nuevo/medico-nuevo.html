@@ -1,0 +1,50 @@
+<app-header></app-header>
+
+<main class="flex-grow pt-[88px] pb-16 min-h-screen">
+  <div class="max-w-[680px] mx-auto px-margin-mobile md:px-margin-desktop">
+
+    <!-- Encabezado -->
+    <div class="mb-6 mt-4">
+      <a
+        routerLink="/medicos"
+        class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md py-2 px-3 rounded-xl hover:bg-surface-container-high/60 mb-4 -ml-3"
+      >
+        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        <span class="font-medium">Volver al listado</span>
+      </a>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
+        <span class="material-symbols-outlined text-[16px]">person_add</span>
+        <span>CU04 · Nuevo Perfil Médico</span>
+      </div>
+      <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary mb-1.5">
+        Registrar Perfil Profesional
+      </h1>
+      <p class="text-body-md font-body-md text-on-surface-variant">
+        El perfil se vinculará a tu cuenta de usuario actual. Completa tus credenciales profesionales.
+      </p>
+    </div>
+
+    @if (cargandoCatalogo()) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-on-surface-variant">
+        <span class="material-symbols-outlined text-[40px] animate-spin text-primary">progress_activity</span>
+        <p class="text-body-md font-body-md">Cargando especialidades...</p>
+      </div>
+    } @else if (especialidades().length === 0) {
+      <div class="p-6 bg-red-50 border border-red-200 rounded-2xl text-red-900 font-body-md text-sm flex items-start gap-3 shadow-sm">
+        <span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
+        <div>
+          <p class="font-semibold">No hay especialidades disponibles</p>
+          <p class="text-red-700 text-xs mt-0.5">El catálogo de especialidades está vacío. Contacta al administrador.</p>
+        </div>
+      </div>
+    } @else {
+      <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-10 relative border border-white/80 transition-all duration-300">
+        <app-medico-form
+          [especialidades]="especialidades()"
+          (saved)="onSaved($event)"
+        />
+      </div>
+    }
+
+  </div>
+</main>
