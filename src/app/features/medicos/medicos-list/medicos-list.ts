@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { EspecialidadResponse, MedicoResponse } from '../../../core/models/medico.models';
+import { Router, RouterLink } from '@angular/router';
+import { EspecialidadCreate, EspecialidadResponse, MedicoResponse } from '../../../core/models/medico.models';
 import { MedicoService } from '../../../core/services/medico.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Header } from '../../../shared/components/header/header';
 
 @Component({
@@ -14,12 +15,22 @@ import { Header } from '../../../shared/components/header/header';
 })
 export class MedicosList implements OnInit {
   private readonly medicoService = inject(MedicoService);
+  private readonly router = inject(Router);
+  readonly authService = inject(AuthService);
 
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly medicos = signal<MedicoResponse[]>([]);
   readonly especialidades = signal<EspecialidadResponse[]>([]);
   readonly total = signal(0);
+
+  // Creación de especialidades (exclusivo Admin)
+  readonly mostrarFormEspecialidad = signal(false);
+  nuevaEspNombre = '';
+  nuevaEspDescripcion = '';
+  readonly guardandoEspecialidad = signal(false);
+  readonly errorEspecialidad = signal<string | null>(null);
+  readonly exitoEspecialidad = signal<string | null>(null);
 
   readonly page = signal(1);
   readonly limit = 9;
@@ -30,8 +41,75 @@ export class MedicosList implements OnInit {
   filtroEstado = 'activo';
 
   ngOnInit(): void {
+    // CU04: el módulo es exclusivo de administradores y médicos.
+    // El médico se redirige a su propio perfil; cualquier otro usuario sale del módulo.
+    if (this.authService.isDoctor()) {
+      this.router.navigate(['/mi-perfil-medico']);
+      return;
+    }
+    if (!this.authService.isAdmin()) {
+      this.router.navigate(['/']);
+      return;
+    }
     this.cargarEspecialidades();
     this.cargarMedicos();
+  }
+
+  abrirFormEspecialidad(): void {
+    this.mostrarFormEspecialidad.set(true);
+    this.nuevaEspNombre = '';
+    this.nuevaEspDescripcion = '';
+    this.errorEspecialidad.set(null);
+    this.exitoEspecialidad.set(null);
+  }
+
+  cerrarFormEspecialidad(): void {
+    this.mostrarFormEspecialidad.set(false);
+    this.nuevaEspNombre = '';
+    this.nuevaEspDescripcion = '';
+    this.errorEspecialidad.set(null);
+    this.exitoEspecialidad.set(null);
+  }
+
+  crearNuevaEspecialidad(): void {
+    const nombre = this.nuevaEspNombre.trim();
+    if (nombre.length < 3) {
+      this.errorEspecialidad.set('El nombre debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    this.guardandoEspecialidad.set(true);
+    this.errorEspecialidad.set(null);
+    this.exitoEspecialidad.set(null);
+
+    const payload: EspecialidadCreate = {
+      nombre,
+      descripcion: this.nuevaEspDescripcion.trim() || undefined
+    };
+
+    this.medicoService.crearEspecialidad(payload).subscribe({
+      next: (creada) => {
+        this.guardandoEspecialidad.set(false);
+        this.nuevaEspNombre = '';
+        this.nuevaEspDescripcion = '';
+        this.cargarEspecialidades();
+        this.exitoEspecialidad.set(`Especialidad "${creada.nombre}" creada exitosamente en el catálogo.`);
+        setTimeout(() => {
+          this.cerrarFormEspecialidad();
+        }, 2000);
+      },
+      error: (err) => {
+        this.guardandoEspecialidad.set(false);
+        if (err.status === 409) {
+          this.errorEspecialidad.set('Ya existe una especialidad con este nombre.');
+        } else {
+          const detail = err.error?.detail;
+          this.errorEspecialidad.set(
+            (typeof detail === 'string' ? detail : null) || 'No se pudo crear la especialidad.'
+          );
+        }
+      }
+    });
   }
 
   cargarEspecialidades(): void {

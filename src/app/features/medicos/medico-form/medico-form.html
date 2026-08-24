@@ -19,6 +19,135 @@
     </div>
   }
 
+  <!-- Sección: Datos de Cuenta de Acceso del Médico (solo creación Admin de nuevo doctor) -->
+  @if (!esEdicion() && !autoRegistro()) {
+    <div class="flex flex-col gap-4 p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm animate-fadeIn">
+      <h3 class="font-label-md text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 pb-2 border-b border-outline-variant/20">
+        <span class="material-symbols-outlined text-[18px] text-secondary">account_circle</span>
+        1. Datos de la Cuenta de Acceso del Médico
+      </h3>
+
+      <!-- Nombres y Apellidos (2 Columns) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Nombres -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-nombres">
+            Nombres <span class="text-error">*</span>
+          </label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">badge</span>
+            </div>
+            <input
+              id="admin-nombres"
+              type="text"
+              formControlName="nombres"
+              placeholder="Ej. Valentina"
+              class="w-full bg-white border border-outline-variant/60 focus:border-secondary focus:ring-secondary/10 rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+        </div>
+
+        <!-- Apellidos -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-apellidos">
+            Apellidos <span class="text-error">*</span>
+          </label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">badge</span>
+            </div>
+            <input
+              id="admin-apellidos"
+              type="text"
+              formControlName="apellidos"
+              placeholder="Ej. Ríos Mendoza"
+              class="w-full bg-white border border-outline-variant/60 focus:border-secondary focus:ring-secondary/10 rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Correo Electrónico y Teléfono (2 Columns) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Correo -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-correo">
+            Correo electrónico <span class="text-error">*</span>
+          </label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">mail</span>
+            </div>
+            <input
+              id="admin-correo"
+              type="email"
+              formControlName="correo"
+              placeholder="doctor@hospital.com"
+              class="w-full bg-white border border-outline-variant/60 focus:border-secondary focus:ring-secondary/10 rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+        </div>
+
+        <!-- Teléfono -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-telefono">
+            Teléfono (opcional)
+          </label>
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">call</span>
+            </div>
+            <input
+              id="admin-telefono"
+              type="tel"
+              formControlName="telefono"
+              placeholder="+591 70000000"
+              class="w-full bg-white border border-outline-variant/60 focus:border-secondary focus:ring-secondary/10 rounded-xl pl-11 pr-3 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Contraseña Inicial -->
+      <div class="flex flex-col gap-1.5">
+        <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-password">
+          Contraseña inicial para el doctor <span class="text-error">*</span>
+        </label>
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-secondary transition-colors">
+            <span class="material-symbols-outlined text-[20px]">lock</span>
+          </div>
+          <input
+            id="admin-password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Mínimo 6 caracteres"
+            class="w-full bg-white border border-outline-variant/60 focus:border-secondary focus:ring-secondary/10 rounded-xl pl-11 pr-11 py-3 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+          />
+          <button
+            type="button"
+            (click)="toggleShowPassword()"
+            class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-outline hover:text-on-surface transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[20px]">
+              {{ showPassword() ? 'visibility_off' : 'visibility' }}
+            </span>
+          </button>
+        </div>
+        <p class="text-[11px] text-on-surface-variant">El médico usará este correo y contraseña para iniciar sesión.</p>
+      </div>
+    </div>
+
+    <!-- Título de sección profesional si es Admin nuevo doctor -->
+    @if (!autoRegistro()) {
+      <h3 class="font-label-md text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 pt-2">
+        <span class="material-symbols-outlined text-[18px] text-secondary">medical_information</span>
+        2. Credenciales y Perfil Profesional
+      </h3>
+    }
+  }
+
   <!-- Matrícula profesional -->
   <div class="flex flex-col gap-1.5">
     <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="matricula">
@@ -172,8 +301,10 @@
       <span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
       <span>Guardando...</span>
     } @else {
-      <span class="material-symbols-outlined text-[20px]">{{ esEdicion() ? 'save' : 'person_add' }}</span>
-      <span>{{ esEdicion() ? 'Guardar cambios' : 'Crear perfil profesional' }}</span>
+      <span class="material-symbols-outlined text-[20px]">{{ esEdicion() ? 'save' : (autoRegistro() ? 'how_to_reg' : 'person_add') }}</span>
+      <span>
+        {{ esEdicion() ? 'Guardar cambios' : (autoRegistro() ? 'Completar mi perfil profesional' : 'Registrar Médico') }}
+      </span>
     }
   </button>
 

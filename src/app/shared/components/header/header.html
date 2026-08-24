@@ -22,8 +22,8 @@
       <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
         Seguridad
       </a>
-      <!-- Acceso al módulo de médicos (CU04), solo para usuarios autenticados -->
-      @if (authService.isAuthenticated()) {
+      <!-- Acceso al módulo de médicos (CU04): solo administradores y médicos -->
+      @if (authService.isAdmin() || authService.isDoctor()) {
         <button
           type="button"
           (click)="goToMedicos()"
@@ -236,7 +236,7 @@
         <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
           Seguridad
         </a>
-        @if (authService.isAuthenticated()) {
+        @if (authService.isAdmin() || authService.isDoctor()) {
           <button
             type="button"
             (click)="goToMedicos()"

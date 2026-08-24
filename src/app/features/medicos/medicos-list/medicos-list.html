@@ -17,14 +17,108 @@
           Consulta los perfiles profesionales del equipo médico por especialidad.
         </p>
       </div>
-      <a
-        routerLink="/medicos/nuevo"
-        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md shrink-0"
-      >
-        <span class="material-symbols-outlined text-[20px]">person_add</span>
-        <span>Nuevo perfil</span>
-      </a>
+      <!-- Botones exclusivos del administrador (CU04); doctores son redirigidos a su perfil
+           y pacientes solo consultan el listado en modo lectura -->
+      @if (authService.isAdmin()) {
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <button
+            type="button"
+            (click)="mostrarFormEspecialidad() ? cerrarFormEspecialidad() : abrirFormEspecialidad()"
+            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-primary bg-secondary-container/40 border border-secondary/30 hover:bg-secondary-container transition-all duration-200 cursor-pointer font-label-md text-label-md"
+          >
+            <span class="material-symbols-outlined text-[20px]">{{ mostrarFormEspecialidad() ? 'close' : 'add_circle' }}</span>
+            <span>{{ mostrarFormEspecialidad() ? 'Cerrar formulario' : 'Nueva especialidad' }}</span>
+          </button>
+          <a
+            routerLink="/medicos/nuevo"
+            class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md"
+          >
+            <span class="material-symbols-outlined text-[20px]">person_add</span>
+            <span>Registrar Doctor</span>
+          </a>
+        </div>
+      }
     </div>
+
+    <!-- Panel de creación de especialidades para Admin -->
+    @if (authService.isAdmin() && mostrarFormEspecialidad()) {
+      <div class="glass-card rounded-2xl shadow-level-2 border border-primary/20 p-5 mb-8 animate-fadeIn bg-primary-fixed/10">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wide">
+            <span class="material-symbols-outlined text-[20px]">medical_services</span>
+            <span>Registrar nueva especialidad médica en el catálogo</span>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarFormEspecialidad()"
+            class="w-7 h-7 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-high/60 transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+
+        @if (errorEspecialidad()) {
+          <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2 animate-fadeIn">
+            <span class="material-symbols-outlined text-[18px] text-red-600">error</span>
+            <span>{{ errorEspecialidad() }}</span>
+          </div>
+        }
+
+        @if (exitoEspecialidad()) {
+          <div class="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-fadeIn">
+            <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
+            <span>{{ exitoEspecialidad() }}</span>
+          </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+          <div class="md:col-span-4 flex flex-col gap-1.5">
+            <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-esp-nombre">
+              Nombre de la especialidad *
+            </label>
+            <input
+              id="admin-esp-nombre"
+              type="text"
+              [(ngModel)]="nuevaEspNombre"
+              placeholder="Ej. Oftalmología"
+              (keyup.enter)="crearNuevaEspecialidad()"
+              class="w-full bg-white border border-outline-variant/60 focus:border-primary focus:ring-primary/10 rounded-xl px-3 py-2.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+
+          <div class="md:col-span-6 flex flex-col gap-1.5">
+            <label class="font-label-md text-xs font-semibold uppercase tracking-wider text-on-surface" for="admin-esp-desc">
+              Descripción (opcional)
+            </label>
+            <input
+              id="admin-esp-desc"
+              type="text"
+              [(ngModel)]="nuevaEspDescripcion"
+              placeholder="Breve resumen del alcance de la especialidad"
+              (keyup.enter)="crearNuevaEspecialidad()"
+              class="w-full bg-white border border-outline-variant/60 focus:border-primary focus:ring-primary/10 rounded-xl px-3 py-2.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm focus:ring-4"
+            />
+          </div>
+
+          <div class="md:col-span-2 flex items-end">
+            <button
+              type="button"
+              (click)="crearNuevaEspecialidad()"
+              [disabled]="guardandoEspecialidad() || nuevaEspNombre.trim().length < 3"
+              class="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary hover:bg-primary-container transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+            >
+              @if (guardandoEspecialidad()) {
+                <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                <span>Guardando...</span>
+              } @else {
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <span>Guardar</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Barra de filtros -->
     <div class="glass-card rounded-2xl shadow-level-1 border border-white/80 p-4 sm:p-5 mb-8">

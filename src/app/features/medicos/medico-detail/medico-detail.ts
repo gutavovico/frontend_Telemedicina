@@ -1,24 +1,29 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AsignacionEspecialidad,
+  EspecialidadCreate,
   EspecialidadResponse,
   MedicoResponse
 } from '../../../core/models/medico.models';
 import { MedicoService } from '../../../core/services/medico.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { MedicoForm } from '../medico-form/medico-form';
 import { Header } from '../../../shared/components/header/header';
 
 @Component({
   selector: 'app-medico-detail',
-  imports: [CommonModule, RouterLink, MedicoForm, Header],
+  imports: [CommonModule, FormsModule, RouterLink, MedicoForm, Header],
   templateUrl: './medico-detail.html',
   styleUrl: './medico-detail.css'
 })
 export class MedicoDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly medicoService = inject(MedicoService);
+  readonly authService = inject(AuthService);
 
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
@@ -32,10 +37,30 @@ export class MedicoDetail implements OnInit {
   readonly esMiPerfil = signal(false);
   readonly sinPerfil = signal(false);
 
+  // Permisos: el propietario y el administrador pueden editar o gestionar el perfil
+  readonly esPropietario = computed(() => {
+    if (this.esMiPerfil()) return true;
+    const medico = this.medico();
+    const currentUser = this.authService.currentUser();
+    if (!medico || !currentUser) return false;
+    return medico.id_usuario === currentUser.id_usuario;
+  });
+
+  readonly puedeGestionar = computed(() => {
+    return this.authService.isAdmin() || this.esPropietario();
+  });
+
   // Asignación de especialidad
   readonly nuevaEspecialidadId = signal<number | null>(null);
   readonly nuevaEsPrincipal = signal(false);
   readonly procesandoAccion = signal(false);
+
+  // Creación inline de especialidad
+  readonly mostrarFormEspecialidad = signal(false);
+  nuevaEspNombre = '';
+  nuevaEspDescripcion = '';
+  readonly guardandoEspecialidad = signal(false);
+  readonly errorEspecialidad = signal<string | null>(null);
 
   readonly nombreCompleto = computed(() => {
     const medico = this.medico();
@@ -102,6 +127,11 @@ export class MedicoDetail implements OnInit {
       next: (medico) => {
         this.medico.set(medico);
         this.isLoading.set(false);
+        // CU04: ver un perfil ajeno es exclusivo del administrador;
+        // cualquier otro usuario fuera del caso de uso sale del módulo
+        if (!this.authService.isAdmin() && !this.esPropietario()) {
+          this.router.navigate(['/']);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -233,6 +263,56 @@ export class MedicoDetail implements OnInit {
       event.preventDefault();
       this.asignarEspecialidad();
     }
+  }
+
+  abrirFormEspecialidad(): void {
+    this.mostrarFormEspecialidad.set(true);
+    this.nuevaEspNombre = '';
+    this.nuevaEspDescripcion = '';
+    this.errorEspecialidad.set(null);
+  }
+
+  cerrarFormEspecialidad(): void {
+    this.mostrarFormEspecialidad.set(false);
+    this.nuevaEspNombre = '';
+    this.nuevaEspDescripcion = '';
+    this.errorEspecialidad.set(null);
+  }
+
+  crearNuevaEspecialidad(): void {
+    const nombre = this.nuevaEspNombre.trim();
+    if (nombre.length < 3) {
+      this.errorEspecialidad.set('El nombre debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    this.guardandoEspecialidad.set(true);
+    this.errorEspecialidad.set(null);
+
+    const payload: EspecialidadCreate = {
+      nombre,
+      descripcion: this.nuevaEspDescripcion.trim() || undefined
+    };
+
+    this.medicoService.crearEspecialidad(payload).subscribe({
+      next: (creada) => {
+        this.guardandoEspecialidad.set(false);
+        this.mostrarFormEspecialidad.set(false);
+        this.nuevaEspNombre = '';
+        this.nuevaEspDescripcion = '';
+        this.cargarEspecialidades();
+        this.nuevaEspecialidadId.set(creada.id_especialidad);
+        this.mostrarMensaje('success', `Especialidad "${creada.nombre}" registrada en el catálogo y seleccionada.`);
+      },
+      error: (err) => {
+        this.guardandoEspecialidad.set(false);
+        if (err.status === 409) {
+          this.errorEspecialidad.set('Ya existe una especialidad con este nombre.');
+        } else {
+          this.errorEspecialidad.set(this.extraerDetalle(err) || 'No se pudo crear la especialidad.');
+        }
+      }
+    });
   }
 
   private mostrarMensaje(tipo: 'success' | 'error', mensaje: string): void {

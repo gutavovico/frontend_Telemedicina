@@ -14,6 +14,11 @@ export interface EspecialidadResponse {
   estado: string;
 }
 
+export interface EspecialidadCreate {
+  nombre: string;
+  descripcion?: string | null;
+}
+
 export interface EspecialidadMedico {
   id_especialidad: number;
   nombre: string;

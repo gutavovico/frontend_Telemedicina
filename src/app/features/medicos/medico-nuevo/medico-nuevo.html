@@ -10,18 +10,32 @@
         class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md py-2 px-3 rounded-xl hover:bg-surface-container-high/60 mb-4 -ml-3"
       >
         <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-        <span class="font-medium">Volver al listado</span>
+        <span class="font-medium">Volver</span>
       </a>
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
-        <span class="material-symbols-outlined text-[16px]">person_add</span>
-        <span>CU04 · Nuevo Perfil Médico</span>
-      </div>
-      <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary mb-1.5">
-        Registrar Perfil Profesional
-      </h1>
-      <p class="text-body-md font-body-md text-on-surface-variant">
-        El perfil se vinculará a tu cuenta de usuario actual. Completa tus credenciales profesionales.
-      </p>
+
+      @if (esAutoRegistro) {
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
+          <span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+          <span>CU04 · Completar Mi Perfil Profesional</span>
+        </div>
+        <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary mb-1.5">
+          Completar Mi Perfil Profesional
+        </h1>
+        <p class="text-body-md font-body-md text-on-surface-variant">
+          Registra tu matrícula, experiencia y especialidades. Tu perfil quedará vinculado a tu cuenta actual.
+        </p>
+      } @else {
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
+          <span class="material-symbols-outlined text-[16px]">person_add</span>
+          <span>CU04 · Registrar Nuevo Doctor</span>
+        </div>
+        <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary mb-1.5">
+          Registrar Nuevo Doctor
+        </h1>
+        <p class="text-body-md font-body-md text-on-surface-variant">
+          Completa los datos de acceso y las credenciales profesionales del médico para darlo de alta en el sistema.
+        </p>
+      }
     </div>
 
     @if (cargandoCatalogo()) {
@@ -34,13 +48,14 @@
         <span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
         <div>
           <p class="font-semibold">No hay especialidades disponibles</p>
-          <p class="text-red-700 text-xs mt-0.5">El catálogo de especialidades está vacío. Contacta al administrador.</p>
+          <p class="text-red-700 text-xs mt-0.5">El catálogo de especialidades está vacío. Registra especialidades primero.</p>
         </div>
       </div>
     } @else {
       <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-10 relative border border-white/80 transition-all duration-300">
         <app-medico-form
           [especialidades]="especialidades()"
+          [autoRegistro]="esAutoRegistro"
           (saved)="onSaved($event)"
         />
       </div>

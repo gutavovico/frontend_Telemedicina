@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AsignacionEspecialidad,
+  EspecialidadCreate,
   EspecialidadResponse,
   EstadoUpdate,
   MedicoCreate,
@@ -71,5 +72,9 @@ export class MedicoService {
 
   listarEspecialidades(): Observable<EspecialidadResponse[]> {
     return this.http.get<EspecialidadResponse[]>(`${this.apiUrl}/especialidades`);
+  }
+
+  crearEspecialidad(datos: EspecialidadCreate): Observable<EspecialidadResponse> {
+    return this.http.post<EspecialidadResponse>(`${this.apiUrl}/especialidades`, datos);
   }
 }

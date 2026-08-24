@@ -14,6 +14,7 @@ import {
   ForgotPasswordResponse,
   ResetPasswordRequest
 } from '../models/auth.models';
+import { MedicoResponse } from '../models/medico.models';
 import { InactivityService } from './inactivity.service';
 
 @Injectable({
@@ -31,6 +32,10 @@ export class AuthService {
   // Reactive state signals
   readonly isAuthenticated = signal<boolean>(this.hasValidToken());
   readonly currentUser = signal<UsuarioResponse | null>(this.getStoredUser());
+
+  // Perfil médico del usuario autenticado (CU04): 200 en /medicos/me = es doctor.
+  // Se carga tras el login y al revalidar la sesión.
+  readonly perfilMedico = signal<MedicoResponse | null>(null);
 
   // Computed properties for UI
   readonly userDisplayName = computed(() => {
@@ -69,16 +74,57 @@ export class AuthService {
     return this.currentUser()?.foto_perfil || null;
   });
 
+  readonly userRole = computed<'admin' | 'doctor' | 'paciente'>(() => {
+    const user = this.currentUser();
+    if (!user) return 'paciente';
+
+    const correo = (user.correo || '').toLowerCase();
+    const nombres = (user.nombres || '').toLowerCase();
+
+    // Admin: heurística temporal hasta que exista la tabla roles (CU02)
+    if (correo.includes('admin') || nombres.includes('admin') || user.id_usuario === 1) {
+      return 'admin';
+    }
+    // Doctor: verificado contra el backend con GET /medicos/me (fuente de verdad)
+    if (this.perfilMedico() !== null) {
+      return 'doctor';
+    }
+    // Fallback solo para usuarios seed (doctor@telemedicina.com sin perfil cargado aún)
+    if (correo.includes('doctor') || nombres.includes('doctor')) {
+      return 'doctor';
+    }
+    return 'paciente';
+  });
+
+  readonly isAdmin = computed(() => this.userRole() === 'admin');
+  readonly isDoctor = computed(() => this.userRole() === 'doctor');
+
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
     if (this.isBrowser && this.hasValidToken()) {
       this.fetchUserProfile().subscribe();
+      this.fetchPerfilMedico();
       // Reanuda el control de inactividad con la preferencia guardada (CU23)
       this.inactivity.start(this.getRememberMe());
     }
 
     // Cierre de sesión automático por inactividad (CU23)
     this.inactivity.expired$.subscribe(() => this.onInactivityExpired());
+  }
+
+  /**
+   * Carga el perfil médico del usuario autenticado (CU04).
+   * Si /medicos/me responde 200, el usuario es doctor; 404 = no lo es.
+   */
+  fetchPerfilMedico(): void {
+    if (!this.getAccessToken()) {
+      this.perfilMedico.set(null);
+      return;
+    }
+    this.http.get<MedicoResponse>(`${this.apiUrl}/medicos/me`).subscribe({
+      next: (perfil) => this.perfilMedico.set(perfil),
+      error: () => this.perfilMedico.set(null)
+    });
   }
 
   private onInactivityExpired(): void {
@@ -121,6 +167,8 @@ export class AuthService {
 
         // Fetch full profile from backend
         this.fetchUserProfile().subscribe();
+        // Cargar perfil médico (define el rol doctor, CU04)
+        this.fetchPerfilMedico();
       })
     );
   }
@@ -203,6 +251,7 @@ export class AuthService {
       localStorage.removeItem('remember_me');
       this.currentUser.set(null);
       this.isAuthenticated.set(false);
+      this.perfilMedico.set(null);
       this.inactivity.stop();
     }
   }
