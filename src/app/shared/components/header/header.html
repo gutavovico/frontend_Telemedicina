@@ -1,7 +1,5 @@
 <header class="fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-all">
   <div class="max-w-container-max mx-auto flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3.5 w-full">
-    
-    <!-- Brand / Logo -->
     <a routerLink="/" class="flex items-center gap-2.5 cursor-pointer group">
       <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
         <span class="material-symbols-outlined text-[22px]">local_hospital</span>
@@ -11,30 +9,53 @@
       </span>
     </a>
 
-    <!-- Desktop Navigation -->
     <nav class="hidden md:flex items-center gap-8">
-      <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#especialidades">
-        Especialidades
-      </a>
-      <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#como-funciona">
-        Cómo funciona
-      </a>
-      <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
-        Seguridad
-      </a>
+      @if (showAdminNavigation()) {
+        <a routerLink="/" class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200">
+          Dashboard
+        </a>
+        <a
+          routerLink="/usuarios"
+          class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+          [class.text-primary]="isUsersRoute()"
+          [class.border-primary]="isUsersRoute()"
+          [class.text-on-surface-variant]="!isUsersRoute()"
+          [class.border-transparent]="!isUsersRoute()"
+        >
+          Usuarios
+        </a>
+        <a
+          routerLink="/roles"
+          class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+          [class.text-primary]="isRolesRoute()"
+          [class.border-primary]="isRolesRoute()"
+          [class.text-on-surface-variant]="!isRolesRoute()"
+          [class.border-transparent]="!isRolesRoute()"
+        >
+          Roles
+        </a>
+        <span class="text-on-surface-variant text-sm font-medium">Permisos</span>
+        <span class="text-on-surface-variant text-sm font-medium">Auditoria</span>
+      } @else {
+        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#especialidades">
+          Especialidades
+        </a>
+        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#como-funciona">
+          Como funciona
+        </a>
+        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
+          Seguridad
+        </a>
+      }
     </nav>
 
-    <!-- Actions / Auth Area -->
     <div class="flex items-center gap-3">
-      
-      <!-- User is Authenticated: Show Avatar, Name & Dropdown Menu -->
       @if (authService.isAuthenticated()) {
         <div
           class="relative group"
           (mouseenter)="openDropdown()"
           (mouseleave)="closeDropdown()"
         >
-          <!-- Avatar Trigger Button -->
           <button
             type="button"
             (click)="toggleDropdown()"
@@ -42,7 +63,6 @@
             aria-haspopup="true"
             [attr.aria-expanded]="isDropdownOpen()"
           >
-            <!-- User Avatar Photo or Initials -->
             <div class="relative shrink-0">
               @if (authService.userPhoto()) {
                 <img
@@ -55,37 +75,28 @@
                   {{ authService.userInitials() }}
                 </div>
               }
-              <!-- Online status dot -->
               <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
             </div>
 
-            <!-- User Name -->
             <span class="font-semibold text-xs sm:text-sm text-on-surface max-w-[130px] truncate hidden sm:inline-block">
               {{ authService.userDisplayName() }}
             </span>
 
-            <!-- Arrow Icon -->
             <span class="material-symbols-outlined text-[18px] text-outline transition-transform duration-200 group-hover:rotate-180">
               expand_more
             </span>
           </button>
 
-          <!-- Hover / Click Dropdown Menu -->
           <div
-            class="absolute right-0 top-full pt-1.5 w-60 z-50 transition-all duration-200"
+            class="absolute right-0 top-full pt-1.5 w-60 z-50 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:pointer-events-auto"
             [class.opacity-100]="isDropdownOpen()"
             [class.visible]="isDropdownOpen()"
             [class.pointer-events-auto]="isDropdownOpen()"
             [class.opacity-0]="!isDropdownOpen()"
             [class.invisible]="!isDropdownOpen()"
             [class.pointer-events-none]="!isDropdownOpen()"
-            [class.group-hover:opacity-100]="true"
-            [class.group-hover:visible]="true"
-            [class.group-hover:pointer-events-auto]="true"
           >
             <div class="bg-white rounded-2xl shadow-level-3 border border-outline-variant/30 py-2 animate-fadeIn overflow-hidden">
-              
-              <!-- User Info Card in Menu -->
               <div class="px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/20 flex items-center gap-3">
                 <div class="shrink-0">
                   @if (authService.userPhoto()) {
@@ -110,7 +121,6 @@
                 </div>
               </div>
 
-              <!-- Menu Option: Perfil -->
               <div class="px-1.5 pt-1.5">
                 <button
                   type="button"
@@ -122,10 +132,8 @@
                 </button>
               </div>
 
-              <!-- Divider -->
               <div class="my-1 border-t border-outline-variant/20 mx-2"></div>
 
-              <!-- Menu Option: Cerrar Sesión -->
               <div class="px-1.5 pb-0.5">
                 <button
                   type="button"
@@ -133,21 +141,18 @@
                   class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-error hover:bg-error-container/40 rounded-xl transition-all duration-150 cursor-pointer text-left"
                 >
                   <span class="material-symbols-outlined text-[20px] text-error">logout</span>
-                  <span>Cerrar sesión</span>
+                  <span>Cerrar sesion</span>
                 </button>
               </div>
-
             </div>
           </div>
         </div>
-
       } @else {
-        <!-- User is NOT Authenticated: Show Login & Register/Cita Buttons -->
         <a
           routerLink="/login"
           class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-primary bg-transparent border border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer text-center"
         >
-          Iniciar Sesión
+          Iniciar Sesion
         </a>
         <a
           routerLink="/register"
@@ -157,27 +162,22 @@
         </a>
       }
 
-      <!-- Mobile Hamburger Button -->
       <button
         type="button"
         (click)="toggleMobileMenu()"
         class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
-        aria-label="Abrir menú"
+        aria-label="Abrir menu"
       >
         <span class="material-symbols-outlined text-[24px]">
           {{ isMobileMenuOpen() ? 'close' : 'menu' }}
         </span>
       </button>
-
     </div>
   </div>
 
-  <!-- Mobile Drawer Menu -->
   @if (isMobileMenuOpen()) {
     <div class="md:hidden bg-white border-b border-outline-variant/30 px-margin-mobile py-4 animate-fadeIn shadow-level-2">
-      
       @if (authService.isAuthenticated()) {
-        <!-- Mobile User Card -->
         <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-3">
           @if (authService.userPhoto()) {
             <img
@@ -196,7 +196,29 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-1 mb-3">
+        <nav class="flex flex-col gap-1 mb-3">
+          <a
+            routerLink="/usuarios"
+            (click)="closeMobileMenu()"
+            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+            [ngClass]="isUsersRoute()
+              ? ['text-primary', 'bg-primary-fixed/30']
+              : ['text-on-surface']"
+          >
+            <span class="material-symbols-outlined text-[20px]">group</span>
+            <span>Usuarios</span>
+          </a>
+          <a
+            routerLink="/roles"
+            (click)="closeMobileMenu()"
+            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+            [ngClass]="isRolesRoute()
+              ? ['text-primary', 'bg-primary-fixed/30']
+              : ['text-on-surface']"
+          >
+            <span class="material-symbols-outlined text-[20px]">shield_person</span>
+            <span>Roles</span>
+          </a>
           <button
             type="button"
             (click)="goToProfile()"
@@ -211,22 +233,22 @@
             class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-error hover:bg-error-container/30 transition-colors w-full text-left"
           >
             <span class="material-symbols-outlined text-[20px] text-error">logout</span>
-            <span>Cerrar sesión</span>
+            <span>Cerrar sesion</span>
           </button>
-        </div>
+        </nav>
+      } @else {
+        <nav class="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
+          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#especialidades">
+            Especialidades
+          </a>
+          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#como-funciona">
+            Como funciona
+          </a>
+          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
+            Seguridad
+          </a>
+        </nav>
       }
-
-      <nav class="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
-        <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#especialidades">
-          Especialidades
-        </a>
-        <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#como-funciona">
-          Cómo funciona
-        </a>
-        <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
-          Seguridad
-        </a>
-      </nav>
     </div>
   }
 </header>
