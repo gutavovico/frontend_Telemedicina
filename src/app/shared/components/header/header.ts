@@ -51,7 +51,18 @@ export class Header {
   goToProfile(): void {
     this.closeDropdown();
     this.closeMobileMenu();
-    this.router.navigate(['/perfil']);
+    // Perfil profesional del médico autenticado (CU04)
+    this.router.navigate(['/mi-perfil-medico']);
+  }
+
+  goToMedicos(): void {
+    this.closeMobileMenu();
+    // CU04: el doctor solo gestiona su propio perfil; admin ve el listado completo
+    if (this.authService.isDoctor()) {
+      this.router.navigate(['/mi-perfil-medico']);
+      return;
+    }
+    this.router.navigate(['/medicos']);
   }
 
   logout(): void {

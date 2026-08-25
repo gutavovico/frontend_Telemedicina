@@ -40,6 +40,31 @@ export const routes: Routes = [
     title: 'Hospital San Juan de Dios - Roles y Permisos'
   },
   {
+    path: 'medicos',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/medicos/medicos-list/medicos-list').then(m => m.MedicosList),
+    title: 'Hospital San Juan de Dios - Médicos'
+  },
+  {
+    path: 'medicos/nuevo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/medicos/medico-nuevo/medico-nuevo').then(m => m.MedicoNuevo),
+    title: 'Hospital San Juan de Dios - Nuevo Perfil Médico'
+  },
+  {
+    path: 'medicos/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/medicos/medico-detail/medico-detail').then(m => m.MedicoDetail),
+    title: 'Hospital San Juan de Dios - Perfil Médico'
+  },
+  {
+    path: 'mi-perfil-medico',
+    canActivate: [authGuard],
+    data: { miPerfil: true },
+    loadComponent: () => import('./features/medicos/medico-detail/medico-detail').then(m => m.MedicoDetail),
+    title: 'Hospital San Juan de Dios - Mi Perfil Médico'
+  },
+  {
     path: '**',
     redirectTo: ''
   }

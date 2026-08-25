@@ -34,14 +34,21 @@
         >
           Roles
         </a>
-        <span class="text-on-surface-variant text-sm font-medium">Permisos</span>
-        <span class="text-on-surface-variant text-sm font-medium">Auditoria</span>
+        @if (authService.isAdmin() || authService.isDoctor()) {
+          <button
+            type="button"
+            (click)="goToMedicos()"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Médicos
+          </button>
+        }
       } @else {
         <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#especialidades">
           Especialidades
         </a>
         <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#como-funciona">
-          Como funciona
+          Cómo funciona
         </a>
         <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
           Seguridad
@@ -219,6 +226,16 @@
             <span class="material-symbols-outlined text-[20px]">shield_person</span>
             <span>Roles</span>
           </a>
+          @if (authService.isAdmin() || authService.isDoctor()) {
+            <button
+              type="button"
+              (click)="goToMedicos()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">medical_information</span>
+              <span>Médicos</span>
+            </button>
+          }
           <button
             type="button"
             (click)="goToProfile()"
@@ -242,7 +259,7 @@
             Especialidades
           </a>
           <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#como-funciona">
-            Como funciona
+            Cómo funciona
           </a>
           <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
             Seguridad
