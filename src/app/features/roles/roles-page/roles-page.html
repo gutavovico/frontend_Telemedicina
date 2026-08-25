@@ -1,0 +1,331 @@
+<div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(165,200,255,0.18),_transparent_32%),linear-gradient(180deg,_rgba(248,249,250,1)_0%,_rgba(243,244,245,1)_100%)]">
+  <app-header></app-header>
+
+  <main class="pt-28 pb-12 px-margin-mobile md:px-margin-desktop">
+    <div class="max-w-container-max mx-auto">
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-2 text-sm">
+            <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+              <span class="material-symbols-outlined text-[16px]">home</span>
+              Inicio
+            </a>
+            <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+            <span class="text-primary font-medium">Roles y permisos</span>
+          </div>
+
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+            <div>
+              <h1 class="text-headline-lg-mobile sm:text-headline-lg text-primary">Administrar roles y permisos</h1>
+              <p class="text-body-md text-on-surface-variant mt-2">
+                Asigna roles a los usuarios y define los permisos de acceso según sus funciones.
+              </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                (click)="openCreateForm()"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl bg-secondary-container/70 hover:bg-secondary-container px-5 py-3 text-sm font-semibold text-primary transition-colors shadow-sm cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                Nuevo rol
+              </button>
+              <button
+                type="button"
+                (click)="exportCsv()"
+                class="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary-container px-5 py-3 text-sm font-semibold text-white transition-colors shadow-sm cursor-pointer disabled:opacity-70"
+                [disabled]="loadingRoles()"
+              >
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                Exportar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        @if (successMessage()) {
+          <div class="rounded-2xl border border-secondary/15 bg-secondary-container/55 px-4 py-3 text-sm text-secondary flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            <span>{{ successMessage() }}</span>
+          </div>
+        }
+
+        @if (forbiddenMessage()) {
+          <div class="rounded-2xl border border-error/15 bg-error-container/70 px-4 py-3 text-sm text-red-700 flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px]">gpp_bad</span>
+            <span>{{ forbiddenMessage() }}</span>
+          </div>
+        }
+
+        <section class="glass-card rounded-[30px] shadow-level-2 border border-white/70 p-5 sm:p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <label class="flex flex-col gap-2">
+              <span class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-on-surface">Buscar</span>
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+                <input
+                  type="text"
+                  [ngModel]="searchTerm()"
+                  (ngModelChange)="onSearchChange($event)"
+                  placeholder="Nombre del rol o descripción"
+                  class="w-full rounded-2xl border border-outline-variant/40 bg-white px-12 py-3.5 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                />
+              </div>
+            </label>
+
+            <label class="flex flex-col gap-2">
+              <span class="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-on-surface">Estado</span>
+              <select
+                [ngModel]="selectedStatus()"
+                (ngModelChange)="onStatusChange($event)"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3.5 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+              >
+                <option value="all">Todos</option>
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="mt-4 flex justify-end">
+            <button
+              type="button"
+              (click)="clearFilters()"
+              class="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              [disabled]="!hasActiveFilters()"
+            >
+              <span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
+              Limpiar filtros
+            </button>
+          </div>
+        </section>
+
+        <section class="glass-card rounded-[30px] shadow-level-2 border border-white/70 overflow-hidden">
+          @if (loadingRoles()) {
+            <div class="p-10 sm:p-14 flex flex-col items-center justify-center text-center">
+              <div class="w-14 h-14 rounded-full border-4 border-primary/15 border-t-primary animate-spin"></div>
+              <p class="mt-4 text-sm text-on-surface-variant">Cargando roles...</p>
+            </div>
+          } @else if (errorMessage()) {
+            <div class="p-10 sm:p-14 flex flex-col items-center justify-center text-center">
+              <div class="w-16 h-16 rounded-full bg-error-container/80 text-error flex items-center justify-center">
+                <span class="material-symbols-outlined text-[30px]">error</span>
+              </div>
+              <p class="mt-4 text-lg font-semibold text-primary">No fue posible cargar los roles.</p>
+              <p class="mt-2 text-sm text-on-surface-variant">{{ errorMessage() }}</p>
+              <button
+                type="button"
+                (click)="loadRoles()"
+                class="mt-5 inline-flex items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-container transition-colors cursor-pointer"
+              >
+                Reintentar
+              </button>
+            </div>
+          } @else if (!filteredRoles().length) {
+            <div class="p-10 sm:p-14 flex flex-col items-center justify-center text-center">
+              <div class="w-16 h-16 rounded-full bg-primary-fixed text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined text-[30px]">shield_person</span>
+              </div>
+              <p class="mt-4 text-lg font-semibold text-primary">No hay roles disponibles.</p>
+              <p class="mt-2 text-sm text-on-surface-variant">Ajusta los filtros o crea un nuevo rol para comenzar.</p>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="min-w-[1180px] w-full">
+                <thead class="bg-white/70">
+                  <tr class="text-left">
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Rol</th>
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Descripción</th>
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Permisos asociados</th>
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Usuarios asignados</th>
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Estado</th>
+                    <th class="px-6 py-5 text-xs font-semibold uppercase tracking-[0.16em] text-on-surface">Acción</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/20">
+                  @for (role of paginatedRoles(); track trackByRoleId($index, role)) {
+                    <tr class="bg-white/55 hover:bg-white/80 transition-colors">
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-4">
+                          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold shadow-sm">
+                            {{ getRoleInitials(role) }}
+                          </div>
+                          <div>
+                            <p class="font-semibold text-on-surface">{{ role.nombre }}</p>
+                            <p class="text-sm text-on-surface-variant">ID {{ role.id_rol }}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-on-surface-variant max-w-[320px]">
+                        {{ getRoleDescription(role) }}
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="flex flex-col gap-3">
+                          @if (hasPermissionCache(role.id_rol) && getPermissionsSummary(role.id_rol).length) {
+                            <div class="flex flex-wrap gap-2">
+                              @for (permission of getVisiblePermissionsSummary(role.id_rol); track permission.id_permiso) {
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary-fixed text-primary border border-primary/10">
+                                  {{ getPermissionDisplayName(permission) }}
+                                </span>
+                              }
+                              @if (getRemainingPermissionsCount(role.id_rol) > 0) {
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-surface-container text-on-surface-variant border border-outline-variant/20">
+                                  +{{ getRemainingPermissionsCount(role.id_rol) }}
+                                </span>
+                              }
+                            </div>
+                          } @else if (hasPermissionCache(role.id_rol)) {
+                            <span class="text-sm text-on-surface-variant">Sin permisos asignados.</span>
+                          } @else {
+                            <span class="text-sm text-on-surface-variant">Disponible al consultar el rol.</span>
+                          }
+                          <button
+                            type="button"
+                            (click)="openPermissionsForm(role)"
+                            class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-secondary transition-colors cursor-pointer self-start"
+                          >
+                            <span class="material-symbols-outlined text-[18px]">tune</span>
+                            {{ hasPermissionCache(role.id_rol) ? 'Editar permisos' : 'Consultar permisos' }}
+                          </button>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-on-surface-variant">
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-surface-container text-on-surface-variant border border-outline-variant/20">
+                          No disponible
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span
+                          class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium border"
+                          [ngClass]="getStatusBadgeClasses(role.estado)"
+                        >
+                          {{ getStatusLabel(role.estado) }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                          <button
+                            type="button"
+                            (click)="openEditForm(role)"
+                            class="w-11 h-11 rounded-2xl border border-outline-variant/30 bg-white text-on-surface-variant hover:text-primary hover:border-primary/25 hover:bg-primary/5 transition-colors cursor-pointer"
+                            aria-label="Editar rol"
+                          >
+                            <span class="material-symbols-outlined text-[20px]">edit_square</span>
+                          </button>
+                          <button
+                            type="button"
+                            (click)="askStatusChange(role)"
+                            class="w-11 h-11 rounded-2xl border border-outline-variant/30 bg-white transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                            [ngClass]="getStatusActionClasses(role.estado)"
+                            [disabled]="updatingRoleStatus() === role.id_rol || !canToggleStatus(role.estado)"
+                            [attr.aria-label]="getStatusActionLabel(role.estado)"
+                          >
+                            <span class="material-symbols-outlined text-[22px]">
+                              {{ getStatusActionIcon(role.estado) }}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-6 py-5 border-t border-outline-variant/20 bg-white/65">
+              <p class="text-sm text-on-surface-variant">
+                Mostrando {{ getRangeStart() }} a {{ getRangeEnd() }} de {{ filteredRoles().length }} roles
+              </p>
+
+              <div class="flex items-center gap-3 self-end sm:self-auto">
+                <button
+                  type="button"
+                  (click)="previousPage()"
+                  class="w-12 h-12 rounded-2xl border border-outline-variant/30 bg-white text-on-surface-variant hover:text-primary hover:border-primary/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="currentPage() === 1"
+                  aria-label="Página anterior"
+                >
+                  <span class="material-symbols-outlined text-[22px]">chevron_left</span>
+                </button>
+                <div class="min-w-12 h-12 rounded-2xl bg-primary text-white font-semibold flex items-center justify-center px-4">
+                  {{ currentPage() }}
+                </div>
+                <button
+                  type="button"
+                  (click)="nextPage()"
+                  class="w-12 h-12 rounded-2xl border border-outline-variant/30 bg-white text-on-surface-variant hover:text-primary hover:border-primary/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="currentPage() === totalPages()"
+                  aria-label="Página siguiente"
+                >
+                  <span class="material-symbols-outlined text-[22px]">chevron_right</span>
+                </button>
+              </div>
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <app-role-form
+    [visible]="isRoleFormOpen()"
+    [mode]="roleFormMode()"
+    [role]="selectedRole()"
+    [submitting]="savingRole()"
+    [errorMessage]="roleFormErrorMessage()"
+    (cancel)="closeRoleForm()"
+    (submitted)="submitRoleForm($event)"
+  />
+
+  <app-role-permissions-form
+    [visible]="isPermissionsFormOpen()"
+    [role]="permissionsTargetRole()"
+    [permissions]="permissionsCatalog()"
+    [selectedPermissionIds]="rolePermissionIds()"
+    [loadingCatalog]="loadingPermissions()"
+    [loadingAssignments]="false"
+    [submitting]="savingPermissions()"
+    [errorMessage]="permissionsErrorMessage()"
+    (cancel)="closePermissionsForm()"
+    (submitted)="submitPermissions($event)"
+  />
+
+  @if (confirmTarget()) {
+    <div class="fixed inset-0 z-[75] bg-slate-950/45 backdrop-blur-[2px] px-4 py-6">
+      <div class="min-h-full flex items-center justify-center">
+        <div class="w-full max-w-md rounded-[28px] bg-white shadow-level-3 border border-outline-variant/20 p-6 animate-fadeIn">
+          <div class="w-14 h-14 rounded-full bg-error-container/70 text-red-600 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[28px]">warning</span>
+          </div>
+          <h3 class="mt-4 text-xl font-semibold text-primary">
+            {{ getNormalizedRoleStatus(confirmTarget()!.estado) === 'ACTIVO' ? 'Deshabilitar rol' : 'Habilitar rol' }}
+          </h3>
+          <p class="mt-2 text-sm text-on-surface-variant">
+            {{ getNormalizedRoleStatus(confirmTarget()!.estado) === 'ACTIVO'
+              ? '¿Está seguro de que desea deshabilitar este rol?'
+              : '¿Está seguro de que desea habilitar este rol?' }}
+          </p>
+          <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              type="button"
+              (click)="closeStatusConfirm()"
+              class="inline-flex items-center justify-center rounded-2xl border border-outline-variant/35 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
+              [disabled]="confirmSubmitting()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="confirmStatusChange()"
+              class="inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white bg-primary hover:bg-primary-container transition-colors cursor-pointer disabled:opacity-70"
+              [disabled]="confirmSubmitting()"
+            >
+              {{ confirmSubmitting() ? 'Procesando...' : (getNormalizedRoleStatus(confirmTarget()!.estado) === 'ACTIVO' ? 'Deshabilitar' : 'Habilitar') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

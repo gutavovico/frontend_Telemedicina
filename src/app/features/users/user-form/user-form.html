@@ -1,0 +1,211 @@
+@if (visible()) {
+  <div class="fixed inset-0 z-[70] bg-slate-950/45 backdrop-blur-[2px] px-4 py-6 sm:px-6 overflow-y-auto">
+    <div class="min-h-full flex items-start sm:items-center justify-center">
+      <div class="w-full max-w-3xl glass-card rounded-[28px] shadow-level-3 border border-white/70 animate-fadeIn overflow-hidden">
+        <div class="flex items-start justify-between gap-4 px-6 py-5 sm:px-8 border-b border-outline-variant/25">
+          <div>
+            <p class="text-[11px] font-semibold tracking-[0.24em] uppercase text-primary/70">CU02</p>
+            <h2 class="text-headline-lg-mobile sm:text-headline-lg text-primary mt-1">{{ title() }}</h2>
+            <p class="text-sm text-on-surface-variant mt-1">
+              {{ mode() === 'create' ? 'Registra un nuevo usuario interno del sistema.' : 'Actualiza la información del usuario seleccionado.' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="close()"
+            class="shrink-0 w-11 h-11 rounded-2xl border border-outline-variant/35 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer"
+            aria-label="Cerrar formulario"
+          >
+            <span class="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-6 py-6 sm:px-8 sm:py-7">
+          @if (errorMessage()) {
+            <div class="mb-5 rounded-2xl border border-error/15 bg-error-container/65 px-4 py-3 text-sm text-red-700 flex gap-3">
+              <span class="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
+              <div>
+                <p class="font-semibold">No se pudo guardar el usuario</p>
+                <p class="mt-1">{{ errorMessage() }}</p>
+              </div>
+            </div>
+          }
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Nombres <span class="text-error">*</span></span>
+              <input
+                type="text"
+                formControlName="nombres"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                [class.border-error]="isFieldInvalid('nombres')"
+              />
+              @if (isFieldInvalid('nombres')) {
+                <span class="text-xs text-error font-medium">Los nombres son obligatorios.</span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Apellidos <span class="text-error">*</span></span>
+              <input
+                type="text"
+                formControlName="apellidos"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                [class.border-error]="isFieldInvalid('apellidos')"
+              />
+              @if (isFieldInvalid('apellidos')) {
+                <span class="text-xs text-error font-medium">Los apellidos son obligatorios.</span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Correo <span class="text-error">*</span></span>
+              <input
+                type="email"
+                formControlName="correo"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                [class.border-error]="isFieldInvalid('correo')"
+              />
+              @if (isFieldInvalid('correo')) {
+                <span class="text-xs text-error font-medium">Ingresa un correo válido.</span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Teléfono</span>
+              <input
+                type="text"
+                formControlName="telefono"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+              />
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Rol <span class="text-error">*</span></span>
+              <select
+                formControlName="id_rol"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                [class.border-error]="isFieldInvalid('id_rol')"
+              >
+                <option [ngValue]="null">Selecciona un rol</option>
+                @for (role of roles(); track role.id_rol) {
+                  <option [ngValue]="role.id_rol">{{ role.nombre }}</option>
+                }
+              </select>
+              @if (isFieldInvalid('id_rol')) {
+                <span class="text-xs text-error font-medium">Selecciona un rol.</span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Clínica</span>
+              <input
+                type="number"
+                min="1"
+                formControlName="id_clinica"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+              />
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">
+                Contraseña
+                @if (isPasswordRequired()) {
+                  <span class="text-error">*</span>
+                }
+              </span>
+              <div class="relative">
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 pr-12 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                  [class.border-error]="isFieldInvalid('password')"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary cursor-pointer"
+                  aria-label="Mostrar contraseña"
+                >
+                  <span class="material-symbols-outlined text-[20px]">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+              @if (isFieldInvalid('password')) {
+                <span class="text-xs text-error font-medium">
+                  {{ isPasswordRequired() ? 'La contraseña es obligatoria.' : 'Revisa la contraseña ingresada.' }}
+                </span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">
+                Confirmar contraseña
+                @if (isPasswordRequired()) {
+                  <span class="text-error">*</span>
+                }
+              </span>
+              <div class="relative">
+                <input
+                  [type]="showConfirmPassword() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 pr-12 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                  [class.border-error]="isFieldInvalid('confirmPassword') || hasPasswordMismatch()"
+                />
+                <button
+                  type="button"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary cursor-pointer"
+                  aria-label="Mostrar confirmación"
+                >
+                  <span class="material-symbols-outlined text-[20px]">{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+              @if (isFieldInvalid('confirmPassword')) {
+                <span class="text-xs text-error font-medium">La confirmación es obligatoria.</span>
+              }
+              @if (hasPasswordMismatch()) {
+                <span class="text-xs text-error font-medium">Las contraseñas no coinciden.</span>
+              }
+            </label>
+          </div>
+
+          <div class="mt-6 rounded-2xl bg-surface-container-low border border-outline-variant/20 p-4">
+            <p class="text-sm font-semibold text-primary">Preferencias de notificación</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+              <label class="flex items-center gap-3 rounded-2xl bg-white/75 px-4 py-3 border border-outline-variant/25 cursor-pointer">
+                <input type="checkbox" formControlName="notificaciones_email" class="accent-[var(--color-primary)]" />
+                <span class="text-sm text-on-surface">Correo</span>
+              </label>
+              <label class="flex items-center gap-3 rounded-2xl bg-white/75 px-4 py-3 border border-outline-variant/25 cursor-pointer">
+                <input type="checkbox" formControlName="notificaciones_push" class="accent-[var(--color-primary)]" />
+                <span class="text-sm text-on-surface">Push</span>
+              </label>
+              <label class="flex items-center gap-3 rounded-2xl bg-white/75 px-4 py-3 border border-outline-variant/25 cursor-pointer">
+                <input type="checkbox" formControlName="notificaciones_sms" class="accent-[var(--color-primary)]" />
+                <span class="text-sm text-on-surface">SMS</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="mt-7 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              type="button"
+              (click)="close()"
+              class="inline-flex items-center justify-center rounded-2xl border border-outline-variant/35 px-5 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
+              [disabled]="submitting()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white bg-primary hover:bg-primary-container transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              [disabled]="submitting()"
+            >
+              {{ submitLabel() }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

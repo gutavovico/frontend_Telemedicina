@@ -1,0 +1,79 @@
+@if (visible()) {
+  <div class="fixed inset-0 z-[70] bg-slate-950/45 backdrop-blur-[2px] px-4 py-6 sm:px-6 overflow-y-auto">
+    <div class="min-h-full flex items-start sm:items-center justify-center">
+      <div class="w-full max-w-2xl glass-card rounded-[28px] shadow-level-3 border border-white/70 animate-fadeIn overflow-hidden">
+        <div class="flex items-start justify-between gap-4 px-6 py-5 sm:px-8 border-b border-outline-variant/25">
+          <div>
+            <p class="text-[11px] font-semibold tracking-[0.24em] uppercase text-primary/70">CU26</p>
+            <h2 class="text-headline-lg-mobile sm:text-headline-lg text-primary mt-1">{{ title() }}</h2>
+            <p class="text-sm text-on-surface-variant mt-1">
+              {{ mode() === 'create' ? 'Registra un nuevo rol del sistema.' : 'Actualiza la información del rol seleccionado.' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="close()"
+            class="shrink-0 w-11 h-11 rounded-2xl border border-outline-variant/35 text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer"
+            aria-label="Cerrar formulario de rol"
+          >
+            <span class="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-6 py-6 sm:px-8 sm:py-7">
+          @if (errorMessage()) {
+            <div class="mb-5 rounded-2xl border border-error/15 bg-error-container/65 px-4 py-3 text-sm text-red-700 flex gap-3">
+              <span class="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
+              <div>
+                <p class="font-semibold">No se pudo guardar el rol</p>
+                <p class="mt-1">{{ errorMessage() }}</p>
+              </div>
+            </div>
+          }
+
+          <div class="grid grid-cols-1 gap-5">
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Nombre del rol <span class="text-error">*</span></span>
+              <input
+                type="text"
+                formControlName="nombre"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                [class.border-error]="isFieldInvalid('nombre')"
+              />
+              @if (isFieldInvalid('nombre')) {
+                <span class="text-xs text-error font-medium">Ingresa un nombre válido para el rol.</span>
+              }
+            </label>
+
+            <label class="flex flex-col gap-2 text-sm text-on-surface">
+              <span class="font-semibold">Descripción</span>
+              <textarea
+                formControlName="descripcion"
+                rows="4"
+                class="w-full rounded-2xl border border-outline-variant/40 bg-white px-4 py-3 outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 resize-y min-h-28"
+              ></textarea>
+            </label>
+          </div>
+
+          <div class="mt-7 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              type="button"
+              (click)="close()"
+              class="inline-flex items-center justify-center rounded-2xl border border-outline-variant/35 px-5 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
+              [disabled]="submitting()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white bg-primary hover:bg-primary-container transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              [disabled]="submitting()"
+            >
+              {{ submitLabel() }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

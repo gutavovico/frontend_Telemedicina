@@ -24,6 +24,18 @@ export class Header {
     this.isMobileMenuOpen.set(false);
   }
 
+  isUsersRoute(): boolean {
+    return this.router.url.startsWith('/usuarios');
+  }
+
+  isRolesRoute(): boolean {
+    return this.router.url.startsWith('/roles');
+  }
+
+  showAdminNavigation(): boolean {
+    return this.authService.isAuthenticated() || this.isUsersRoute() || this.isRolesRoute();
+  }
+
   openDropdown(): void {
     this.isDropdownOpen.set(true);
   }
