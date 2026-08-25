@@ -1,0 +1,286 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Encabezado de Página -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-[#293954]">Gestión de Pacientes</h1>
+            <p class="text-sm text-gray-500">Expedientes clínicos y registro general del Hospital San Juan de Dios</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a
+          routerLink="/pacientes/nuevo"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white font-medium rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Nuevo Paciente</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Feedback Toast / Banner -->
+    <div
+      *ngIf="actionFeedback()"
+      class="p-4 rounded-xl flex items-center justify-between text-sm transition-all duration-200"
+      [ngClass]="{
+        'bg-emerald-50 text-emerald-800 border border-emerald-200': actionFeedback()?.type === 'success',
+        'bg-rose-50 text-rose-800 border border-rose-200': actionFeedback()?.type === 'error'
+      }"
+    >
+      <div class="flex items-center gap-2">
+        <svg *ngIf="actionFeedback()?.type === 'success'" class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <svg *ngIf="actionFeedback()?.type === 'error'" class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>{{ actionFeedback()?.message }}</span>
+      </div>
+      <button (click)="actionFeedback.set(null)" class="text-gray-400 hover:text-gray-600">&times;</button>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        <!-- Búsqueda General -->
+        <div class="lg:col-span-5 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            placeholder="Buscar por nombres, apellidos o correo..."
+            class="w-full pl-10 pr-4 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+
+        <!-- Filtro C.I. -->
+        <div class="lg:col-span-3 relative">
+          <input
+            type="text"
+            [(ngModel)]="ciFilter"
+            (keyup.enter)="onSearch()"
+            placeholder="Filtrar por C.I...."
+            class="w-full px-4 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+
+        <!-- Selector de Estado -->
+        <div class="lg:col-span-2">
+          <select
+            [(ngModel)]="selectedEstado"
+            (change)="onSearch()"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          >
+            <option value="ACTIVO">Activos</option>
+            <option value="INACTIVO">Inactivos</option>
+            <option value="TODOS">Todos</option>
+          </select>
+        </div>
+
+        <!-- Botones de Acción de Filtros -->
+        <div class="lg:col-span-2 flex items-center gap-2">
+          <button
+            (click)="onSearch()"
+            class="flex-1 px-4 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl transition"
+          >
+            Buscar
+          </button>
+          <button
+            (click)="clearFilters()"
+            title="Limpiar filtros"
+            class="px-3 py-2.5 text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor de Tabla de Pacientes -->
+    <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden">
+      
+      <!-- Estado de Carga (Skeleton/Spinner) -->
+      <div *ngIf="patientService.isLoading()" class="p-12 text-center text-gray-500 space-y-3">
+        <div class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-sm font-medium text-[#25627C]">Cargando expedientes de pacientes...</p>
+      </div>
+
+      <!-- Estado Vacío (Empty State) -->
+      <div *ngIf="!patientService.isLoading() && patientService.patients().length === 0" class="p-12 text-center space-y-4">
+        <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-[#293954]">No se encontraron pacientes</h3>
+          <p class="text-sm text-gray-500 mt-1">Intente ajustar los términos de búsqueda o registre un nuevo paciente.</p>
+        </div>
+        <a
+          routerLink="/pacientes/nuevo"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-[#049CAB] text-white text-sm font-medium rounded-xl hover:bg-[#1FA7AE] transition"
+        >
+          Registrar Paciente
+        </a>
+      </div>
+
+      <!-- Tabla de Datos -->
+      <div *ngIf="!patientService.isLoading() && patientService.patients().length > 0" class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-[#293954]">
+          <thead class="bg-[#F0F5FB]/70 text-xs uppercase font-semibold text-gray-600 border-b border-[#E8EDF4]">
+            <tr>
+              <th scope="col" class="px-6 py-4">Paciente</th>
+              <th scope="col" class="px-6 py-4">C.I. / Documento</th>
+              <th scope="col" class="px-6 py-4">Edad / Género</th>
+              <th scope="col" class="px-6 py-4">Contacto</th>
+              <th scope="col" class="px-6 py-4">Tipo Sangre</th>
+              <th scope="col" class="px-6 py-4">Estado</th>
+              <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#E8EDF4]">
+            <tr *ngFor="let patient of patientService.patients()" class="hover:bg-slate-50/80 transition-colors">
+              <!-- Paciente (Avatar + Nombres) -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#049CAB] to-[#25627C] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    {{ patient.nombres.charAt(0) }}{{ patient.apellidos.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="font-semibold text-[#293954] hover:text-[#049CAB] transition">
+                      <a [routerLink]="['/pacientes', patient.id_paciente]">{{ patient.nombres }} {{ patient.apellidos }}</a>
+                    </div>
+                    <div class="text-xs text-gray-400">{{ patient.correo || 'Sin correo' }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- CI -->
+              <td class="px-6 py-4 font-mono font-medium text-gray-700">
+                {{ patient.ci }} <span *ngIf="patient.complemento" class="text-xs text-gray-400">({{ patient.complemento }})</span>
+              </td>
+
+              <!-- Edad / Genero -->
+              <td class="px-6 py-4">
+                <div>{{ calculateAge(patient.fecha_nacimiento) }} años</div>
+                <div class="text-xs text-gray-400">
+                  <span *ngIf="patient.genero === 'M'">Masculino</span>
+                  <span *ngIf="patient.genero === 'F'">Femenino</span>
+                  <span *ngIf="patient.genero === 'OTRO'">Otro</span>
+                </div>
+              </td>
+
+              <!-- Contacto -->
+              <td class="px-6 py-4">
+                <div class="font-medium text-gray-700">{{ patient.telefono }}</div>
+                <div class="text-xs text-gray-400 truncate max-w-[150px]">{{ patient.ciudad || 'Santa Cruz' }}</div>
+              </td>
+
+              <!-- Tipo de Sangre -->
+              <td class="px-6 py-4">
+                <span *ngIf="patient.tipo_sangre" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                  {{ patient.tipo_sangre }}
+                </span>
+                <span *ngIf="!patient.tipo_sangre" class="text-xs text-gray-400">N/A</span>
+              </td>
+
+              <!-- Estado -->
+              <td class="px-6 py-4">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-emerald-50 text-emerald-700 border border-emerald-200': patient.estado === 'ACTIVO',
+                    'bg-gray-100 text-gray-700 border border-gray-200': patient.estado === 'INACTIVO',
+                    'bg-amber-50 text-amber-700 border border-amber-200': patient.estado === 'SUSPENDIDO'
+                  }"
+                >
+                  {{ patient.estado }}
+                </span>
+              </td>
+
+              <!-- Acciones -->
+              <td class="px-6 py-4 text-right space-x-2">
+                <a
+                  [routerLink]="['/pacientes', patient.id_paciente]"
+                  title="Ver Expediente"
+                  class="inline-flex p-2 text-gray-500 hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </a>
+                <a
+                  [routerLink]="['/pacientes', patient.id_paciente, 'editar']"
+                  title="Editar Paciente"
+                  class="inline-flex p-2 text-gray-500 hover:text-[#25627C] hover:bg-sky-50 rounded-lg transition"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </a>
+                <button
+                  *ngIf="patient.estado === 'ACTIVO'"
+                  (click)="onDelete(patient)"
+                  title="Desactivar Paciente"
+                  class="inline-flex p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div *ngIf="!patientService.isLoading() && patientService.patients().length > 0" class="px-6 py-4 bg-white border-t border-[#E8EDF4] flex items-center justify-between">
+        <div class="text-xs text-gray-500">
+          Mostrando página <span class="font-semibold text-gray-700">{{ patientService.currentPage() }}</span> de <span class="font-semibold text-gray-700">{{ patientService.totalPages() }}</span> (<span class="font-semibold">{{ patientService.totalRecords() }}</span> pacientes registrados)
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            [disabled]="patientService.currentPage() <= 1"
+            (click)="loadPatients(patientService.currentPage() - 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            Anterior
+          </button>
+          <button
+            [disabled]="patientService.currentPage() >= patientService.totalPages()"
+            (click)="loadPatients(patientService.currentPage() + 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>
