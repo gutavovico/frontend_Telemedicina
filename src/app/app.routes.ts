@@ -65,6 +65,44 @@ export const routes: Routes = [
     title: 'Hospital San Juan de Dios - Mi Perfil Médico'
   },
   {
+    path: 'pacientes',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/medical-records/patients/patient-list/patient-list').then(
+            m => m.PatientList
+          ),
+        title: 'Hospital San Juan de Dios - Lista de Pacientes'
+      },
+      {
+        path: 'nuevo',
+        loadComponent: () =>
+          import('./features/medical-records/patients/patient-form/patient-form').then(
+            m => m.PatientForm
+          ),
+        title: 'Hospital San Juan de Dios - Nuevo Paciente'
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./features/medical-records/patients/patient-detail/patient-detail').then(
+            m => m.PatientDetail
+          ),
+        title: 'Hospital San Juan de Dios - Expediente del Paciente'
+      },
+      {
+        path: ':id/editar',
+        loadComponent: () =>
+          import('./features/medical-records/patients/patient-form/patient-form').then(
+            m => m.PatientForm
+          ),
+        title: 'Hospital San Juan de Dios - Editar Paciente'
+      }
+    ]
+  },
+  {
     path: '**',
     redirectTo: ''
   }
