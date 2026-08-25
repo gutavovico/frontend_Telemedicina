@@ -2,7 +2,7 @@ import { Injectable, inject, PLATFORM_ID, signal, computed } from '@angular/core
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, finalize, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   LoginRequest,
@@ -190,9 +190,20 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.getRefreshToken();
     this.inactivity.stop();
-    this.clearTokens();
-    this.router.navigate(['/login']);
+
+    const request$: Observable<unknown> = refreshToken
+      ? this.http.post(`${this.apiUrl}/auth/logout`, { refresh_token: refreshToken })
+      : of(null);
+
+    request$.pipe(
+      catchError(() => of(null)),
+      finalize(() => {
+        this.clearTokens();
+        this.router.navigate(['/login']);
+      })
+    ).subscribe();
   }
 
   clearTokens(): void {
