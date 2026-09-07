@@ -99,6 +99,22 @@ export const routes: Routes = [
             m => m.PatientForm
           ),
         title: 'Hospital San Juan de Dios - Editar Paciente'
+      },
+      {
+        path: ':id/hce',
+        loadComponent: () =>
+          import('./features/medical-records/hce/hce-timeline/hce-timeline').then(
+            m => m.HceTimeline
+          ),
+        title: 'Hospital San Juan de Dios - Historia Clínica Electrónica'
+      },
+      {
+        path: ':id/consultas/nueva',
+        loadComponent: () =>
+          import('./features/medical-records/hce/consulta-editor/consulta-editor').then(
+            m => m.ConsultaEditor
+          ),
+        title: 'Hospital San Juan de Dios - Registrar Consulta Médica'
       }
     ]
   },

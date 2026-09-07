@@ -1,0 +1,343 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#f8f9fa] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Navegación de migas de pan (Breadcrumb) -->
+    <nav class="flex items-center gap-2 text-sm text-[#424750]">
+      <a routerLink="/pacientes" class="hover:text-[#003667] transition flex items-center gap-1">
+        <span class="material-symbols-outlined text-[18px]">group</span>
+        Pacientes
+      </a>
+      <span>/</span>
+      <a [routerLink]="['/pacientes', idPaciente()]" class="hover:text-[#003667] transition">
+        {{ patientService.selectedPatient()?.nombres }} {{ patientService.selectedPatient()?.apellidos }}
+      </a>
+      <span>/</span>
+      <span class="font-semibold text-[#003667]">Historia Clínica Electrónica (HCE)</span>
+    </nav>
+
+    <!-- Estado de Carga -->
+    <div *ngIf="hceService.isLoading()" class="bg-white p-12 rounded-2xl shadow-level-1 border border-[#e1e3e4] text-center space-y-3">
+      <div class="inline-block w-8 h-8 border-4 border-[#003667] border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-medium text-[#003667]">Cargando expediente clínico consolidado...</p>
+    </div>
+
+    <!-- Mensaje de Error / Aislamiento Multitenant -->
+    <div *ngIf="hceService.errorMessage()" class="bg-white p-8 rounded-2xl shadow-level-1 border border-[#ba1a1a] text-center space-y-4">
+      <div class="w-14 h-14 bg-[#ffdad6] text-[#ba1a1a] rounded-full flex items-center justify-center mx-auto">
+        <span class="material-symbols-outlined text-3xl">emergency</span>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-[#191c1d]">Aviso de Acceso Clínico</h2>
+        <p class="text-sm text-[#424750] mt-1">{{ hceService.errorMessage() }}</p>
+      </div>
+      <a
+        [routerLink]="['/pacientes', idPaciente()]"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-medium rounded-xl transition shadow-level-1"
+      >
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Volver al Perfil del Paciente
+      </a>
+    </div>
+
+    <!-- Contenido Principal de HCE -->
+    <div *ngIf="!hceService.isLoading() && hceService.historiaActual()" class="space-y-6">
+
+      <!-- Cabecera del Paciente y Número HCE -->
+      <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-level-1 border border-[#e1e3e4] flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#003667] to-[#0a4d8c] text-white flex items-center justify-center font-bold text-2xl sm:text-3xl shadow-level-2 shrink-0">
+            {{ patientService.selectedPatient()?.nombres?.charAt(0) || 'P' }}{{ patientService.selectedPatient()?.apellidos?.charAt(0) || 'T' }}
+          </div>
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-3">
+              <h1 class="text-2xl sm:text-3xl font-bold text-[#191c1d]">
+                {{ patientService.selectedPatient()?.nombres || 'Paciente' }} {{ patientService.selectedPatient()?.apellidos || ('#' + idPaciente()) }}
+              </h1>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#d4e3ff] text-[#001c3a] border border-[#a5c8ff]">
+                N° {{ hceService.historiaActual()?.numero_historia || 'HCE-2026-000001' }}
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-[#424750]">
+              <span class="font-mono bg-[#f3f4f5] px-2 py-0.5 rounded text-[#191c1d]">
+                C.I.: {{ patientService.selectedPatient()?.ci || 'S/N' }}
+              </span>
+              <span>•</span>
+              <span>{{ calculateAge(patientService.selectedPatient()?.fecha_nacimiento) }} años</span>
+              <span>•</span>
+              <span>
+                {{ patientService.selectedPatient()?.genero === 'M' ? 'Masculino' : (patientService.selectedPatient()?.genero === 'F' ? 'Femenino' : 'Otro') }}
+              </span>
+              <span>•</span>
+              <span>Grupo Sanguíneo: <strong>{{ patientService.selectedPatient()?.tipo_sangre || 'No registrado' }}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="flex flex-wrap items-center gap-3">
+          <a
+            *ngIf="authService.isDoctor()"
+            [routerLink]="['/pacientes', idPaciente(), 'consultas', 'nueva']"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-semibold rounded-xl shadow-level-1 hover:shadow-level-2 transition"
+          >
+            <span class="material-symbols-outlined text-[20px]">add_notes</span>
+            Nueva Atención / Evolución
+          </a>
+          <a
+            [routerLink]="['/pacientes', idPaciente()]"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#f3f4f5] hover:bg-[#edeeef] text-[#191c1d] text-sm font-medium rounded-xl border border-[#c2c6d2] transition"
+          >
+            <span class="material-symbols-outlined text-[18px]">person</span>
+            Ver Perfil
+          </a>
+        </div>
+      </div>
+
+      <!-- ALERTA ROJA MÉDICA: Alergias -->
+      <div
+        *ngIf="hceService.historiaActual()?.alergias || patientService.selectedPatient()?.alergias"
+        class="bg-[#ffdad6] border-2 border-[#ba1a1a] p-4 sm:p-5 rounded-2xl flex items-start gap-4 shadow-level-1 animate-pulse"
+      >
+        <span class="material-symbols-outlined text-[#ba1a1a] text-3xl shrink-0 mt-0.5">warning</span>
+        <div class="space-y-1">
+          <h3 class="text-sm font-bold text-[#93000a] uppercase tracking-wide">
+            Alerta Crítica: Alergias Registradas
+          </h3>
+          <p class="text-sm font-medium text-[#410002]">
+            {{ hceService.historiaActual()?.alergias || patientService.selectedPatient()?.alergias }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Cuadrícula de Antecedentes Base del Paciente -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Antecedentes Personales -->
+        <div class="bg-white p-5 rounded-2xl border border-[#e1e3e4] shadow-level-1 space-y-2">
+          <div class="flex items-center gap-2 text-[#003667] font-semibold text-sm">
+            <span class="material-symbols-outlined text-[20px]">personal_injury</span>
+            <h4>Antecedentes Personales</h4>
+          </div>
+          <p class="text-sm text-[#424750]">
+            {{ hceService.historiaActual()?.antecedentes_personales || patientService.selectedPatient()?.antecedentes_patologicos || 'Sin antecedentes patológicos relevantes.' }}
+          </p>
+        </div>
+
+        <!-- Antecedentes Familiares -->
+        <div class="bg-white p-5 rounded-2xl border border-[#e1e3e4] shadow-level-1 space-y-2">
+          <div class="flex items-center gap-2 text-[#003667] font-semibold text-sm">
+            <span class="material-symbols-outlined text-[20px]">family_history</span>
+            <h4>Antecedentes Familiares</h4>
+          </div>
+          <p class="text-sm text-[#424750]">
+            {{ hceService.historiaActual()?.antecedentes_familiares || 'No se han reportado antecedentes hereditarios.' }}
+          </p>
+        </div>
+
+        <!-- Hábitos / Estilo de Vida -->
+        <div class="bg-white p-5 rounded-2xl border border-[#e1e3e4] shadow-level-1 space-y-2">
+          <div class="flex items-center gap-2 text-[#003667] font-semibold text-sm">
+            <span class="material-symbols-outlined text-[20px]">vital_signs</span>
+            <h4>Hábitos y Factores de Riesgo</h4>
+          </div>
+          <p class="text-sm text-[#424750]">
+            {{ hceService.historiaActual()?.habitos || 'No se registran hábitos de riesgo (tabaco, alcohol, sedentarismo).' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Barra de Filtros y Búsqueda de Consultas -->
+      <div class="bg-white p-4 rounded-2xl border border-[#e1e3e4] shadow-level-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-[#003667] text-2xl">timeline</span>
+          <h2 class="text-lg font-bold text-[#191c1d]">
+            Línea de Tiempo de Atenciones Clínicas ({{ consultasFiltradas().length }})
+          </h2>
+        </div>
+
+        <div class="relative w-full sm:w-80">
+          <input
+            type="text"
+            [(ngModel)]="filtroTexto"
+            placeholder="Buscar por motivo, CIE-10 o síntoma..."
+            class="w-full pl-10 pr-4 py-2 bg-[#f8f9fa] border border-[#c2c6d2] rounded-xl text-sm focus:outline-none focus:border-[#003667] transition"
+          />
+          <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#727781] text-[18px]">search</span>
+        </div>
+      </div>
+
+      <!-- Lista Cronológica de Consultas (Timeline) -->
+      <div *ngIf="consultasFiltradas().length === 0" class="bg-white p-12 rounded-2xl border border-[#e1e3e4] text-center space-y-3">
+        <div class="w-16 h-16 bg-[#f3f4f5] text-[#727781] rounded-full flex items-center justify-center mx-auto">
+          <span class="material-symbols-outlined text-3xl">clinical_notes</span>
+        </div>
+        <h3 class="text-base font-bold text-[#191c1d]">Sin Consultas Médicas Registradas</h3>
+        <p class="text-sm text-[#424750] max-w-md mx-auto">
+          No se encontraron evoluciones clínicas con los criterios especificados.
+        </p>
+        <a
+          *ngIf="authService.isDoctor()"
+          [routerLink]="['/pacientes', idPaciente(), 'consultas', 'nueva']"
+          class="inline-flex items-center gap-2 px-5 py-2 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-semibold rounded-xl transition mt-2"
+        >
+          <span class="material-symbols-outlined text-[18px]">add_notes</span>
+          Registrar la Primera Consulta
+        </a>
+      </div>
+
+      <!-- Tarjetas de Consultas Médicas -->
+      <div *ngIf="consultasFiltradas().length > 0" class="space-y-4">
+        <div
+          *ngFor="let c of consultasFiltradas(); let i = index"
+          class="bg-white rounded-2xl border border-[#e1e3e4] shadow-level-1 overflow-hidden transition hover:border-[#003667]/40"
+        >
+          <!-- Encabezado de la Consulta -->
+          <div
+            (click)="toggleDetalle(c.id_consulta)"
+            class="p-5 sm:p-6 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#f8f9fa] border-b border-[#e1e3e4]/60 hover:bg-[#f3f4f5] transition"
+          >
+            <div class="flex items-start sm:items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-[#003667] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                #{{ consultasFiltradas().length - i }}
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-base font-bold text-[#191c1d]">
+                    {{ c.motivo_consulta }}
+                  </h3>
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#e7e8e9] text-[#424750]">
+                    Cita N° {{ c.id_cita }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-[#424750]">
+                  <span class="material-symbols-outlined text-[15px]">event</span>
+                  <span>{{ c.fecha_consulta | date:'fullDate' }} a las {{ c.fecha_consulta | date:'shortTime' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 self-end sm:self-center">
+              <span class="material-symbols-outlined text-[#727781] transition-transform duration-200" [class.rotate-180]="consultaExpandidaId() === c.id_consulta">
+                expand_more
+              </span>
+            </div>
+          </div>
+
+          <!-- Resumen Rápido de Diagnósticos CIE-10 -->
+          <div class="px-6 py-3 bg-white border-b border-[#e1e3e4]/40 flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-[#727781] uppercase tracking-wider mr-2">Diagnósticos:</span>
+            <div *ngFor="let d of c.diagnosticos" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+                 [ngClass]="{
+                   'bg-[#d4e3ff] text-[#001c3a] border border-[#a5c8ff]': d.tipo === 'DEFINITIVO',
+                   'bg-[#fef3c7] text-[#92400e] border border-[#fde68a]': d.tipo === 'PRESUNTIVO',
+                   'bg-[#f3e8ff] text-[#6b21a8] border border-[#e9d5ff]': d.tipo === 'REPETITIVO'
+                 }">
+              <span class="font-mono font-bold">[{{ d.codigo_cie }}]</span>
+              <span>{{ d.descripcion }}</span>
+              <span class="text-[10px] uppercase opacity-75 font-normal">({{ d.tipo }})</span>
+            </div>
+          </div>
+
+          <!-- Cuerpo Expandible de la Consulta -->
+          <div *ngIf="consultaExpandidaId() === c.id_consulta" class="p-6 space-y-6 animate-fadeIn">
+
+            <!-- Tira Biométrica de Signos Vitales -->
+            <div *ngIf="c.signos_vitales" class="space-y-2">
+              <h4 class="text-xs font-bold text-[#003667] uppercase tracking-wider flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">monitor_heart</span>
+                Signos Vitales y Biometría
+              </h4>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center">
+                <!-- Presión Arterial -->
+                <div class="p-3 rounded-xl border text-xs font-medium" [ngClass]="getClasePresion(c.signos_vitales.presion_sistolica_mmhg, c.signos_vitales.presion_diastolica_mmhg)">
+                  <p class="text-[11px] opacity-75">Presión Arterial</p>
+                  <p class="text-base font-bold">
+                    {{ c.signos_vitales.presion_sistolica_mmhg || '--' }}/{{ c.signos_vitales.presion_diastolica_mmhg || '--' }}
+                  </p>
+                  <p class="text-[10px]">mmHg</p>
+                </div>
+
+                <!-- Frecuencia Cardíaca -->
+                <div class="p-3 rounded-xl border bg-gray-50 border-gray-200 text-xs font-medium">
+                  <p class="text-[11px] text-gray-500">Frecuencia Cardíaca</p>
+                  <p class="text-base font-bold text-gray-800">{{ c.signos_vitales.frecuencia_cardiaca_lpm || '--' }}</p>
+                  <p class="text-[10px] text-gray-500">lpm</p>
+                </div>
+
+                <!-- Temperatura -->
+                <div class="p-3 rounded-xl border text-xs font-medium" [ngClass]="getClaseTemperatura(c.signos_vitales.temperatura_corporal_c)">
+                  <p class="text-[11px] opacity-75">Temperatura</p>
+                  <p class="text-base font-bold">{{ c.signos_vitales.temperatura_corporal_c || '--' }}</p>
+                  <p class="text-[10px]">°C</p>
+                </div>
+
+                <!-- Saturación SpO2 -->
+                <div class="p-3 rounded-xl border text-xs font-medium" [ngClass]="getClaseSpo2(c.signos_vitales.saturacion_oxigeno_pct)">
+                  <p class="text-[11px] opacity-75">Saturación SpO2</p>
+                  <p class="text-base font-bold">{{ c.signos_vitales.saturacion_oxigeno_pct || '--' }}%</p>
+                  <p class="text-[10px]">Oxígeno</p>
+                </div>
+
+                <!-- Peso / Talla -->
+                <div class="p-3 rounded-xl border bg-gray-50 border-gray-200 text-xs font-medium">
+                  <p class="text-[11px] text-gray-500">Peso / Talla</p>
+                  <p class="text-sm font-bold text-gray-800">
+                    {{ c.signos_vitales.peso_kg || '--' }} kg / {{ c.signos_vitales.talla_cm || '--' }} cm
+                  </p>
+                </div>
+
+                <!-- IMC -->
+                <div class="p-3 rounded-xl border text-xs font-medium" [ngClass]="getClaseImc(c.signos_vitales.indice_masa_corporal)">
+                  <p class="text-[11px] opacity-75">Índice Masa (IMC)</p>
+                  <p class="text-base font-bold">{{ c.signos_vitales.indice_masa_corporal || '--' }}</p>
+                  <p class="text-[10px]">{{ getEtiquetaImc(c.signos_vitales.indice_masa_corporal) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Síntomas y Examen Físico -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-[#f8f9fa] p-4 rounded-xl border border-[#e1e3e4]">
+                <h5 class="text-xs font-bold text-[#424750] uppercase tracking-wider mb-1">Síntomas Actuales:</h5>
+                <p class="text-sm text-[#191c1d] leading-relaxed">{{ c.sintomas }}</p>
+              </div>
+              <div *ngIf="c.examen_fisico" class="bg-[#f8f9fa] p-4 rounded-xl border border-[#e1e3e4]">
+                <h5 class="text-xs font-bold text-[#424750] uppercase tracking-wider mb-1">Examen Físico:</h5>
+                <p class="text-sm text-[#191c1d] leading-relaxed">{{ c.examen_fisico }}</p>
+              </div>
+            </div>
+
+            <!-- Evolución SOAP -->
+            <div class="bg-blue-50/40 p-5 rounded-xl border border-blue-100 space-y-1">
+              <h5 class="text-xs font-bold text-[#003667] uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[18px]">clinical_notes</span>
+                Nota de Evolución Clínica (SOAP):
+              </h5>
+              <p class="text-sm text-[#191c1d] leading-relaxed whitespace-pre-line">{{ c.evolucion }}</p>
+            </div>
+
+            <!-- Plan Terapéutico y Tratamiento -->
+            <div class="bg-emerald-50/40 p-5 rounded-xl border border-emerald-100 space-y-1">
+              <h5 class="text-xs font-bold text-[#006b5f] uppercase tracking-wider flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[18px]">prescriptions</span>
+                Plan Médico e Indicaciones:
+              </h5>
+              <p class="text-sm text-[#191c1d] leading-relaxed whitespace-pre-line">{{ c.plan_medico }}</p>
+            </div>
+
+            <!-- Observaciones adicionales si existen -->
+            <div *ngIf="c.observaciones" class="text-xs text-[#727781] italic border-t pt-3">
+              Observaciones: {{ c.observaciones }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<app-footer></app-footer>
