@@ -1,0 +1,26 @@
+<div class="document-viewer">
+  <!-- Estado de Carga -->
+  <div *ngIf="isLoading()" class="py-16 text-center space-y-3">
+    <div class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-sm font-medium text-[#25627C]">Cargando documento...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!isLoading() && errorMessage()" class="py-12 text-center space-y-3">
+    <span class="material-symbols-outlined text-[40px] text-rose-400">picture_as_pdf</span>
+    <p class="text-sm font-medium text-rose-600">{{ errorMessage() }}</p>
+  </div>
+
+  <!-- Visor PDF (ng2-pdf-viewer) -->
+  <div *ngIf="!isLoading() && !errorMessage() && pdfSrc()" class="bg-[#F0F5FB] rounded-xl border border-[#E8EDF4] overflow-auto max-h-[80vh]">
+    <pdf-viewer
+      [src]="pdfSrc() ?? undefined"
+      [render-text]="renderText"
+      [zoom]="zoom"
+      [show-all]="true"
+      [original-size]="false"
+      [render-text-mode]="0"
+      class="min-w-full"
+    ></pdf-viewer>
+  </div>
+</div>

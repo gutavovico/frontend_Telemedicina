@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "pdf.worker.min.mjs",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/assets"
               }
             ],
             "styles": [
@@ -31,7 +36,7 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": ["localhost:4200", "127.0.0.1:4200", "localhost", "127.0.0.1"]
             },
             "ssr": {
               "entry": "src/server.ts"
@@ -74,7 +79,25 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runner": "vitest",
+            "include": ["src/**/*.vitest.ts", "src/**/*.spec.ts"],
+            "coverage": true,
+            "coverageReporters": ["text-summary", "text"],
+            "coverageInclude": [
+              "src/app/features/medical-records/documents/services/**/*.ts",
+              "src/app/features/medical-records/documents/guards/**/*.ts",
+              "src/app/features/medical-records/documents/pipes/**/*.ts",
+              "src/app/features/medical-records/documents/models/**/*.ts"
+            ],
+            "coverageThresholds": {
+              "statements": 70,
+              "branches": 70,
+              "functions": 70,
+              "lines": 70
+            }
+          }
         }
       }
     }

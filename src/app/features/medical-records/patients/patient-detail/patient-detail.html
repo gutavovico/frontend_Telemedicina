@@ -1,0 +1,285 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Loading State -->
+    <div *ngIf="patientService.isLoading()" class="bg-white p-12 rounded-2xl shadow-sm border border-[#E8EDF4] text-center space-y-3">
+      <div class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm font-medium text-[#25627C]">Cargando expediente del paciente...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMessage()" class="bg-white p-8 rounded-2xl shadow-sm border border-rose-200 text-center space-y-4">
+      <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-lg font-bold text-[#293954]">Expediente No Encontrado</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ errorMessage() }}</p>
+      </div>
+      <a
+        routerLink="/pacientes"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white text-sm font-medium rounded-xl transition shadow-sm"
+      >
+        Volver a la Lista de Pacientes
+      </a>
+    </div>
+
+    <!-- Contenido del Expediente -->
+    <div *ngIf="!patientService.isLoading() && patientService.selectedPatient()" class="space-y-6">
+
+      <!-- Cabecera / Perfil Card -->
+      <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex items-center gap-5">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#049CAB] to-[#25627C] text-white flex items-center justify-center font-bold text-2xl sm:text-3xl shadow-md shrink-0">
+            {{ patientService.selectedPatient()?.nombres?.charAt(0) }}{{ patientService.selectedPatient()?.apellidos?.charAt(0) }}
+          </div>
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-3">
+              <h1 class="text-2xl sm:text-3xl font-bold text-[#293954]">
+                {{ patientService.selectedPatient()?.nombres }} {{ patientService.selectedPatient()?.apellidos }}
+              </h1>
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                [ngClass]="{
+                  'bg-emerald-50 text-emerald-700 border border-emerald-200': patientService.selectedPatient()?.estado === 'ACTIVO',
+                  'bg-gray-100 text-gray-700 border border-gray-200': patientService.selectedPatient()?.estado === 'INACTIVO',
+                  'bg-amber-50 text-amber-700 border border-amber-200': patientService.selectedPatient()?.estado === 'SUSPENDIDO'
+                }"
+              >
+                {{ patientService.selectedPatient()?.estado }}
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-500">
+              <span class="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                C.I.: {{ patientService.selectedPatient()?.ci }}
+                <span *ngIf="patientService.selectedPatient()?.complemento"> ({{ patientService.selectedPatient()?.complemento }})</span>
+              </span>
+              <span>•</span>
+              <span>{{ calculateAge(patientService.selectedPatient()?.fecha_nacimiento) }} años</span>
+              <span>•</span>
+              <span>
+                <span *ngIf="patientService.selectedPatient()?.genero === 'M'">Masculino</span>
+                <span *ngIf="patientService.selectedPatient()?.genero === 'F'">Femenino</span>
+                <span *ngIf="patientService.selectedPatient()?.genero === 'OTRO'">Otro</span>
+              </span>
+              <span>•</span>
+              <span class="text-gray-400">Expediente #{{ patientService.selectedPatient()?.id_paciente }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 self-end md:self-auto">
+          <a
+            [routerLink]="['/pacientes', patientService.selectedPatient()?.id_paciente, 'documentos']"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl shadow-sm hover:shadow transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span>Documentos Clínicos</span>
+          </a>
+          <a
+            [routerLink]="['/pacientes', patientService.selectedPatient()?.id_paciente, 'editar']"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white text-sm font-medium rounded-xl shadow-sm hover:shadow transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <span>Editar Expediente</span>
+          </a>
+          <a
+            routerLink="/pacientes"
+            class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition"
+          >
+            <span>Volver</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Navegación de Pestañas (Tabs) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-2 flex gap-2">
+        <button
+          (click)="setTab('general')"
+          class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2"
+          [ngClass]="{
+            'bg-[#049CAB] text-white shadow-sm': activeTab() === 'general',
+            'text-gray-600 hover:bg-gray-100': activeTab() !== 'general'
+          }"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span>Datos Generales</span>
+        </button>
+
+        <button
+          (click)="setTab('clinico')"
+          class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2"
+          [ngClass]="{
+            'bg-[#049CAB] text-white shadow-sm': activeTab() === 'clinico',
+            'text-gray-600 hover:bg-gray-100': activeTab() !== 'clinico'
+          }"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+          <span>Historial Clínico Base</span>
+        </button>
+
+        <button
+          (click)="setTab('emergencia')"
+          class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2"
+          [ngClass]="{
+            'bg-[#049CAB] text-white shadow-sm': activeTab() === 'emergencia',
+            'text-gray-600 hover:bg-gray-100': activeTab() !== 'emergencia'
+          }"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span>Emergencia y Seguro</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Datos Generales -->
+      <div *ngIf="activeTab() === 'general'" class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 sm:p-8 space-y-6">
+        <h3 class="text-lg font-bold text-[#293954] border-b border-[#E8EDF4] pb-3">Información de Contacto y Ubicación</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Teléfono / Celular</div>
+            <div class="text-sm font-semibold text-[#293954]">{{ patientService.selectedPatient()?.telefono || 'No registrado' }}</div>
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Correo Electrónico</div>
+            <div class="text-sm font-semibold text-[#293954]">{{ patientService.selectedPatient()?.correo || 'No registrado' }}</div>
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Fecha de Nacimiento</div>
+            <div class="text-sm font-semibold text-[#293954]">{{ patientService.selectedPatient()?.fecha_nacimiento }}</div>
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Dirección de Residencia</div>
+            <div class="text-sm font-semibold text-[#293954]">{{ patientService.selectedPatient()?.direccion || 'No registrada' }}</div>
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Ciudad / Localidad</div>
+            <div class="text-sm font-semibold text-[#293954]">{{ patientService.selectedPatient()?.ciudad || 'Santa Cruz de la Sierra' }}</div>
+          </div>
+          <div class="space-y-1">
+            <div class="text-xs font-medium text-gray-400 uppercase tracking-wider">Cuenta de Usuario Asociada</div>
+            <div class="text-sm font-semibold text-[#293954]">
+              {{ patientService.selectedPatient()?.id_usuario ? ('Usuario #' + patientService.selectedPatient()?.id_usuario) : 'Sin cuenta vinculada' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Historial Clínico Base -->
+      <div *ngIf="activeTab() === 'clinico'" class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 sm:p-8 space-y-6">
+        <h3 class="text-lg font-bold text-[#293954] border-b border-[#E8EDF4] pb-3">Perfil Clínico Base</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          
+          <!-- Tipo de Sangre Card -->
+          <div class="sm:col-span-2 bg-[#F0F5FB]/60 p-4 rounded-xl border border-[#E8EDF4] flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg">
+                🩸
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 uppercase font-semibold">Grupo Sanguíneo y Factor Rh</div>
+                <div class="text-lg font-bold text-[#293954]">{{ patientService.selectedPatient()?.tipo_sangre || 'No especificado' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alergias -->
+          <div class="space-y-2 bg-slate-50 p-5 rounded-xl border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-rose-600 font-semibold text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Alergias y Reacciones Adversas</span>
+            </div>
+            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+              {{ patientService.selectedPatient()?.alergias || 'Ninguna alergia registrada en el expediente.' }}
+            </p>
+          </div>
+
+          <!-- Antecedentes Patológicos -->
+          <div class="space-y-2 bg-slate-50 p-5 rounded-xl border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-[#25627C] font-semibold text-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <span>Antecedentes Patológicos / Patologías de Base</span>
+            </div>
+            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+              {{ patientService.selectedPatient()?.antecedentes_patologicos || 'Sin antecedentes patológicos relevantes reportados.' }}
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab 3: Contacto de Emergencia y Seguro -->
+      <div *ngIf="activeTab() === 'emergencia'" class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 sm:p-8 space-y-6">
+        <h3 class="text-lg font-bold text-[#293954] border-b border-[#E8EDF4] pb-3">Información de Seguro y Contacto de Urgencia</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- Seguro Médico -->
+          <div class="space-y-4 bg-teal-50/40 p-5 rounded-xl border border-teal-100">
+            <h4 class="text-sm font-bold text-[#049CAB] flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              <span>Seguro de Salud / Convenio</span>
+            </h4>
+            <div class="space-y-2 text-sm">
+              <div>
+                <span class="text-xs text-gray-400 block">Institución / Aseguradora:</span>
+                <span class="font-semibold text-[#293954]">{{ patientService.selectedPatient()?.seguro_medico || 'Particular / Sin seguro' }}</span>
+              </div>
+              <div>
+                <span class="text-xs text-gray-400 block">Número de Matrícula / Póliza:</span>
+                <span class="font-semibold text-[#293954]">{{ patientService.selectedPatient()?.numero_seguro || 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contacto de Emergencia -->
+          <div class="space-y-4 bg-amber-50/40 p-5 rounded-xl border border-amber-100">
+            <h4 class="text-sm font-bold text-amber-800 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Contacto en Caso de Emergencia</span>
+            </h4>
+            <div class="space-y-2 text-sm">
+              <div>
+                <span class="text-xs text-gray-400 block">Nombre del Contacto / Tutor:</span>
+                <span class="font-semibold text-[#293954]">{{ patientService.selectedPatient()?.contacto_emergencia_nombre || 'No registrado' }}</span>
+              </div>
+              <div>
+                <span class="text-xs text-gray-400 block">Teléfono de Contacto:</span>
+                <span class="font-semibold text-[#293954]">{{ patientService.selectedPatient()?.contacto_emergencia_telefono || 'No registrado' }}</span>
+              </div>
+              <div>
+                <span class="text-xs text-gray-400 block">Parentesco:</span>
+                <span class="font-semibold text-[#293954]">{{ patientService.selectedPatient()?.contacto_emergencia_parentesco || 'No especificado' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<app-footer></app-footer>
