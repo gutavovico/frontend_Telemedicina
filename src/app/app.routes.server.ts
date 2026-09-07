@@ -23,6 +23,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    path: 'pacientes/:id/hce',
+    renderMode: RenderMode.Server
+  },
+  {
+    path: 'pacientes/:id/consultas/nueva',
+    renderMode: RenderMode.Server
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

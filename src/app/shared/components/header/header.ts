@@ -56,12 +56,8 @@ export class Header {
   }
 
   goToMedicos(): void {
+    this.closeDropdown();
     this.closeMobileMenu();
-    // CU04: el doctor solo gestiona su propio perfil; admin ve el listado completo
-    if (this.authService.isDoctor()) {
-      this.router.navigate(['/mi-perfil-medico']);
-      return;
-    }
     this.router.navigate(['/medicos']);
   }
 

@@ -6,10 +6,11 @@ import { EspecialidadCreate, EspecialidadResponse, MedicoResponse } from '../../
 import { MedicoService } from '../../../core/services/medico.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Header } from '../../../shared/components/header/header';
+import { DoctorDashboard } from '../doctor-dashboard/doctor-dashboard';
 
 @Component({
   selector: 'app-medicos-list',
-  imports: [CommonModule, FormsModule, RouterLink, Header],
+  imports: [CommonModule, FormsModule, RouterLink, Header, DoctorDashboard],
   templateUrl: './medicos-list.html',
   styleUrl: './medicos-list.css'
 })
@@ -41,18 +42,16 @@ export class MedicosList implements OnInit {
   filtroEstado = 'activo';
 
   ngOnInit(): void {
-    // CU04: el módulo es exclusivo de administradores y médicos.
-    // El médico se redirige a su propio perfil; cualquier otro usuario sale del módulo.
-    if (this.authService.isDoctor()) {
-      this.router.navigate(['/mi-perfil-medico']);
-      return;
-    }
-    if (!this.authService.isAdmin()) {
+    // CU04: El módulo está disponible para administradores y médicos
+    if (!this.authService.isAdmin() && !this.authService.isDoctor()) {
       this.router.navigate(['/']);
       return;
     }
-    this.cargarEspecialidades();
-    this.cargarMedicos();
+    // Si es Administrador, cargamos la gestión de médicos y catálogo administrativo
+    if (this.authService.isAdmin()) {
+      this.cargarEspecialidades();
+      this.cargarMedicos();
+    }
   }
 
   abrirFormEspecialidad(): void {
