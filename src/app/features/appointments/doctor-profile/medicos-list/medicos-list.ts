@@ -2,10 +2,10 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { EspecialidadCreate, EspecialidadResponse, MedicoResponse } from '../../../core/models/medico.models';
-import { MedicoService } from '../../../core/services/medico.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Header } from '../../../shared/components/header/header';
+import { EspecialidadCreate, EspecialidadResponse, MedicoResponse } from '../../../../core/models/medico.models';
+import { MedicoService } from '../../../../core/services/medico.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { Header } from '../../../../shared/components/header/header';
 
 @Component({
   selector: 'app-medicos-list',

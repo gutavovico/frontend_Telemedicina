@@ -1,10 +1,10 @@
 import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EspecialidadResponse, MedicoCreate, MedicoResponse, MedicoUpdate } from '../../../core/models/medico.models';
-import { RegisterRequest } from '../../../core/models/auth.models';
-import { MedicoService } from '../../../core/services/medico.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { EspecialidadResponse, MedicoCreate, MedicoResponse, MedicoUpdate } from '../../../../core/models/medico.models';
+import { RegisterRequest } from '../../../../core/models/auth.models';
+import { MedicoService } from '../../../../core/services/medico.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-medico-form',

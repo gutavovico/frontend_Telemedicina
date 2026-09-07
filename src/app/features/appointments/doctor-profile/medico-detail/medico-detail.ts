@@ -7,11 +7,11 @@ import {
   EspecialidadCreate,
   EspecialidadResponse,
   MedicoResponse
-} from '../../../core/models/medico.models';
-import { MedicoService } from '../../../core/services/medico.service';
-import { AuthService } from '../../../core/services/auth.service';
+} from '../../../../core/models/medico.models';
+import { MedicoService } from '../../../../core/services/medico.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { MedicoForm } from '../medico-form/medico-form';
-import { Header } from '../../../shared/components/header/header';
+import { Header } from '../../../../shared/components/header/header';
 
 @Component({
   selector: 'app-medico-detail',

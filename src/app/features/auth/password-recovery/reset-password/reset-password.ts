@@ -10,7 +10,7 @@ import {
   Validators
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 /**
  * Validador de coincidencia entre contraseña y confirmación.
@@ -48,7 +48,7 @@ export class ResetPassword {
     {
       correo: ['', [Validators.required, Validators.email]],
       codigo: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
-      nueva_password: ['', [Validators.required, Validators.minLength(6)]],
+      nueva_password: ['', [Validators.required, Validators.minLength(8)]],
       confirmar_password: ['', [Validators.required]]
     },
     { validators: passwordMatchValidator }
@@ -81,7 +81,7 @@ export class ResetPassword {
     if (!pwd) return { level: 0, label: '', color: 'bg-outline-variant' };
 
     let score = 0;
-    if (pwd.length >= 6) score += 1;
+    if (pwd.length >= 8) score += 1;
     if (pwd.length >= 10) score += 1;
     if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score += 1;
     if (/\d/.test(pwd) || /[^A-Za-z0-9]/.test(pwd)) score += 1;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
-import { Permission, Role } from '../../../core/models/role.models';
+import { Permission, Role } from '../../../../core/models/role.models';
 
 @Component({
   selector: 'app-role-permissions-form',

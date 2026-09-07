@@ -3,9 +3,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Header } from '../../../shared/components/header/header';
-import { AdminUser, AdminUserCreate, AdminUserStatusUpdate, AdminUserUpdate, UserRole } from '../../../core/models/user.models';
-import { UsersService } from '../../../core/services/users.service';
+import { Header } from '../../../../shared/components/header/header';
+import { AdminUser, AdminUserCreate, AdminUserStatusUpdate, AdminUserUpdate, UserRole } from '../../../../core/models/user.models';
+import { UsersService } from '../../../../core/services/users.service';
 import { UserForm, UserFormMode, UserFormSubmitEvent } from '../user-form/user-form';
 
 const USERS_PER_PAGE = 6;

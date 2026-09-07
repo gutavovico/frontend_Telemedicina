@@ -4,7 +4,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { Header } from '../../../shared/components/header/header';
+import { Header } from '../../../../shared/components/header/header';
 import {
   Permission,
   Role,
@@ -13,9 +13,9 @@ import {
   RolePermissionsUpdate,
   RoleStatusUpdate,
   RoleUpdate
-} from '../../../core/models/role.models';
-import { PermissionsService } from '../../../core/services/permissions.service';
-import { RolesService } from '../../../core/services/roles.service';
+} from '../../../../core/models/role.models';
+import { PermissionsService } from '../../../../core/services/permissions.service';
+import { RolesService } from '../../../../core/services/roles.service';
 import { RoleForm, RoleFormMode, RoleFormSubmitEvent } from '../role-form/role-form';
 import { RolePermissionsForm } from '../role-permissions-form/role-permissions-form';
 

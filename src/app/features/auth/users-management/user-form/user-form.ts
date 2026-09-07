@@ -9,7 +9,7 @@ import {
   ValidatorFn,
   Validators
 } from '@angular/forms';
-import { AdminUser, AdminUserCreate, AdminUserUpdate, UserRole } from '../../../core/models/user.models';
+import { AdminUser, AdminUserCreate, AdminUserUpdate, UserRole } from '../../../../core/models/user.models';
 
 export type UserFormMode = 'create' | 'edit';
 

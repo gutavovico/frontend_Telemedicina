@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Role, RoleCreate, RoleUpdate } from '../../../core/models/role.models';
+import { Role, RoleCreate, RoleUpdate } from '../../../../core/models/role.models';
 
 export type RoleFormMode = 'create' | 'edit';
 
