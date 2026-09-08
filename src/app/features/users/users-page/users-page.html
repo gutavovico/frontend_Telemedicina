@@ -1,18 +1,14 @@
-<div class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(165,200,255,0.18),_transparent_32%),linear-gradient(180deg,_rgba(248,249,250,1)_0%,_rgba(243,244,245,1)_100%)]">
-  <app-header></app-header>
-
-  <main class="pt-28 pb-12 px-margin-mobile md:px-margin-desktop">
-    <div class="max-w-container-max mx-auto">
-      <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-3">
-          <div class="flex items-center gap-2 text-sm">
-            <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
-              <span class="material-symbols-outlined text-[16px]">home</span>
-              Inicio
-            </a>
-            <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
-            <span class="text-primary font-medium">Usuarios</span>
-          </div>
+<div class="space-y-6">
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-2 text-sm">
+        <a routerLink="/admin/dashboard" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+          <span class="material-symbols-outlined text-[16px]">dashboard</span>
+          Dashboard
+        </a>
+        <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+        <span class="text-primary font-medium">Usuarios</span>
+      </div>
 
           <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
             <div>
@@ -252,8 +248,6 @@
           }
         </section>
       </div>
-    </div>
-  </main>
 
   <app-user-form
     [visible]="isFormOpen()"

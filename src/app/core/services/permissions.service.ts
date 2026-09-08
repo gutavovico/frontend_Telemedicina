@@ -7,12 +7,14 @@ import {
   RolePermissionAssignment,
   RolePermissionsUpdate
 } from '../models/role.models';
+import { TenantService } from './tenant.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PermissionsService {
   private readonly http = inject(HttpClient);
+  private readonly tenantService = inject(TenantService);
   private readonly apiUrl = environment.apiUrl;
 
   getPermissions(): Observable<Permission[]> {
@@ -28,4 +30,32 @@ export class PermissionsService {
   updateRolePermissions(idRol: number, payload: RolePermissionsUpdate): Observable<unknown> {
     return this.http.put(`${this.apiUrl}/roles/${idRol}/permissions`, payload);
   }
+
+  hasPermission(permission: string): boolean {
+    if (this.isSuperAdmin()) return true;
+    const userPermissions = this.tenantService.permisos();
+    return userPermissions.includes(permission);
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    if (this.isSuperAdmin()) return true;
+    const userPermissions = this.tenantService.permisos();
+    return permissions.some((p) => userPermissions.includes(p));
+  }
+
+  hasAllPermissions(permissions: string[]): boolean {
+    if (this.isSuperAdmin()) return true;
+    const userPermissions = this.tenantService.permisos();
+    return permissions.every((p) => userPermissions.includes(p));
+  }
+
+  isSuperAdmin(): boolean {
+    return this.tenantService.isSuperAdmin();
+  }
+
+  isAdminClinica(): boolean {
+    const rol = this.tenantService.currentTenant()?.rol?.toUpperCase();
+    return rol === 'ADMIN' || rol === 'ADMINISTRADOR' || rol === 'ADMINISTRACION';
+  }
 }
+

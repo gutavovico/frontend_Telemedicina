@@ -1,0 +1,283 @@
+<div class="min-h-screen bg-background text-on-surface flex flex-col">
+  <!-- Backdrop for Mobile Sidebar -->
+  @if (isSidebarOpen()) {
+    <div
+      class="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-xs transition-opacity duration-200"
+      (click)="closeSidebar()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <!-- Sidebar (Desktop & Mobile Drawer) -->
+  <aside
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-primary text-white flex flex-col justify-between transition-transform duration-300 ease-in-out shadow-level-3 md:translate-x-0"
+    [class.translate-x-0]="isSidebarOpen()"
+    [class.-translate-x-full]="!isSidebarOpen()"
+  >
+    <!-- Top section: Logo & Nav -->
+    <div class="flex flex-col flex-1 overflow-y-auto">
+      <!-- Header / Logo -->
+      <div class="p-5 flex items-center justify-between border-b border-white/10">
+        <a routerLink="/" class="flex items-center gap-3 group cursor-pointer">
+          <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
+            <span class="material-symbols-outlined text-[22px]">local_hospital</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="font-bold text-sm tracking-tight text-white group-hover:text-secondary-fixed transition-colors truncate max-w-[140px]" [title]="tenantService.clinicaNombre()">
+              {{ tenantService.clinicaNombre() }}
+            </span>
+            <span class="text-[11px] font-semibold text-secondary-fixed tracking-wider uppercase">
+              {{ tenantService.isSuperAdmin() ? 'Super Admin' : 'Panel Admin' }}
+            </span>
+          </div>
+        </a>
+
+        <button
+          type="button"
+          (click)="closeSidebar()"
+          class="md:hidden p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label="Cerrar menú lateral"
+        >
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="px-3 py-4">
+        <p class="px-3 mb-2 text-[10px] font-bold text-white/50 uppercase tracking-widest">
+          Gestión Principal
+        </p>
+
+        <nav class="space-y-1">
+          <!-- Dashboard -->
+          <a
+            routerLink="/admin/dashboard"
+            routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeSidebar()"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+          >
+            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+
+          <!-- Clínicas (Super Admin) -->
+          @if (tenantService.isSuperAdmin()) {
+            <a
+              routerLink="/admin/clinicas"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">domain</span>
+              <span>Clínicas (SaaS)</span>
+            </a>
+          }
+
+          <!-- Usuarios -->
+          <a
+            routerLink="/admin/usuarios"
+            routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+            (click)="closeSidebar()"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+          >
+            <span class="material-symbols-outlined text-[20px]">group</span>
+            <span>Usuarios</span>
+          </a>
+
+          <!-- Roles -->
+          <a
+            routerLink="/admin/roles"
+            routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+            (click)="closeSidebar()"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+          >
+            <span class="material-symbols-outlined text-[20px]">shield_person</span>
+            <span>Roles y Permisos</span>
+          </a>
+
+          <!-- Médicos -->
+          <a
+            routerLink="/admin/medicos"
+            routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+            (click)="closeSidebar()"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+          >
+            <span class="material-symbols-outlined text-[20px]">medical_information</span>
+            <span>Médicos</span>
+          </a>
+
+          <!-- Bitácora de Auditoría (CU21) -->
+          <a
+            routerLink="/admin/bitacora"
+            routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+            (click)="closeSidebar()"
+            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+          >
+            <span class="material-symbols-outlined text-[20px]">history_toggle_off</span>
+            <span>Bitácora</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Bottom sidebar footer: Return to public site -->
+    <div class="p-4 border-t border-white/10 space-y-2">
+      <a
+        routerLink="/"
+        class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-white/75 hover:bg-white/10 hover:text-white transition-all duration-150 cursor-pointer"
+      >
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        <span>Volver a la landing</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper (shifted for desktop sidebar) -->
+  <div class="flex-1 md:pl-64 flex flex-col min-w-0">
+    <!-- Topbar Header -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 shadow-xs px-4 sm:px-6 py-3 flex items-center justify-between">
+      <!-- Left side: Hamburger (mobile) + Section context -->
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="toggleSidebar()"
+          class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+          aria-label="Abrir barra lateral"
+        >
+          <span class="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+
+        <div class="hidden sm:flex items-center gap-2 text-xs text-on-surface-variant">
+          <span class="font-semibold text-primary">Panel Admin</span>
+          <span>/</span>
+          <span class="text-on-surface">Administración del Sistema</span>
+        </div>
+      </div>
+
+      <!-- Right side: Tenant Selector, Avatar and Dropdown Menu -->
+      <div class="flex items-center gap-3">
+        <app-tenant-selector></app-tenant-selector>
+
+        @if (authService.isAuthenticated()) {
+          <div
+            class="relative"
+            (mouseenter)="openDropdown()"
+            (mouseleave)="closeDropdown()"
+          >
+            <button
+              type="button"
+              (click)="toggleDropdown()"
+              class="flex items-center gap-2.5 py-1 px-2 sm:px-3 rounded-full hover:bg-surface-container transition-all duration-200 border border-outline-variant/40 hover:border-primary/40 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
+              aria-haspopup="true"
+              [attr.aria-expanded]="isDropdownOpen()"
+            >
+              <div class="relative shrink-0">
+                @if (authService.userPhoto()) {
+                  <img
+                    [src]="authService.userPhoto()"
+                    [alt]="authService.userDisplayName()"
+                    class="w-8 h-8 rounded-full object-cover ring-2 ring-secondary/30"
+                  />
+                } @else {
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-primary-container to-secondary text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-primary/20">
+                    {{ authService.userInitials() }}
+                  </div>
+                }
+                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+              </div>
+
+              <div class="hidden sm:flex flex-col text-left">
+                <span class="font-semibold text-xs text-on-surface max-w-[120px] truncate leading-tight">
+                  {{ authService.userDisplayName() }}
+                </span>
+                <span class="text-[10px] font-medium text-primary leading-tight">
+                  Administrador
+                </span>
+              </div>
+
+              <span class="material-symbols-outlined text-[18px] text-outline transition-transform duration-200" [class.rotate-180]="isDropdownOpen()">
+                expand_more
+              </span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div
+              class="absolute right-0 top-full pt-1.5 w-60 z-50 transition-all duration-200"
+              [class.opacity-100]="isDropdownOpen()"
+              [class.visible]="isDropdownOpen()"
+              [class.pointer-events-auto]="isDropdownOpen()"
+              [class.opacity-0]="!isDropdownOpen()"
+              [class.invisible]="!isDropdownOpen()"
+              [class.pointer-events-none]="!isDropdownOpen()"
+            >
+              <div class="bg-white rounded-2xl shadow-level-3 border border-outline-variant/30 py-2 animate-fadeIn overflow-hidden">
+                <div class="px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/20 flex items-center gap-3">
+                  <div class="shrink-0">
+                    @if (authService.userPhoto()) {
+                      <img
+                        [src]="authService.userPhoto()"
+                        [alt]="authService.userDisplayName()"
+                        class="w-10 h-10 rounded-full object-cover ring-2 ring-secondary/40"
+                      />
+                    } @else {
+                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                        {{ authService.userInitials() }}
+                      </div>
+                    }
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <p class="font-bold text-xs sm:text-sm text-on-surface truncate">
+                      {{ authService.userDisplayName() }}
+                    </p>
+                    <p class="text-[11px] text-on-surface-variant truncate">
+                      {{ authService.currentUser()?.correo }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="px-1.5 pt-1.5 space-y-0.5">
+                  <button
+                    type="button"
+                    (click)="goToProfile()"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">person</span>
+                    <span>Perfil</span>
+                  </button>
+
+                  <a
+                    routerLink="/"
+                    (click)="closeDropdown()"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">storefront</span>
+                    <span>Ir a la web principal</span>
+                  </a>
+                </div>
+
+                <div class="my-1 border-t border-outline-variant/20 mx-2"></div>
+
+                <div class="px-1.5 pb-0.5">
+                  <button
+                    type="button"
+                    (click)="logout()"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-error hover:bg-error-container/40 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-error">logout</span>
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </header>
+
+    <!-- Main Content Routed Views -->
+    <main class="flex-1 p-4 sm:p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

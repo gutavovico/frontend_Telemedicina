@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { EspecialidadResponse, MedicoResponse } from '../../../core/models/medico.models';
@@ -23,6 +23,7 @@ export class MedicoNuevo implements OnInit {
 
   /** CU04: auto-registro cuando un usuario sin perfil médico completa el suyo propio. */
   readonly esAutoRegistro = !this.authService.isAdmin();
+  readonly isInAdmin = computed(() => this.router.url.startsWith('/admin'));
 
   ngOnInit(): void {
     // Regla 1:1 solo en auto-registro: un usuario que ya tiene su perfil médico
@@ -46,6 +47,10 @@ export class MedicoNuevo implements OnInit {
 
   onSaved(medico: MedicoResponse): void {
     // Tras crear el perfil, navega al detalle del médico
-    this.router.navigate(['/medicos', medico.id_medico]);
+    if (this.isInAdmin()) {
+      this.router.navigate(['/admin/medicos', medico.id_medico]);
+    } else {
+      this.router.navigate(['/medicos', medico.id_medico]);
+    }
   }
 }

@@ -1,0 +1,195 @@
+<div class="clinicas-container">
+  <div class="page-header">
+    <div>
+      <h2>Gestión de Clínicas (Tenants)</h2>
+      <p class="subtitle">Panel de administración global de la plataforma SaaS</p>
+    </div>
+    <div>
+      <button class="btn-primary-create" (click)="abrirModalCrear()">
+        <span class="btn-icon">➕</span>
+        <span>Nueva Clínica</span>
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">
+      <span>⚠️ {{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span>✅ {{ successMessage() }}</span>
+    </div>
+  }
+
+  <div class="toolbar">
+    <div class="filter-group">
+      <label for="filterEstado">Filtrar por estado:</label>
+      <select
+        id="filterEstado"
+        [ngModel]="filterEstado()"
+        (ngModelChange)="filterEstado.set($event); cargarClinicas()"
+        class="form-select"
+      >
+        <option value="">Todos los estados</option>
+        <option value="ACTIVO">ACTIVO</option>
+        <option value="INACTIVO">INACTIVO</option>
+        <option value="SUSPENDIDO">SUSPENDIDO</option>
+      </select>
+    </div>
+
+    <div class="total-badge">
+      Total de clínicas: <strong>{{ total() }}</strong>
+    </div>
+  </div>
+
+  <div class="table-card">
+    @if (isLoading()) {
+      <div class="loading-spinner">Cargando clínicas...</div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>NIT</th>
+            <th>Razón Social</th>
+            <th>Usuarios Activos</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clinicas(); track c.clinica_id) {
+            <tr>
+              <td>#{{ c.clinica_id }}</td>
+              <td class="clinic-name"><strong>{{ c.nombre }}</strong></td>
+              <td>{{ c.nit || '—' }}</td>
+              <td>{{ c.razon_social || '—' }}</td>
+              <td>
+                <span class="user-count-badge">👥 {{ c.usuarios_activos }}</span>
+              </td>
+              <td>
+                <span
+                  class="status-pill"
+                  [class.status-active]="c.estado === 'ACTIVO'"
+                  [class.status-inactive]="c.estado === 'INACTIVO'"
+                  [class.status-suspended]="c.estado === 'SUSPENDIDO'"
+                >
+                  {{ c.estado }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                @if (c.estado === 'ACTIVO') {
+                  <button
+                    class="btn-action btn-suspend"
+                    (click)="cambiarEstado(c, 'SUSPENDIDO')"
+                    title="Suspender acceso de la clínica"
+                  >
+                    Suspender
+                  </button>
+                  <button
+                    class="btn-action btn-deactivate"
+                    (click)="cambiarEstado(c, 'INACTIVO')"
+                    title="Desactivar clínica"
+                  >
+                    Desactivar
+                  </button>
+                } @else {
+                  <button
+                    class="btn-action btn-activate"
+                    (click)="cambiarEstado(c, 'ACTIVO')"
+                    title="Activar clínica"
+                  >
+                    Reactivar
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-state">No se encontraron clínicas registradas.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- Modal Crear Clínica -->
+  @if (showCreateModal()) {
+    <div class="modal-backdrop" (click)="cerrarModalCrear()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>🏥 Registrar Nueva Clínica</h3>
+          <button type="button" class="btn-close" (click)="cerrarModalCrear()">✕</button>
+        </div>
+
+        @if (createError()) {
+          <div class="alert alert-danger modal-alert">
+            <span>⚠️ {{ createError() }}</span>
+          </div>
+        }
+
+        <form (ngSubmit)="guardarNuevaClinica()" class="modal-body">
+          <div class="form-section-title">Datos de la Clínica</div>
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label>Nombre de la Clínica *</label>
+              <input type="text" [(ngModel)]="nuevaClinica.nombre" name="nombre" placeholder="Ej. Clínica Dental Sonrisas" required />
+            </div>
+            <div class="form-field">
+              <label>Razón Social</label>
+              <input type="text" [(ngModel)]="nuevaClinica.razon_social" name="razon_social" placeholder="Ej. Sonrisas S.R.L." />
+            </div>
+            <div class="form-field">
+              <label>NIT</label>
+              <input type="text" [(ngModel)]="nuevaClinica.nit" name="nit" placeholder="Ej. 1020304050" />
+            </div>
+            <div class="form-field">
+              <label>Teléfono</label>
+              <input type="text" [(ngModel)]="nuevaClinica.telefono" name="telefono" placeholder="+591 70000000" />
+            </div>
+            <div class="form-field">
+              <label>Dirección</label>
+              <input type="text" [(ngModel)]="nuevaClinica.direccion" name="direccion" placeholder="Av. Principal #123" />
+            </div>
+          </div>
+
+          <div class="form-section-title mt-4">Cuenta Administrador Inicial</div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label>Nombres del Admin *</label>
+              <input type="text" [(ngModel)]="nuevaClinica.admin_nombres" name="admin_nombres" placeholder="Juan" required />
+            </div>
+            <div class="form-field">
+              <label>Apellidos del Admin *</label>
+              <input type="text" [(ngModel)]="nuevaClinica.admin_apellidos" name="admin_apellidos" placeholder="Pérez" required />
+            </div>
+            <div class="form-field">
+              <label>Correo Electrónico *</label>
+              <input type="email" [(ngModel)]="nuevaClinica.admin_email" name="admin_email" placeholder="admin@clinica.com" required />
+            </div>
+            <div class="form-field">
+              <label>Contraseña *</label>
+              <input type="password" [(ngModel)]="nuevaClinica.admin_password" name="admin_password" placeholder="••••••••" required />
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" (click)="cerrarModalCrear()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="isCreating()">
+              @if (isCreating()) {
+                <span>Guardando...</span>
+              } @else {
+                <span>Registrar Clínica</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

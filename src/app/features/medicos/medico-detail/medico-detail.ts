@@ -36,6 +36,7 @@ export class MedicoDetail implements OnInit {
   readonly modoEdicion = signal(false);
   readonly esMiPerfil = signal(false);
   readonly sinPerfil = signal(false);
+  readonly isInAdmin = computed(() => this.router.url.startsWith('/admin'));
 
   // Permisos: el propietario y el administrador pueden editar o gestionar el perfil
   readonly esPropietario = computed(() => {

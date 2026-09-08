@@ -4,7 +4,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { Header } from '../../../shared/components/header/header';
 import {
   Permission,
   Role,
@@ -27,7 +26,6 @@ const ROLES_PER_PAGE = 6;
     CommonModule,
     FormsModule,
     RouterLink,
-    Header,
     RoleForm,
     RolePermissionsForm
   ],

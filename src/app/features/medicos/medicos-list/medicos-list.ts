@@ -5,11 +5,10 @@ import { Router, RouterLink } from '@angular/router';
 import { EspecialidadCreate, EspecialidadResponse, MedicoResponse } from '../../../core/models/medico.models';
 import { MedicoService } from '../../../core/services/medico.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Header } from '../../../shared/components/header/header';
 
 @Component({
   selector: 'app-medicos-list',
-  imports: [CommonModule, FormsModule, RouterLink, Header],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './medicos-list.html',
   styleUrl: './medicos-list.css'
 })

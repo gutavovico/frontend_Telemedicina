@@ -1,6 +1,11 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
+  // Rutas protegidas de administración: render del lado del cliente únicamente
+  {
+    path: 'admin/**',
+    renderMode: RenderMode.Client
+  },
   // Rutas protegidas por authGuard (CU04): render del lado del cliente únicamente
   {
     path: 'medicos',

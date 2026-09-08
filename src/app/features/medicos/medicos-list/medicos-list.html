@@ -1,44 +1,39 @@
-<app-header></app-header>
-
-<main class="flex-grow pt-[88px] pb-16 min-h-screen">
-  <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
-
-    <!-- Encabezado de la sección -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
-          <span class="material-symbols-outlined text-[16px]">medical_information</span>
-          <span>CU04 · Perfil Profesional</span>
-        </div>
-        <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary">
-          Médicos del Hospital
-        </h1>
-        <p class="text-body-md font-body-md text-on-surface-variant mt-1">
-          Consulta los perfiles profesionales del equipo médico por especialidad.
-        </p>
+<div class="space-y-6">
+  <!-- Encabezado de la sección -->
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-2">
+        <span class="material-symbols-outlined text-[16px]">medical_information</span>
+        <span>CU04 · Perfil Profesional</span>
       </div>
-      <!-- Botones exclusivos del administrador (CU04); doctores son redirigidos a su perfil
-           y pacientes solo consultan el listado en modo lectura -->
-      @if (authService.isAdmin()) {
-        <div class="flex flex-wrap items-center gap-3 shrink-0">
-          <button
-            type="button"
-            (click)="mostrarFormEspecialidad() ? cerrarFormEspecialidad() : abrirFormEspecialidad()"
-            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-primary bg-secondary-container/40 border border-secondary/30 hover:bg-secondary-container transition-all duration-200 cursor-pointer font-label-md text-label-md"
-          >
-            <span class="material-symbols-outlined text-[20px]">{{ mostrarFormEspecialidad() ? 'close' : 'add_circle' }}</span>
-            <span>{{ mostrarFormEspecialidad() ? 'Cerrar formulario' : 'Nueva especialidad' }}</span>
-          </button>
-          <a
-            routerLink="/medicos/nuevo"
-            class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md"
-          >
-            <span class="material-symbols-outlined text-[20px]">person_add</span>
-            <span>Registrar Doctor</span>
-          </a>
-        </div>
-      }
+      <h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-primary">
+        Médicos del Hospital
+      </h1>
+      <p class="text-body-md font-body-md text-on-surface-variant mt-1">
+        Consulta y gestiona los perfiles profesionales del equipo médico por especialidad.
+      </p>
     </div>
+    <!-- Botones exclusivos del administrador -->
+    @if (authService.isAdmin()) {
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <button
+          type="button"
+          (click)="mostrarFormEspecialidad() ? cerrarFormEspecialidad() : abrirFormEspecialidad()"
+          class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-primary bg-secondary-container/40 border border-secondary/30 hover:bg-secondary-container transition-all duration-200 cursor-pointer font-label-md text-label-md"
+        >
+          <span class="material-symbols-outlined text-[20px]">{{ mostrarFormEspecialidad() ? 'close' : 'add_circle' }}</span>
+          <span>{{ mostrarFormEspecialidad() ? 'Cerrar formulario' : 'Nueva especialidad' }}</span>
+        </button>
+        <a
+          routerLink="/admin/medicos/nuevo"
+          class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md"
+        >
+          <span class="material-symbols-outlined text-[20px]">person_add</span>
+          <span>Registrar Doctor</span>
+        </a>
+      </div>
+    }
+  </div>
 
     <!-- Panel de creación de especialidades para Admin -->
     @if (authService.isAdmin() && mostrarFormEspecialidad()) {
@@ -240,7 +235,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
           @for (medico of medicos(); track medico.id_medico) {
             <a
-              [routerLink]="['/medicos', medico.id_medico]"
+              [routerLink]="['/admin/medicos', medico.id_medico]"
               class="bg-surface-container-lowest rounded-3xl p-6 shadow-level-1 hover:shadow-level-2 transition-all duration-300 border border-outline-variant/20 hover:border-primary/30 flex flex-col gap-4 group cursor-pointer transform hover:-translate-y-1"
             >
               <!-- Cabecera: avatar + estado -->
@@ -351,6 +346,4 @@
         }
       }
     }
-
-  </div>
-</main>
+</div>

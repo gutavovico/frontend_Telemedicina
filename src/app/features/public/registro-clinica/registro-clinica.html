@@ -1,0 +1,155 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <div class="logo-badge">🏥</div>
+      <h2>Registrar Nueva Clínica</h2>
+      <p class="subtitle">Únete a la plataforma SaaS de Telemedicina y configura tu centro médico</p>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-danger">
+        <span>⚠️ {{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <span>✅ {{ successMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form">
+      <div class="form-section">
+        <h3>1. Datos de la Clínica</h3>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="nombre">Nombre de la Clínica *</label>
+            <input
+              id="nombre"
+              type="text"
+              formControlName="nombre"
+              placeholder="Ej. Clínica Santa María"
+              class="form-control"
+              [class.is-invalid]="form.get('nombre')?.touched && form.get('nombre')?.invalid"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="nit">NIT / Identificación Fiscal</label>
+            <input
+              id="nit"
+              type="text"
+              formControlName="nit"
+              placeholder="Ej. 102938475"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="razon_social">Razón Social</label>
+            <input
+              id="razon_social"
+              type="text"
+              formControlName="razon_social"
+              placeholder="Ej. Servicios Médicos Santa María S.A."
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="telefono">Teléfono</label>
+            <input
+              id="telefono"
+              type="text"
+              formControlName="telefono"
+              placeholder="Ej. +591 3 3344556"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="direccion">Dirección</label>
+            <input
+              id="direccion"
+              type="text"
+              formControlName="direccion"
+              placeholder="Ej. Av. Principal #123"
+              class="form-control"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>2. Administrador Principal de la Clínica</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="admin_nombres">Nombres *</label>
+            <input
+              id="admin_nombres"
+              type="text"
+              formControlName="admin_nombres"
+              placeholder="Nombres del admin"
+              class="form-control"
+              [class.is-invalid]="form.get('admin_nombres')?.touched && form.get('admin_nombres')?.invalid"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="admin_apellidos">Apellidos *</label>
+            <input
+              id="admin_apellidos"
+              type="text"
+              formControlName="admin_apellidos"
+              placeholder="Apellidos del admin"
+              class="form-control"
+              [class.is-invalid]="form.get('admin_apellidos')?.touched && form.get('admin_apellidos')?.invalid"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="admin_email">Correo Electrónico *</label>
+            <input
+              id="admin_email"
+              type="email"
+              formControlName="admin_email"
+              placeholder="admin@clinica.com"
+              class="form-control"
+              [class.is-invalid]="form.get('admin_email')?.touched && form.get('admin_email')?.invalid"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="admin_password">Contraseña *</label>
+            <input
+              id="admin_password"
+              type="password"
+              formControlName="admin_password"
+              placeholder="Mínimo 6 caracteres"
+              class="form-control"
+              [class.is-invalid]="form.get('admin_password')?.touched && form.get('admin_password')?.invalid"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="isLoading() || form.invalid"
+        >
+          @if (isLoading()) {
+            <span>Registrando...</span>
+          } @else {
+            <span>Crear Clínica y Cuenta</span>
+          }
+        </button>
+      </div>
+
+      <div class="login-footer">
+        <p>¿Ya tienes una cuenta? <a routerLink="/login">Iniciar Sesión</a></p>
+      </div>
+    </form>
+  </div>
+</div>

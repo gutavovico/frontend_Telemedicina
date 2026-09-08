@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { tenantGuard } from './core/guards/tenant.guard';
+import { clinicaGuard } from './core/guards/clinica.guard';
+import { superAdminGuard } from './core/guards/super-admin.guard';
 
 export const routes: Routes = [
   {
@@ -10,28 +14,97 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login').then(m => m.Login),
-    title: 'Hospital San Juan de Dios - Iniciar Sesion'
+    title: 'Telemedicina - Iniciar Sesión'
   },
   {
     path: 'register',
     loadComponent: () => import('./features/auth/register/register').then(m => m.Register),
-    title: 'Hospital San Juan de Dios - Crear Cuenta'
+    title: 'Telemedicina - Crear Cuenta'
+  },
+  {
+    path: 'registro-clinica',
+    loadComponent: () => import('./features/public/registro-clinica/registro-clinica').then(m => m.RegistroClinica),
+    title: 'Telemedicina - Registro de Clínica'
+  },
+  {
+    path: 'clinica-inactiva',
+    loadComponent: () => import('./features/errors/clinica-inactiva/clinica-inactiva').then(m => m.ClinicaInactiva),
+    title: 'Telemedicina - Clínica Inactiva'
+  },
+  {
+    path: 'sin-permisos',
+    loadComponent: () => import('./features/errors/sin-permisos/sin-permisos').then(m => m.SinPermisos),
+    title: 'Telemedicina - Acceso Denegado'
   },
   {
     path: 'recuperar',
     loadComponent: () => import('./features/auth/recover/recover').then(m => m.Recover),
-    title: 'Hospital San Juan de Dios - Recuperar Contrasena'
+    title: 'Telemedicina - Recuperar Contraseña'
   },
   {
     path: 'recuperar-contrasena',
     loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPassword),
-    title: 'Hospital San Juan de Dios - Restablecer Contrasena'
+    title: 'Telemedicina - Restablecer Contraseña'
+  },
+  // Panel de Administrador
+  {
+    path: 'admin',
+    canActivate: [authGuard, tenantGuard, clinicaGuard, adminGuard],
+    loadComponent: () => import('./features/admin/admin-layout/admin-layout').then(m => m.AdminLayout),
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/admin/admin-dashboard/admin-dashboard').then(m => m.AdminDashboard),
+        title: 'Telemedicina - Panel Administrador'
+      },
+      {
+        path: 'clinicas',
+        canActivate: [superAdminGuard],
+        loadComponent: () => import('./features/admin/clinicas/clinicas-list').then(m => m.ClinicasList),
+        title: 'Telemedicina - Gestión de Clínicas'
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () => import('./features/users/users-page/users-page').then(m => m.UsersPage),
+        title: 'Telemedicina - Gestión de Usuarios'
+      },
+      {
+        path: 'roles',
+        loadComponent: () => import('./features/roles/roles-page/roles-page').then(m => m.RolesPage),
+        title: 'Telemedicina - Roles y Permisos'
+      },
+      {
+        path: 'medicos',
+        loadComponent: () => import('./features/medicos/medicos-list/medicos-list').then(m => m.MedicosList),
+        title: 'Telemedicina - Directorio Médico'
+      },
+      {
+        path: 'medicos/nuevo',
+        loadComponent: () => import('./features/medicos/medico-nuevo/medico-nuevo').then(m => m.MedicoNuevo),
+        title: 'Telemedicina - Nuevo Perfil Médico'
+      },
+      {
+        path: 'medicos/:id',
+        loadComponent: () => import('./features/medicos/medico-detail/medico-detail').then(m => m.MedicoDetail),
+        title: 'Telemedicina - Perfil Médico'
+      },
+      {
+        path: 'bitacora',
+        loadComponent: () => import('./features/admin/bitacora/bitacora-page').then(m => m.BitacoraPage),
+        title: 'Telemedicina - Bitácora de Auditoría'
+      }
+    ]
   },
   {
     path: 'usuarios',
-    canActivate: [authGuard],
+    canActivate: [authGuard, tenantGuard, clinicaGuard],
     loadComponent: () => import('./features/users/users-page/users-page').then(m => m.UsersPage),
-    title: 'Hospital San Juan de Dios - Gestion de Usuarios'
+    title: 'Telemedicina - Gestión de Usuarios'
   },
   {
     path: 'roles',

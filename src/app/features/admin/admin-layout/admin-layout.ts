@@ -1,27 +1,30 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantService } from '../../../core/services/tenant.service';
+import { TenantSelectorComponent } from '../../../shared/components/tenant-selector/tenant-selector';
 
 @Component({
-  selector: 'app-header',
-  imports: [CommonModule, RouterLink],
-  templateUrl: './header.html',
-  styleUrl: './header.css'
+  selector: 'app-admin-layout',
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TenantSelectorComponent],
+  templateUrl: './admin-layout.html',
+  styleUrl: './admin-layout.css'
 })
-export class Header {
+export class AdminLayout {
   readonly authService = inject(AuthService);
+  readonly tenantService = inject(TenantService);
   private readonly router = inject(Router);
 
-  readonly isMobileMenuOpen = signal(false);
+  readonly isSidebarOpen = signal(false);
   readonly isDropdownOpen = signal(false);
 
-  toggleMobileMenu(): void {
-    this.isMobileMenuOpen.update(value => !value);
+  toggleSidebar(): void {
+    this.isSidebarOpen.update(v => !v);
   }
 
-  closeMobileMenu(): void {
-    this.isMobileMenuOpen.set(false);
+  closeSidebar(): void {
+    this.isSidebarOpen.set(false);
   }
 
   openDropdown(): void {
@@ -38,19 +41,11 @@ export class Header {
 
   goToProfile(): void {
     this.closeDropdown();
-    this.closeMobileMenu();
     this.router.navigate(['/mi-perfil-medico']);
-  }
-
-  goToAdminPanel(): void {
-    this.closeDropdown();
-    this.closeMobileMenu();
-    this.router.navigate(['/admin']);
   }
 
   logout(): void {
     this.closeDropdown();
-    this.closeMobileMenu();
     this.authService.logout();
   }
 }

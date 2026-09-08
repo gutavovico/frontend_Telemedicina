@@ -38,6 +38,9 @@ export interface TokenResponse {
 
 export interface UsuarioResponse {
   id_usuario: number;
+  id_clinica?: number | null;
+  tenant_id?: string | null;
+  id_rol?: number | null;
   nombres: string;
   apellidos: string;
   correo: string;
