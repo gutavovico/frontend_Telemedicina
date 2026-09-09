@@ -3,6 +3,12 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'appointments/agenda',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/appointments/medical-agenda-page/medical-agenda-page').then(m => m.MedicalAgendaPage),
+    title: 'Hospital San Juan de Dios - Agenda médica'
+  },
+  {
     path: '',
     loadComponent: () => import('./features/home/home').then(m => m.Home),
     title: 'Hospital San Juan de Dios - Telemedicina'
