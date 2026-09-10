@@ -42,6 +42,30 @@
           >
             Médicos
           </button>
+          <a
+            routerLink="/appointments/agenda"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Agenda
+          </a>
+          <a
+            routerLink="/appointments/consultas"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Citas
+          </a>
+          <a
+            routerLink="/fichas"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Fichas
+          </a>
+          <a
+            routerLink="/documentos"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Documentos
+          </a>
         }
       } @else {
         <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#especialidades">
@@ -137,6 +161,43 @@
                   <span class="material-symbols-outlined text-[20px] text-primary">person</span>
                   <span>Perfil</span>
                 </button>
+                @if (authService.isAdmin() || authService.isDoctor()) {
+                  <a
+                    routerLink="/appointments/agenda"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+                    <span>Agenda Médica</span>
+                  </a>
+                  <a
+                    routerLink="/appointments/consultas"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">event</span>
+                    <span>Gestionar Citas</span>
+                  </a>
+                  <a
+                    routerLink="/fichas"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">description</span>
+                    <span>Fichas Médicas</span>
+                  </a>
+                  <a
+                    routerLink="/documentos"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">folder_shared</span>
+                    <span>Documentos Clínicos</span>
+                  </a>
+                  <a
+                    routerLink="/bitacora"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary">history_toggle_off</span>
+                    <span>Bitácora de Auditoría</span>
+                  </a>
+                }
               </div>
 
               <div class="my-1 border-t border-outline-variant/20 mx-2"></div>
@@ -235,6 +296,46 @@
               <span class="material-symbols-outlined text-[20px] text-primary">medical_information</span>
               <span>Médicos</span>
             </button>
+            <a
+              routerLink="/appointments/agenda"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+              <span>Agenda Médica</span>
+            </a>
+            <a
+              routerLink="/appointments/consultas"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">event</span>
+              <span>Gestionar Citas</span>
+            </a>
+            <a
+              routerLink="/fichas"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">description</span>
+              <span>Fichas Médicas</span>
+            </a>
+            <a
+              routerLink="/documentos"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">folder_shared</span>
+              <span>Documentos Clínicos</span>
+            </a>
+            <a
+              routerLink="/bitacora"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">history_toggle_off</span>
+              <span>Bitácora de Auditoría</span>
+            </a>
           }
           <button
             type="button"

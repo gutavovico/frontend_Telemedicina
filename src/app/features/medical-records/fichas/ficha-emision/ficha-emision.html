@@ -1,0 +1,263 @@
+<div class="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header & Navigation -->
+    <div class="flex items-center justify-between">
+      <a
+        routerLink="/fichas"
+        class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Volver a Fichas
+      </a>
+
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+        Nueva Emisión de Ficha (CU09)
+      </span>
+    </div>
+
+    <!-- Alert de Conflicto de Turno (409 Conflict) -->
+    <div
+      *ngIf="conflictError()"
+      class="p-4 rounded-2xl bg-rose-50 border border-rose-200 shadow-sm flex items-start gap-3 animate-fade-in"
+    >
+      <div class="p-2 rounded-xl bg-rose-100 text-rose-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div>
+        <h4 class="text-sm font-bold text-rose-900">Conflicto de Concurrencia (409 Conflict)</h4>
+        <p class="text-xs text-rose-700 mt-0.5">{{ conflictError() }}</p>
+        <p class="text-xs text-rose-600 mt-1 font-medium">
+          Seleccione otro horario disponible en la cuadrícula inferior para continuar.
+        </p>
+      </div>
+    </div>
+
+    <!-- Alert de Error General -->
+    <div
+      *ngIf="errorMessage()"
+      class="p-4 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm text-sm text-amber-800"
+    >
+      {{ errorMessage() }}
+    </div>
+
+    <!-- Alert de Éxito -->
+    <div
+      *ngIf="successMessage()"
+      class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-sm text-sm font-semibold text-emerald-800 flex items-center gap-2"
+    >
+      <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      {{ successMessage() }}
+    </div>
+
+    <!-- Main Card Form -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+      <div class="border-b border-slate-100 pb-5 mb-6">
+        <h2 class="text-xl font-black text-slate-900">Emisión y Reserva de Ficha Médica</h2>
+        <p class="text-xs text-slate-500 mt-1">
+          Complete los datos del paciente, seleccione especialista y confirme el slot de atención médica.
+        </p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Sección 1: Paciente y Especialista -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <!-- Paciente -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Paciente *
+            </label>
+            <select
+              formControlName="id_paciente"
+              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option *ngFor="let p of pacientes()" [value]="p.id_paciente">
+                {{ p.nombre }} (CI: {{ p.ci }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Especialista / Médico -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Médico / Especialista *
+            </label>
+            <select
+              formControlName="id_medico"
+              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option *ngFor="let m of medicos()" [value]="m.id_medico">
+                {{ m.nombre }} — {{ m.especialidad }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sección 2: Fecha de Atención -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Fecha de Atención *
+            </label>
+            <input
+              type="date"
+              formControlName="fecha_atencion"
+              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div class="flex flex-col justify-end">
+            <span class="text-xs text-slate-500 mb-2">Horario seleccionado</span>
+            <div class="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-sm font-mono font-bold text-slate-800">
+              {{ form.get('hora_inicio')?.value ? (form.get('hora_inicio')?.value + ' - ' + form.get('hora_fin')?.value) : 'Ningún turno seleccionado' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de Slots Interactivos -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Turnos y Slots Disponibles *
+          </label>
+
+          <div *ngIf="isLoadingSlots()" class="p-4 text-center text-xs text-slate-500">
+            Consultando disponibilidad de turnos en tiempo real...
+          </div>
+
+          <div *ngIf="!isLoadingSlots()" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <button
+              *ngFor="let slot of slotsDisponibles()"
+              type="button"
+              [disabled]="!slot.disponible"
+              (click)="selectSlot(slot)"
+              class="py-2 px-1 text-center rounded-xl text-xs font-mono font-semibold border transition"
+              [ngClass]="{
+                'bg-indigo-600 text-white border-indigo-600 shadow-sm': selectedSlot() === slot.hora_inicio,
+                'bg-white text-slate-700 border-slate-200 hover:bg-indigo-50 hover:border-indigo-300': slot.disponible && selectedSlot() !== slot.hora_inicio,
+                'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed line-through': !slot.disponible
+              }"
+            >
+              {{ slot.hora_inicio }}
+            </button>
+          </div>
+          <div *ngIf="form.get('hora_inicio')?.touched && form.get('hora_inicio')?.invalid" class="text-xs text-rose-500 mt-1">
+            Debe seleccionar un turno disponible.
+          </div>
+        </div>
+
+        <!-- Motivo de Consulta -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Motivo de Consulta / Atención *
+          </label>
+          <textarea
+            formControlName="motivo_consulta"
+            rows="3"
+            placeholder="Describa el motivo principal de atención del paciente..."
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          ></textarea>
+          <div *ngIf="form.get('motivo_consulta')?.touched && form.get('motivo_consulta')?.invalid" class="text-xs text-rose-500 mt-1">
+            El motivo de consulta es obligatorio (mínimo 4 caracteres).
+          </div>
+        </div>
+
+        <!-- Pre-triaje: Signos Vitales Preliminares (Opcional) -->
+        <div class="pt-4 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">
+              Pre-Triaje / Signos Vitales Preliminares (Opcional)
+            </h3>
+            <span class="text-xs text-indigo-600 font-semibold" *ngIf="imcCalculado()">
+              IMC Calculado: {{ imcCalculado() }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Presión Arterial</label>
+              <input
+                type="text"
+                formControlName="presion_arterial"
+                placeholder="120/80"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Frec. Cardíaca (lpm)</label>
+              <input
+                type="number"
+                formControlName="frecuencia_cardiaca"
+                placeholder="75"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Temperatura (°C)</label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="temperatura"
+                placeholder="36.5"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Peso (kg)</label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="peso_kg"
+                placeholder="70.5"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Talla (cm)</label>
+              <input
+                type="number"
+                formControlName="talla_cm"
+                placeholder="172"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <a
+            routerLink="/fichas"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
+          >
+            Cancelar
+          </a>
+
+          <button
+            type="submit"
+            [disabled]="form.invalid || isSubmitting()"
+            class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition shadow-sm"
+          >
+            <svg *ngIf="isSubmitting()" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isSubmitting() ? 'Validando y Emitiendo...' : 'Confirmar Emisión de Ficha' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>

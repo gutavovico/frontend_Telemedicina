@@ -1,3 +1,6 @@
+@if (authService.isDoctor()) {
+  <app-doctor-dashboard></app-doctor-dashboard>
+} @else {
 <app-header></app-header>
 
 <main class="flex-grow pt-[88px] pb-16 min-h-screen">
@@ -354,3 +357,4 @@
 
   </div>
 </main>
+}

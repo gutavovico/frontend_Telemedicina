@@ -53,6 +53,27 @@ export const routes: Routes = [
       import('./features/auth/roles-permissions/roles-page/roles-page').then(m => m.RolesPage),
     title: 'Hospital San Juan de Dios - Roles y Permisos'
   },
+  {
+    path: 'bitacora',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/audit/bitacora-page').then(m => m.BitacoraPage),
+    title: 'Hospital San Juan de Dios - Bitácora de Auditoría'
+  },
+  {
+    path: 'audit',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/audit/bitacora-page').then(m => m.BitacoraPage),
+    title: 'Hospital San Juan de Dios - Bitácora de Auditoría'
+  },
+  {
+    path: 'audit-log',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/audit/bitacora-page').then(m => m.BitacoraPage),
+    title: 'Hospital San Juan de Dios - Bitácora de Auditoría'
+  },
 
   // =========================================================================
   // 2. MÓDULO CANÓNICO: APPOINTMENTS (CU04 - Gestión Médica y Agendas)
@@ -94,9 +115,72 @@ export const routes: Routes = [
       ),
     title: 'Hospital San Juan de Dios - Mi Perfil Médico'
   },
+  {
+    path: 'doctor-dashboard',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/appointments/doctor-profile/doctor-dashboard/doctor-dashboard'
+      ).then(m => m.DoctorDashboard),
+    title: 'Hospital San Juan de Dios - Panel Médico'
+  },
+  {
+    path: 'appointments/agenda',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/agenda/medical-agenda-page/medical-agenda-page').then(
+        m => m.MedicalAgendaPage
+      ),
+    title: 'Hospital San Juan de Dios - Agenda Médica'
+  },
+  {
+    path: 'agenda',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/agenda/medical-agenda-page/medical-agenda-page').then(
+        m => m.MedicalAgendaPage
+      ),
+    title: 'Hospital San Juan de Dios - Agenda Médica'
+  },
+  {
+    path: 'medicos/:id/agenda',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/agenda/medical-agenda-page/medical-agenda-page').then(
+        m => m.MedicalAgendaPage
+      ),
+    title: 'Hospital San Juan de Dios - Agenda Médica'
+  },
+  {
+    path: 'appointments/consultas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/consultas/consultas').then(
+        m => m.ConsultasComponent
+      ),
+    title: 'Hospital San Juan de Dios - Consultas y Citas'
+  },
+  {
+    path: 'consultas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/consultas/consultas').then(
+        m => m.ConsultasComponent
+      ),
+    title: 'Hospital San Juan de Dios - Consultas y Citas'
+  },
+  {
+    path: 'citas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/consultas/consultas').then(
+        m => m.ConsultasComponent
+      ),
+    title: 'Hospital San Juan de Dios - Gestión de Citas'
+  },
 
   // =========================================================================
-  // 3. MÓDULO CANÓNICO: MEDICAL_RECORDS (CU03 - Pacientes y Expedientes)
+  // 3. MÓDULO CANÓNICO: MEDICAL_RECORDS (CU03 - Pacientes y Expedientes, CU28 - HCE)
   // =========================================================================
   {
     path: 'pacientes',
@@ -133,8 +217,91 @@ export const routes: Routes = [
             './features/medical-records/patient-profile/patient-form/patient-form'
           ).then(m => m.PatientForm),
         title: 'Hospital San Juan de Dios - Editar Paciente'
+      },
+      {
+        path: ':id/hce',
+        loadComponent: () =>
+          import('./features/medical-records/hce/hce-timeline/hce-timeline').then(
+            m => m.HceTimeline
+          ),
+        title: 'Hospital San Juan de Dios - Historia Clínica Electrónica'
+      },
+      {
+        path: ':id/consultas/nueva',
+        loadComponent: () =>
+          import(
+            './features/medical-records/hce/consulta-editor/consulta-editor'
+          ).then(m => m.ConsultaEditor),
+        title: 'Hospital San Juan de Dios - Registrar Consulta Médica'
       }
     ]
+  },
+  {
+    path: 'fichas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/fichas/ficha-list/ficha-list').then(m => m.FichaListComponent),
+    title: 'Hospital San Juan de Dios - Fichas Médicas'
+  },
+  {
+    path: 'fichas/nueva',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/fichas/ficha-emision/ficha-emision').then(m => m.FichaEmisionComponent),
+    title: 'Hospital San Juan de Dios - Emitir Ficha Médica'
+  },
+  {
+    path: 'fichas/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/fichas/ficha-detalle/ficha-detalle').then(m => m.FichaDetalleComponent),
+    title: 'Hospital San Juan de Dios - Expediente Ficha Médica'
+  },
+  {
+    path: 'documentos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/medical-records/documentos/components/document-list/document-list'
+      ).then(m => m.DocumentList),
+    title: 'Hospital San Juan de Dios - Documentos Clínicos'
+  },
+  {
+    path: 'documentos/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/medical-records/documentos/components/document-detail/document-detail'
+      ).then(m => m.DocumentDetail),
+    title: 'Hospital San Juan de Dios - Detalle de Documento'
+  },
+  {
+    path: 'documentos/paciente/:idPaciente/documento/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/medical-records/documentos/components/document-detail/document-detail'
+      ).then(m => m.DocumentDetail),
+    title: 'Hospital San Juan de Dios - Documento del Paciente'
+  },
+  {
+    path: 'mis-documentos',
+    canActivate: [authGuard],
+    data: { modo: 'me' },
+    loadComponent: () =>
+      import(
+        './features/medical-records/documentos/components/document-list/document-list'
+      ).then(m => m.DocumentList),
+    title: 'Hospital San Juan de Dios - Mis Documentos Clínicos'
+  },
+  {
+    path: 'mis-documentos/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import(
+        './features/medical-records/documentos/components/document-detail/document-detail'
+      ).then(m => m.DocumentDetail),
+    title: 'Hospital San Juan de Dios - Mi Documento'
   },
 
   // =========================================================================

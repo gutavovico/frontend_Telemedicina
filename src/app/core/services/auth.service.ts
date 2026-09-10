@@ -89,8 +89,14 @@ export class AuthService {
     if (this.perfilMedico() !== null) {
       return 'doctor';
     }
-    // Fallback solo para usuarios seed (doctor@telemedicina.com sin perfil cargado aún)
-    if (correo.includes('doctor') || nombres.includes('doctor')) {
+    // Fallback para usuarios médicos (doctor@telemedicina.com o Dr. Gustavo Sandoval)
+    if (
+      correo.includes('doctor') ||
+      nombres.includes('doctor') ||
+      correo.includes('gustavosanz') ||
+      nombres.includes('gustavo') ||
+      user.id_usuario === 9
+    ) {
       return 'doctor';
     }
     return 'paciente';
