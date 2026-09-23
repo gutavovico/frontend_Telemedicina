@@ -1,0 +1,395 @@
+<div class="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Navigation & Status Top Bar -->
+    <div class="flex items-center justify-between">
+      <a
+        routerLink="/fichas"
+        class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Volver al Listado de Fichas
+      </a>
+
+      <div class="flex items-center gap-2">
+        <span
+          *ngIf="ficha()"
+          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+          [ngClass]="getStatusBadgeClass(ficha()!.estado)"
+        >
+          {{ ficha()!.estado }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div *ngIf="saveSuccess()" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-800 flex items-center gap-2">
+      <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      {{ saveSuccess() }}
+    </div>
+
+    <div *ngIf="saveError()" class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-800">
+      {{ saveError() }}
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="bg-white p-12 rounded-3xl shadow-sm border border-slate-200 text-center text-slate-500">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
+      <p class="mt-2 text-sm font-medium">Cargando expediente clínico...</p>
+    </div>
+
+    <div *ngIf="!isLoading() && ficha()" class="space-y-6">
+
+      <!-- Ficha Banner Header -->
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Ficha Médica</span>
+              <span class="font-mono text-sm font-black px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {{ ficha()!.correlativo }}
+              </span>
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 mt-1">
+              {{ ficha()!.paciente_nombre || ('Paciente #' + ficha()!.id_paciente) }}
+            </h1>
+            <p class="text-xs text-slate-500 font-mono mt-0.5">
+              CI: {{ ficha()!.paciente_ci || 'No consignado' }} | ID: {{ ficha()!.id_paciente }}
+            </p>
+          </div>
+
+          <div class="sm:text-right">
+            <div class="text-xs font-semibold text-slate-500 uppercase">Médico Tratante</div>
+            <div class="text-base font-bold text-slate-800">{{ ficha()!.medico_nombre || ('Médico #' + ficha()!.id_medico) }}</div>
+            <div class="text-xs font-semibold text-indigo-600">{{ ficha()!.especialidad_nombre || 'Medicina General' }}</div>
+            <div class="text-xs text-slate-400 font-mono mt-1">
+              {{ ficha()!.fecha_atencion }} ({{ ficha()!.hora_inicio }} - {{ ficha()!.hora_fin }})
+            </div>
+          </div>
+        </div>
+
+        <!-- Motivo de Consulta Inicial -->
+        <div class="pt-4">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Motivo de Consulta</span>
+          <p class="text-sm font-medium text-slate-800 mt-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            {{ ficha()!.motivo_consulta }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Clinical Form -->
+      <form [formGroup]="clinicaForm" class="space-y-6">
+
+        <!-- 1. Signos Vitales Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-black text-slate-900">Signos Vitales y Somatometría</h2>
+              <p class="text-xs text-slate-500">Parámetros hemodinámicos y antropométricos</p>
+            </div>
+            <span *ngIf="imc()" class="px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-bold font-mono">
+              IMC: {{ imc() }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Presión Arterial (mmHg)</label>
+              <input
+                type="text"
+                formControlName="presion_arterial"
+                placeholder="120/80"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Frecuencia Cardíaca (lpm)</label>
+              <input
+                type="number"
+                formControlName="frecuencia_cardiaca"
+                placeholder="75"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Frecuencia Respiratoria (rpm)</label>
+              <input
+                type="number"
+                formControlName="frecuencia_respiratoria"
+                placeholder="18"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Temperatura (°C)</label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="temperatura"
+                placeholder="36.5"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Saturación O2 (%)</label>
+              <input
+                type="number"
+                formControlName="saturacion_oxigeno"
+                placeholder="98"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Peso (kg)</label>
+              <input
+                type="number"
+                step="0.1"
+                formControlName="peso_kg"
+                placeholder="70.0"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Talla (cm)</label>
+              <input
+                type="number"
+                formControlName="talla_cm"
+                placeholder="170"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Secciones Dinámicas JSONB por Especialidad Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-3">
+            <div>
+              <h2 class="text-base font-black text-slate-900">Expediente Clínico Dinámico (JSONB)</h2>
+              <p class="text-xs text-slate-500">Esquema adaptable según la especialidad de atención</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-semibold">Plantilla:</span>
+              <select
+                formControlName="tipo_plantilla"
+                class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+              >
+                <option value="MEDICINA_GENERAL">Medicina General</option>
+                <option value="CARDIOLOGIA">Cardiología</option>
+                <option value="PEDIATRIA">Pediatría</option>
+                <option value="DERMATOLOGIA">Dermatología</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Anamnesis -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Anamnesis / Historia de la Enfermedad Actual
+              </label>
+              <textarea
+                formControlName="anamnesis"
+                rows="3"
+                placeholder="Evolución cronológica de los síntomas relatados por el paciente..."
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500"
+              ></textarea>
+            </div>
+
+            <!-- Examen Físico -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Examen Físico Segmentario
+              </label>
+              <textarea
+                formControlName="examen_fisico"
+                rows="3"
+                placeholder="Hallazgos semiológicos a la inspección, palpación, percusión y auscultación..."
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500"
+              ></textarea>
+            </div>
+
+            <!-- Campos especializados según plantilla -->
+            <div *ngIf="clinicaForm.get('tipo_plantilla')?.value === 'CARDIOLOGIA'" class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+              <span class="text-xs font-bold text-indigo-900 uppercase">Sección Específica: Cardiología</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-600 mb-1">Auscultación Cardíaca</label>
+                  <input
+                    type="text"
+                    formControlName="campo_especialidad_1"
+                    placeholder="R1 y R2 rítmicos, sin soplos"
+                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-600 mb-1">Electrocardiograma / Pruebas</label>
+                  <input
+                    type="text"
+                    formControlName="campo_especialidad_2"
+                    placeholder="Ritmo sinusal regular"
+                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="clinicaForm.get('tipo_plantilla')?.value === 'PEDIATRIA'" class="p-4 rounded-2xl bg-amber-50/50 border border-amber-100 space-y-3">
+              <span class="text-xs font-bold text-amber-900 uppercase">Sección Específica: Pediatría</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-600 mb-1">Desarrollo Psicomotriz / Hitos</label>
+                  <input
+                    type="text"
+                    formControlName="campo_especialidad_1"
+                    placeholder="Adecuado para la edad cronológica"
+                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-600 mb-1">Estado de Inmunizaciones</label>
+                  <input
+                    type="text"
+                    formControlName="campo_especialidad_2"
+                    placeholder="Esquema nacional de vacunación al día"
+                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Diagnóstico CIE-10 y Notas de Evolución Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h2 class="text-base font-black text-slate-900">Diagnóstico CIE-10 y Notas de Evolución</h2>
+            <p class="text-xs text-slate-500">Clasificación internacional y plan de manejo</p>
+          </div>
+
+          <!-- Buscador CIE-10 -->
+          <div class="relative">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Diagnóstico Principal (CIE-10)
+            </label>
+
+            <div class="flex items-center gap-2">
+              <div class="relative flex-1">
+                <input
+                  type="text"
+                  [ngModel]="cie10SearchQuery()"
+                  (ngModelChange)="cie10SearchQuery.set($event); showCie10Dropdown.set(true)"
+                  [ngModelOptions]="{standalone: true}"
+                  placeholder="Buscar por código CIE o descripción (ej: Hipertensión, J00, I10)..."
+                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <button
+                *ngIf="selectedCie10()"
+                type="button"
+                (click)="clearCie10()"
+                class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+              >
+                Limpiar
+              </button>
+            </div>
+
+            <!-- Dropdown Resultados CIE-10 -->
+            <div
+              *ngIf="showCie10Dropdown() && filteredCie10().length > 0"
+              class="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100"
+            >
+              <div
+                *ngFor="let item of filteredCie10()"
+                (click)="selectCie10(item)"
+                class="p-3 hover:bg-indigo-50/70 cursor-pointer transition flex items-center justify-between"
+              >
+                <div>
+                  <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 mr-2">
+                    {{ item.codigo }}
+                  </span>
+                  <span class="text-sm font-semibold text-slate-800">{{ item.descripcion }}</span>
+                </div>
+                <span class="text-xs text-slate-400 font-medium">{{ item.categoria }}</span>
+              </div>
+            </div>
+
+            <!-- Badge Diagnóstico Seleccionado -->
+            <div *ngIf="selectedCie10()" class="mt-2 p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-600 text-white">
+                  {{ selectedCie10()!.codigo }}
+                </span>
+                <span class="text-xs font-bold text-indigo-950">{{ selectedCie10()!.descripcion }}</span>
+              </div>
+              <span class="text-xs font-semibold text-indigo-600">{{ selectedCie10()!.categoria }}</span>
+            </div>
+          </div>
+
+          <!-- Notas de Evolución y Tratamiento -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Notas de Evolución y Plan Terapéutico
+            </label>
+            <textarea
+              formControlName="notas_evolucion"
+              rows="4"
+              placeholder="Conducta médica, prescripción de fármacos, indicaciones y solicitud de paraclínicos..."
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Action Buttons Bar -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <a
+            routerLink="/fichas"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
+          >
+            Volver a la Lista
+          </a>
+
+          <div class="flex items-center gap-3">
+            <button
+              *ngIf="ficha()!.estado !== 'FINALIZADA' && ficha()!.estado !== 'CANCELADA'"
+              type="button"
+              [disabled]="isSaving()"
+              (click)="guardarClinica(false)"
+              class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-800 text-sm font-bold hover:bg-slate-200 disabled:opacity-50 transition"
+            >
+              Guardar Avance Clínico
+            </button>
+
+            <button
+              *ngIf="ficha()!.estado !== 'FINALIZADA' && ficha()!.estado !== 'CANCELADA'"
+              type="button"
+              [disabled]="isSaving()"
+              (click)="guardarClinica(true)"
+              class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
+            >
+              <svg *ngIf="isSaving()" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Finalizar Atención Médica
+            </button>
+          </div>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+</div>

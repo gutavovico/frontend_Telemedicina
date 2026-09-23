@@ -1,0 +1,114 @@
+<app-header />
+<main class="agenda-page">
+  <div class="agenda-heading">
+    <div><p class="agenda-eyebrow">GESTIÓN MÉDICA · CU05</p><h1>{{ rol() === 'ADMIN' ? 'Solicitudes de bloqueo' : 'Agenda médica' }}</h1>
+      <p class="agenda-muted">{{ rol() === 'ADMIN' ? 'Revisa los períodos solicitados por el personal de tu clínica.' : 'Organiza tu disponibilidad y consulta los períodos de atención.' }}</p>
+    </div>
+    <button class="agenda-button secondary" type="button" [disabled]="loading() || busy()" (click)="initialize()">Actualizar</button>
+  </div>
+  @if (limitation()) { <p class="agenda-notice" role="status">{{ limitation() }}</p> }
+  @if (error()) { <p class="agenda-error" role="alert">{{ error() }}</p> }
+  @if (success()) { <p class="agenda-success" role="status">{{ success() }}</p> }
+  @for (warning of warnings(); track $index) { <p class="agenda-notice" role="status">{{ warning }}</p> }
+  @if (loading()) { <p class="agenda-muted" role="status" aria-live="polite">Cargando agenda…</p> }
+
+  @if (manage()) {
+    <section class="agenda-card" aria-labelledby="context-title">
+      <h2 id="context-title">{{ rol() === 'MEDICO' ? 'Mi agenda' : 'Agenda de la clínica' }}</h2>
+      <form [formGroup]="filters" (ngSubmit)="selectFilters()" class="agenda-filters">
+        @if (rol() === 'RECEPCION') {
+          <label>Médico<select formControlName="id_medico" [attr.disabled]="busy() || loading() ? '' : null" (change)="selectFilters()">
+            <option [ngValue]="0">Selecciona un médico</option>
+            @for (m of medicos(); track m.id_medico) { <option [ngValue]="m.id_medico">{{ nombreMedico(m.id_medico) }}</option> }
+          </select></label>
+        } @else { <p class="agenda-doctor">{{ medicoNombre() }}</p> }
+        <label>Servicio<select formControlName="id_servicio" [attr.disabled]="busy() || loading() ? '' : null" (change)="selectFilters()">
+          @for (s of activeServices(); track s.id_servicio) { <option [ngValue]="s.id_servicio">{{ s.nombre }}</option> }
+        </select></label>
+        <label>Fecha<input type="date" formControlName="fecha" required [attr.disabled]="busy() || loading() ? '' : null" (change)="selectFilters()"></label>
+      </form>
+    </section>
+
+    <section aria-labelledby="services-title">
+      <h2 id="services-title">Servicios de atención</h2>
+      <div class="agenda-services">
+        @for (s of servicios(); track s.id_servicio) {
+          <article class="agenda-card service-card"><span class="agenda-eyebrow">SERVICIO {{ s.id_servicio }}</span><h3>{{ s.nombre }}</h3>
+            @if (s.descripcion) { <p class="agenda-muted">{{ s.descripcion }}</p> }
+            <p><strong>{{ s.hora_inicio.slice(0, 5) }} – {{ s.hora_fin.slice(0, 5) }}</strong></p>
+            <p class="agenda-muted">{{ s.duracion_minutos }} minutos por atención</p>
+            <p class="agenda-cost">Costo: {{ s.costo }} <span class="agenda-badge">{{ s.estado }}</span></p>
+          </article>
+        } @empty { <p class="agenda-muted">No hay servicios disponibles.</p> }
+      </div>
+    </section>
+
+    <section class="agenda-card" aria-labelledby="availability-title" [attr.aria-busy]="loading()">
+      <h2 id="availability-title">Disponibilidad del día</h2>
+      <app-agenda-availability [agenda]="availability()" [bloqueos]="bloqueos()" />
+    </section>
+
+    <section class="agenda-card" aria-labelledby="schedules-title">
+      <h2 id="schedules-title">Horarios recurrentes</h2>
+      <p class="agenda-muted">Activa un servicio para un día de la semana. Las horas y la duración son fijas.</p>
+      <form [formGroup]="scheduleForm" (ngSubmit)="createSchedule()" class="agenda-filters">
+        <label>Servicio<select formControlName="id_servicio">
+          <option [ngValue]="0">Selecciona un servicio</option>
+          @for (s of activeServices(); track s.id_servicio) { <option [ngValue]="s.id_servicio">{{ s.nombre }}</option> }
+        </select></label>
+        <label>Día<select formControlName="dia_semana">
+          @for (dia of dias; track $index) { <option [ngValue]="$index + 1">{{ dia }}</option> }
+        </select></label>
+        <button class="agenda-button" type="submit" [disabled]="busy() || loading() || !medicoId()">Activar disponibilidad</button>
+      </form>
+      <div class="agenda-table-scroll"><table><caption class="sr-only">Horarios recurrentes del médico seleccionado</caption>
+        <thead><tr><th>Día</th><th>Servicio</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>@for (h of horarios(); track h.id_horario) {
+          <tr><td>{{ dias[h.dia_semana - 1] }}</td><td>{{ nombreServicio(h.id_servicio) }}</td><td><span class="agenda-badge">{{ h.estado }}</span></td>
+            <td><button type="button" class="agenda-button secondary" [disabled]="busy() || loading()" (click)="toggleSchedule(h)">{{ h.estado === 'activo' ? 'Desactivar' : 'Reactivar' }}</button></td></tr>
+        } @empty { <tr><td colspan="4">No hay horarios configurados para este médico.</td></tr> }</tbody>
+      </table></div>
+    </section>
+  }
+
+  <section class="agenda-card" aria-labelledby="blocks-title">
+    <div class="agenda-heading"><div><h2 id="blocks-title">Bloqueos de agenda</h2><p class="agenda-muted">{{ pendingCount() }} solicitudes pendientes</p></div>
+      @if (manage()) { <button class="agenda-button" type="button" [disabled]="busy() || loading() || !medicoId() || !activeServices().length" (click)="openBlock()">Solicitar bloqueo</button> }
+    </div>
+    <label class="agenda-status-filter">Estado<select #statusFilter [value]="estadoFiltro()" (change)="estadoFiltro.set(statusFilter.value)">
+      <option value="TODOS">Todos</option><option value="PENDIENTE">Pendiente</option><option value="APROBADO">Aprobado</option>
+      <option value="RECHAZADO">Rechazado</option><option value="LIBERADO">Liberado</option>
+    </select></label>
+    <div class="agenda-table-scroll"><table><caption class="sr-only">Solicitudes de bloqueo y acciones autorizadas</caption>
+      <thead><tr><th>Médico / servicio</th><th>Fecha / período</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>@for (b of filteredBlocks(); track b.id_bloqueo) {
+        <tr><td><strong>{{ nombreMedico(b.id_medico) }}</strong><br>{{ nombreServicio(b.id_servicio) }}</td>
+          <td>{{ b.fecha }}<br>{{ b.hora_inicio.slice(0, 5) }} – {{ b.hora_fin.slice(0, 5) }}</td><td class="agenda-reason">{{ b.motivo }}</td>
+          <td><span class="agenda-badge" [class.pending]="b.estado === 'PENDIENTE'" [class.approved]="b.estado === 'APROBADO'">{{ b.estado }}</span></td>
+          <td><div class="agenda-actions">
+            @if (rol() === 'ADMIN' && b.estado === 'PENDIENTE') {
+              <button class="agenda-button" type="button" [disabled]="busy() || loading()" (click)="askAction(b, 'aprobar')">Aprobar</button>
+              <button class="agenda-button secondary" type="button" [disabled]="busy() || loading()" (click)="askAction(b, 'rechazar')">Rechazar</button>
+            } @else if (canRelease(b)) { <button class="agenda-button secondary" type="button" [disabled]="busy() || loading()" (click)="askAction(b, 'liberar')">Liberar</button> }
+            @else { <span class="agenda-muted">Sin acciones</span> }
+          </div></td>
+        </tr>
+      } @empty { <tr><td colspan="5">No hay bloqueos para esta selección.</td></tr> }</tbody>
+    </table></div>
+  </section>
+</main>
+@if (blockModal() && medicoId(); as id) {
+  <app-agenda-block-form [servicios]="activeServices()" [rol]="rol()" [medicoId]="id" [medicoNombre]="medicoNombre()"
+    [submitting]="busy()" [errorMessage]="blockError()" (cancel)="blockModal.set(false)" (submitted)="submitBlock($event)" />
+}
+@if (confirmation(); as target) {
+  <div class="agenda-overlay" (keydown.escape)="!busy() && confirmation.set(null)">
+    <section class="agenda-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+      <h2 id="confirm-title">Confirmar: {{ target.accion }} bloqueo</h2>
+      <p>{{ nombreMedico(target.bloqueo.id_medico) }} · {{ target.bloqueo.fecha }} · {{ target.bloqueo.hora_inicio.slice(0, 5) }} – {{ target.bloqueo.hora_fin.slice(0, 5) }}</p>
+      @if (target.accion === 'aprobar') { <p class="agenda-notice">Se detectarán las citas afectadas y se registrarán los avisos posibles. Las citas no se cancelan ni se reprograman automáticamente.</p> }
+      <div class="agenda-actions"><button type="button" class="agenda-button secondary" cdkFocusInitial [disabled]="busy()" (click)="confirmation.set(null)">Cancelar</button>
+        <button type="button" class="agenda-button" [disabled]="busy()" (click)="confirmAction()">{{ busy() ? 'Guardando…' : 'Confirmar' }}</button></div>
+    </section>
+  </div>
+}

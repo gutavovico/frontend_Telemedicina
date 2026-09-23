@@ -1,0 +1,152 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Encabezado -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl">
+            <span class="material-symbols-outlined text-[24px]">description</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-[#293954]">Documento Clínico</h1>
+            <p class="text-sm text-gray-500">Detalle, visualización y descarga segura del documento</p>
+          </div>
+        </div>
+      </div>
+      <a
+        routerLink="/documentos"
+        class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#25627C] bg-[#F0F5FB] hover:bg-[#E8EDF4] rounded-xl transition"
+      >
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Volver a documentos
+      </a>
+    </div>
+
+    <!-- Feedback Toast / Error -->
+    <div *ngIf="errorMessage()" class="p-4 rounded-xl flex items-center justify-between text-sm bg-rose-50 text-rose-800 border border-rose-200">
+      <span>{{ errorMessage() }}</span>
+      <button (click)="errorMessage.set(null)" class="text-gray-400 hover:text-gray-600">&times;</button>
+    </div>
+
+    <!-- Estado de Carga del detalle -->
+    <div *ngIf="documentsService.isLoading() && !documentsService.selectedDocument()" class="bg-white p-12 rounded-2xl shadow-sm border border-[#E8EDF4] text-center">
+      <div class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-3 text-sm font-medium text-[#25627C]">Cargando documento...</p>
+    </div>
+
+    <!-- Detalle del Documento -->
+    <ng-container *ngIf="documentsService.selectedDocument() as doc">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Metadata -->
+        <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 space-y-4">
+          <h2 class="text-base font-bold text-[#293954] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-[#049CAB]">info</span>
+            Información del documento
+          </h2>
+          <dl class="space-y-3 text-sm">
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Tipo</dt>
+              <dd class="mt-0.5 font-medium text-[#293954]">{{ doc.tipo_documento | documentType }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Título</dt>
+              <dd class="mt-0.5 font-medium text-[#293954]">{{ doc.titulo }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Descripción</dt>
+              <dd class="mt-0.5 text-gray-600">{{ doc.descripcion || 'Sin descripción' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Paciente</dt>
+              <dd class="mt-0.5 font-medium text-[#293954]">{{ doc.paciente_nombre || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Firmado por</dt>
+              <dd class="mt-0.5 font-medium text-[#293954]">{{ doc.firmante_nombre || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Fecha del documento</dt>
+              <dd class="mt-0.5 font-medium text-[#293954]">{{ doc.fecha_documento }}</dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Estado</dt>
+              <dd class="mt-0.5">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                  [ngClass]="doc.estado === 'ACTIVO'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200'"
+                >
+                  {{ doc.estado }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs uppercase font-semibold text-gray-400">Hash SHA-256</dt>
+              <dd class="mt-0.5 font-mono text-xs text-gray-500 break-all">{{ doc.hash_archivo }}</dd>
+            </div>
+          </dl>
+
+          <!-- Acciones -->
+          <div class="pt-4 border-t border-[#E8EDF4] space-y-2">
+            <button
+              type="button"
+              (click)="downloadInfo() ? null : loadDownloadUrl()"
+              class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white font-medium rounded-xl transition"
+              [class.opacity-60]="isLoadingDownload()"
+              [disabled]="isLoadingDownload()"
+            >
+              <span class="material-symbols-outlined text-[18px]">download</span>
+              {{ downloadInfo() ? 'Descargar PDF' : 'Preparar Descarga' }}
+            </button>
+
+            <button
+              *ngIf="downloadInfo()"
+              type="button"
+              (click)="downloadFile()"
+              class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#25627C] hover:bg-[#1E5B76] rounded-xl transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">save_alt</span>
+              Descargar {{ downloadInfo()?.nombre_archivo }}
+            </button>
+
+            <button
+              *ngIf="isAdmin"
+              type="button"
+              (click)="anularDocumento()"
+              class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition"
+              [disabled]="isAnulating()"
+            >
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+              Anular Documento
+            </button>
+          </div>
+        </div>
+
+        <!-- Visor PDF -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6">
+          <h2 class="text-base font-bold text-[#293954] mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-[#049CAB]">picture_as_pdf</span>
+            Vista previa
+          </h2>
+
+          <div *ngIf="!downloadInfo()" class="text-center py-12 text-gray-400">
+            <span class="material-symbols-outlined text-[48px]">visibility</span>
+            <p class="text-sm">Haga clic en "Preparar Descarga" para visualizar el documento.</p>
+          </div>
+
+          <app-document-viewer
+            *ngIf="downloadInfo()"
+            [downloadUrl]="downloadInfo()!.url_firmada"
+            [idDocumento]="downloadInfo()!.id_documento"
+          ></app-document-viewer>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</main>
+
+<app-footer></app-footer>
