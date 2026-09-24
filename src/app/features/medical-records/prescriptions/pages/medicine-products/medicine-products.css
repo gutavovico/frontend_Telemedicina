@@ -1,0 +1,47 @@
+.product-hero {
+  background:
+    radial-gradient(circle at 86% 15%, rgb(92 221 222 / 28%), transparent 27%),
+    linear-gradient(125deg, #1e5369 0%, #25627c 58%, #049cab 100%);
+}
+
+.medicine-mark {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #b8e5e8;
+  border-radius: 0.875rem;
+  color: #037f8b;
+  background: linear-gradient(145deg, #effcfc, #e3f5f7);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #293954;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.field-input {
+  width: 100%;
+  border: 1px solid #d8e1eb;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  padding: 0.65rem 0.75rem;
+  color: #293954;
+  font-size: 0.875rem;
+}
+
+.field-input:focus {
+  outline: 2px solid #049cab;
+  outline-offset: 1px;
+  background: white;
+}
+
+.field-error {
+  margin-top: 0.3rem;
+  color: #be123c;
+  font-size: 0.75rem;
+}

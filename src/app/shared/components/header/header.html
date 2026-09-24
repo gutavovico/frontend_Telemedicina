@@ -1,17 +1,28 @@
-<header class="fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-all">
-  <div class="max-w-container-max mx-auto flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3.5 w-full">
+<header
+  class="fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-all"
+>
+  <div
+    class="max-w-container-max mx-auto flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3.5 w-full"
+  >
     <a routerLink="/" class="flex items-center gap-2.5 cursor-pointer group">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
+      <div
+        class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200"
+      >
         <span class="material-symbols-outlined text-[22px]">local_hospital</span>
       </div>
-      <span class="text-title-md font-bold text-primary group-hover:text-secondary transition-colors duration-200 tracking-tight">
+      <span
+        class="text-title-md font-bold text-primary group-hover:text-secondary transition-colors duration-200 tracking-tight"
+      >
         Hospital San Juan de Dios
       </span>
     </a>
 
     <nav class="hidden md:flex items-center gap-8">
       @if (showAdminNavigation()) {
-        <a routerLink="/" class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200">
+        <a
+          routerLink="/"
+          class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+        >
           Dashboard
         </a>
         <a
@@ -67,14 +78,35 @@
             Documentos
           </a>
         }
+        @if (canSeeRecetas()) {
+          <a
+            routerLink="/recetas"
+            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+            [class.text-primary]="isRecetasRoute()"
+            [class.border-primary]="isRecetasRoute()"
+            [class.text-on-surface-variant]="!isRecetasRoute()"
+            [class.border-transparent]="!isRecetasRoute()"
+          >
+            Recetas
+          </a>
+        }
       } @else {
-        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#especialidades">
+        <a
+          class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+          href="#especialidades"
+        >
           Especialidades
         </a>
-        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#como-funciona">
+        <a
+          class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+          href="#como-funciona"
+        >
           Cómo funciona
         </a>
-        <a class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200" href="#seguridad">
+        <a
+          class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+          href="#seguridad"
+        >
           Seguridad
         </a>
       }
@@ -82,11 +114,7 @@
 
     <div class="flex items-center gap-3">
       @if (authService.isAuthenticated()) {
-        <div
-          class="relative group"
-          (mouseenter)="openDropdown()"
-          (mouseleave)="closeDropdown()"
-        >
+        <div class="relative group" (mouseenter)="openDropdown()" (mouseleave)="closeDropdown()">
           <button
             type="button"
             (click)="toggleDropdown()"
@@ -102,18 +130,26 @@
                   class="w-8 h-8 rounded-full object-cover ring-2 ring-secondary/30"
                 />
               } @else {
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-primary-container to-secondary text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-primary/20">
+                <div
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-primary-container to-secondary text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-primary/20"
+                >
                   {{ authService.userInitials() }}
                 </div>
               }
-              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+              <span
+                class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"
+              ></span>
             </div>
 
-            <span class="font-semibold text-xs sm:text-sm text-on-surface max-w-[130px] truncate hidden sm:inline-block">
+            <span
+              class="font-semibold text-xs sm:text-sm text-on-surface max-w-[130px] truncate hidden sm:inline-block"
+            >
               {{ authService.userDisplayName() }}
             </span>
 
-            <span class="material-symbols-outlined text-[18px] text-outline transition-transform duration-200 group-hover:rotate-180">
+            <span
+              class="material-symbols-outlined text-[18px] text-outline transition-transform duration-200 group-hover:rotate-180"
+            >
               expand_more
             </span>
           </button>
@@ -127,8 +163,12 @@
             [class.invisible]="!isDropdownOpen()"
             [class.pointer-events-none]="!isDropdownOpen()"
           >
-            <div class="bg-white rounded-2xl shadow-level-3 border border-outline-variant/30 py-2 animate-fadeIn overflow-hidden">
-              <div class="px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/20 flex items-center gap-3">
+            <div
+              class="bg-white rounded-2xl shadow-level-3 border border-outline-variant/30 py-2 animate-fadeIn overflow-hidden"
+            >
+              <div
+                class="px-4 py-2.5 bg-surface-container-lowest border-b border-outline-variant/20 flex items-center gap-3"
+              >
                 <div class="shrink-0">
                   @if (authService.userPhoto()) {
                     <img
@@ -137,7 +177,9 @@
                       class="w-10 h-10 rounded-full object-cover ring-2 ring-secondary/40"
                     />
                   } @else {
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                    <div
+                      class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold text-sm shadow-xs"
+                    >
                       {{ authService.userInitials() }}
                     </div>
                   }
@@ -161,12 +203,37 @@
                   <span class="material-symbols-outlined text-[20px] text-primary">person</span>
                   <span>Perfil</span>
                 </button>
+                @if (canSeeRecetas()) {
+                  <a
+                    routerLink="/recetas"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >prescriptions</span
+                    >
+                    <span>Recetas</span>
+                  </a>
+                }
+                @if (authService.isAdmin()) {
+                  <button
+                    type="button"
+                    (click)="goToProducts()"
+                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
+                  >
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >medication</span
+                    >
+                    <span>Productos</span>
+                  </button>
+                }
                 @if (authService.isAdmin() || authService.isDoctor()) {
                   <a
                     routerLink="/appointments/agenda"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
-                    <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >calendar_month</span
+                    >
                     <span>Agenda Médica</span>
                   </a>
                   <a
@@ -180,21 +247,27 @@
                     routerLink="/fichas"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
-                    <span class="material-symbols-outlined text-[20px] text-primary">description</span>
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >description</span
+                    >
                     <span>Fichas Médicas</span>
                   </a>
                   <a
                     routerLink="/documentos"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
-                    <span class="material-symbols-outlined text-[20px] text-primary">folder_shared</span>
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >folder_shared</span
+                    >
                     <span>Documentos Clínicos</span>
                   </a>
                   <a
                     routerLink="/bitacora"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
-                    <span class="material-symbols-outlined text-[20px] text-primary">history_toggle_off</span>
+                    <span class="material-symbols-outlined text-[20px] text-primary"
+                      >history_toggle_off</span
+                    >
                     <span>Bitácora de Auditoría</span>
                   </a>
                 }
@@ -244,7 +317,9 @@
   </div>
 
   @if (isMobileMenuOpen()) {
-    <div class="md:hidden bg-white border-b border-outline-variant/30 px-margin-mobile py-4 animate-fadeIn shadow-level-2">
+    <div
+      class="md:hidden bg-white border-b border-outline-variant/30 px-margin-mobile py-4 animate-fadeIn shadow-level-2"
+    >
       @if (authService.isAuthenticated()) {
         <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl mb-3">
           @if (authService.userPhoto()) {
@@ -254,13 +329,19 @@
               class="w-10 h-10 rounded-full object-cover ring-2 ring-secondary/30"
             />
           } @else {
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center font-bold text-sm shadow-xs"
+            >
               {{ authService.userInitials() }}
             </div>
           }
           <div class="flex flex-col min-w-0">
-            <span class="font-bold text-sm text-on-surface truncate">{{ authService.userDisplayName() }}</span>
-            <span class="text-xs text-on-surface-variant truncate">{{ authService.currentUser()?.correo }}</span>
+            <span class="font-bold text-sm text-on-surface truncate">{{
+              authService.userDisplayName()
+            }}</span>
+            <span class="text-xs text-on-surface-variant truncate">{{
+              authService.currentUser()?.correo
+            }}</span>
           </div>
         </div>
 
@@ -269,9 +350,9 @@
             routerLink="/usuarios"
             (click)="closeMobileMenu()"
             class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
-            [ngClass]="isUsersRoute()
-              ? ['text-primary', 'bg-primary-fixed/30']
-              : ['text-on-surface']"
+            [ngClass]="
+              isUsersRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+            "
           >
             <span class="material-symbols-outlined text-[20px]">group</span>
             <span>Usuarios</span>
@@ -280,9 +361,9 @@
             routerLink="/roles"
             (click)="closeMobileMenu()"
             class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
-            [ngClass]="isRolesRoute()
-              ? ['text-primary', 'bg-primary-fixed/30']
-              : ['text-on-surface']"
+            [ngClass]="
+              isRolesRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+            "
           >
             <span class="material-symbols-outlined text-[20px]">shield_person</span>
             <span>Roles</span>
@@ -293,7 +374,9 @@
               (click)="goToMedicos()"
               class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
             >
-              <span class="material-symbols-outlined text-[20px] text-primary">medical_information</span>
+              <span class="material-symbols-outlined text-[20px] text-primary"
+                >medical_information</span
+              >
               <span>Médicos</span>
             </button>
             <a
@@ -333,9 +416,37 @@
               (click)="closeMobileMenu()"
               class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
             >
-              <span class="material-symbols-outlined text-[20px] text-primary">history_toggle_off</span>
+              <span class="material-symbols-outlined text-[20px] text-primary"
+                >history_toggle_off</span
+              >
               <span>Bitácora de Auditoría</span>
             </a>
+          }
+          @if (canSeeRecetas()) {
+            <a
+              routerLink="/recetas"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isRecetasRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">prescriptions</span>
+              <span>Recetas</span>
+            </a>
+          }
+          @if (authService.isAdmin()) {
+            <button
+              type="button"
+              (click)="goToProducts()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isProductsRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">medication</span>
+              <span>Productos</span>
+            </button>
           }
           <button
             type="button"
@@ -356,13 +467,25 @@
         </nav>
       } @else {
         <nav class="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
-          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#especialidades">
+          <a
+            (click)="closeMobileMenu()"
+            class="text-on-surface py-2 font-medium hover:text-primary transition-colors"
+            href="#especialidades"
+          >
             Especialidades
           </a>
-          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#como-funciona">
+          <a
+            (click)="closeMobileMenu()"
+            class="text-on-surface py-2 font-medium hover:text-primary transition-colors"
+            href="#como-funciona"
+          >
             Cómo funciona
           </a>
-          <a (click)="closeMobileMenu()" class="text-on-surface py-2 font-medium hover:text-primary transition-colors" href="#seguridad">
+          <a
+            (click)="closeMobileMenu()"
+            class="text-on-surface py-2 font-medium hover:text-primary transition-colors"
+            href="#seguridad"
+          >
             Seguridad
           </a>
         </nav>

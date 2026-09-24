@@ -1,0 +1,222 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <span class="material-symbols-outlined text-[24px]">prescriptions</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-[#293954]">Emitir receta médica</h1>
+          <p class="text-sm text-gray-500">
+            La receta se firma en el servidor. El PDF descargado es el documento legal.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="emitir()"
+      class="space-y-6"
+      aria-label="Formulario de emisión de receta"
+      novalidate
+    >
+      <section
+        class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] space-y-4"
+        aria-labelledby="titulo-contexto"
+      >
+        <h2 id="titulo-contexto" class="text-base font-bold text-[#293954]">Contexto clínico</h2>
+        <div
+          *ngIf="contextoClinicoValido()"
+          class="p-4 rounded-xl bg-teal-50/60 border border-teal-200 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
+          role="status"
+        >
+          <span class="material-symbols-outlined text-[#049CAB]" aria-hidden="true">
+            clinical_notes
+          </span>
+          <div class="text-sm">
+            <p class="font-bold text-[#293954]">
+              Consulta #{{ contextoConsultaId() }} · Paciente #{{ contextoPacienteId() }}
+            </p>
+            <p class="text-gray-600 text-xs mt-0.5">
+              Valores fijados desde la historia clínica. No se pueden editar manualmente.
+            </p>
+          </div>
+        </div>
+        <div
+          *ngIf="!contextoClinicoValido()"
+          class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-900 space-y-2"
+          role="alert"
+        >
+          <p class="font-bold">Falta el contexto clínico de la consulta</p>
+          <p>
+            Para emitir una receta, abra esta pantalla desde una consulta registrada. No es posible
+            emitir escribiendo identificadores manualmente.
+          </p>
+          <p class="flex flex-wrap gap-2 pt-1">
+            <a
+              routerLink="/consultas"
+              class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-semibold hover:bg-amber-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+            >
+              Volver a consultas
+            </a>
+            <a
+              routerLink="/pacientes"
+              class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-semibold hover:bg-amber-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+            >
+              Ver historias clínicas
+            </a>
+          </p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" *ngIf="contextoClinicoValido()">
+          <div>
+            <label for="id-consulta" class="block text-xs font-semibold text-[#293954] mb-1">
+              Consulta (ID) *
+            </label>
+            <input
+              id="id-consulta"
+              type="number"
+              min="1"
+              formControlName="id_consulta"
+              readonly
+              aria-readonly="true"
+              aria-describedby="id-consulta-ayuda"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-[#E8EDF4] rounded-xl text-sm text-gray-600 cursor-not-allowed"
+            />
+            <p id="id-consulta-ayuda" class="text-xs text-gray-500 mt-1">
+              Fijado desde la consulta registrada.
+            </p>
+          </div>
+          <div>
+            <label for="id-paciente" class="block text-xs font-semibold text-[#293954] mb-1">
+              Paciente (ID) *
+            </label>
+            <input
+              id="id-paciente"
+              type="number"
+              min="1"
+              formControlName="id_paciente"
+              readonly
+              aria-readonly="true"
+              aria-describedby="id-paciente-ayuda"
+              class="w-full px-3 py-2.5 bg-gray-50 border border-[#E8EDF4] rounded-xl text-sm text-gray-600 cursor-not-allowed"
+            />
+            <p id="id-paciente-ayuda" class="text-xs text-gray-500 mt-1">
+              Fijado desde la historia clínica.
+            </p>
+          </div>
+          <div>
+            <label for="fecha-vencimiento" class="block text-xs font-semibold text-[#293954] mb-1">
+              Fecha de vencimiento *
+            </label>
+            <input
+              id="fecha-vencimiento"
+              type="date"
+              formControlName="fecha_vencimiento"
+              aria-describedby="fecha-vencimiento-error fecha-vencimiento-ayuda"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+            <p id="fecha-vencimiento-ayuda" class="text-xs text-gray-500 mt-1">
+              Vigencia local de 1 a 90 días. La clínica puede exigir un máximo menor (error 422).
+            </p>
+            <p
+              *ngIf="
+                form.controls.fecha_vencimiento.touched && form.controls.fecha_vencimiento.invalid
+              "
+              id="fecha-vencimiento-error"
+              class="text-xs text-rose-600 mt-1"
+              role="alert"
+            >
+              La vigencia debe estar entre 1 y 90 días.
+            </p>
+          </div>
+        </div>
+        <div>
+          <label
+            for="indicaciones-generales"
+            class="block text-xs font-semibold text-[#293954] mb-1"
+          >
+            Indicaciones generales
+          </label>
+          <textarea
+            id="indicaciones-generales"
+            formControlName="indicaciones_generales"
+            rows="3"
+            placeholder="Recomendaciones generales para el paciente..."
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="space-y-4" aria-labelledby="titulo-detalles" formArrayName="detalles">
+        <div class="flex items-center justify-between gap-3">
+          <h2 id="titulo-detalles" class="text-base font-bold text-[#293954]">
+            Medicamentos ({{ detalles.length }})
+          </h2>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="agregarLinea()"
+              class="px-3 py-2 rounded-xl text-xs font-semibold text-white bg-[#25627C] hover:bg-[#1e5469] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25627C]"
+            >
+              + Agregar línea
+            </button>
+          </div>
+        </div>
+
+        <app-medicine-line-editor
+          *ngFor="let linea of detalles.controls; let i = index"
+          [line]="linea"
+          [index]="i"
+          [canRemove]="detalles.length > 1"
+          (removeRequested)="retirarLinea(i)"
+        ></app-medicine-line-editor>
+        <p
+          *ngIf="detalles.length === 0"
+          class="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3"
+          role="alert"
+        >
+          Se requiere al menos un medicamento.
+        </p>
+      </section>
+
+      <div
+        *ngIf="submitError()"
+        class="p-4 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-sm"
+        role="alert"
+        aria-live="assertive"
+      >
+        <p class="font-semibold">No se pudo emitir la receta</p>
+        <p class="mt-1">{{ submitError() }}</p>
+        <p *ngIf="submitErrorCode()" class="mt-1 font-mono text-xs">
+          Código: {{ submitErrorCode() }}
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row justify-end gap-3">
+        <a
+          routerLink="/recetas"
+          class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-[#E8EDF4] hover:bg-slate-50 transition text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+        >
+          Cancelar
+        </a>
+        <button
+          type="submit"
+          [disabled]="isSubmitting() || !contextoClinicoValido()"
+          class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#049CAB] hover:bg-[#038795] disabled:opacity-60 disabled:cursor-not-allowed transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          aria-live="polite"
+        >
+          <span *ngIf="!isSubmitting()">Emitir receta</span>
+          <span *ngIf="isSubmitting()">Emitiendo...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<app-footer></app-footer>

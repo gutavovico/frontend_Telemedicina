@@ -1,0 +1,242 @@
+<div
+  class="rounded-2xl border border-[#E8EDF4] bg-white p-4 sm:p-5 space-y-4"
+  [formGroup]="line"
+  role="group"
+  [attr.aria-label]="'Prescripción ' + (index + 1)"
+>
+  <div class="flex items-center justify-between gap-3">
+    <h3 class="text-sm font-bold text-[#293954]">Prescripción {{ index + 1 | number: '2.0-0' }}</h3>
+    <button
+      *ngIf="canRemove"
+      type="button"
+      (click)="solicitarRetiro()"
+      [attr.aria-label]="'Retirar prescripción ' + (index + 1)"
+      class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+    >
+      <span class="material-symbols-outlined text-[18px]" aria-hidden="true">delete</span>
+      Retirar
+    </button>
+  </div>
+
+  <div
+    class="inline-flex rounded-xl border border-[#E8EDF4] bg-[#F0F5FB]/60 p-1 text-xs font-semibold"
+    role="tablist"
+    [attr.aria-label]="'Modo de medicamento para prescripción ' + (index + 1)"
+  >
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="modo === 'catalogo'"
+      (click)="usarCatalogo()"
+      class="px-3 py-1.5 rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+      [ngClass]="modo === 'catalogo' ? 'bg-white text-[#293954] shadow-sm' : 'text-gray-500'"
+    >
+      Catálogo
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="modo === 'manual'"
+      (click)="usarManual()"
+      class="px-3 py-1.5 rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+      [ngClass]="modo === 'manual' ? 'bg-white text-[#293954] shadow-sm' : 'text-gray-500'"
+    >
+      Manual
+    </button>
+  </div>
+
+  <div *ngIf="modo === 'catalogo'" class="space-y-2">
+    <label [for]="campoId('busqueda')" class="block text-xs font-semibold text-[#293954]">
+      Medicamento del catálogo *
+    </label>
+    <input
+      [id]="campoId('busqueda')"
+      type="text"
+      [formControl]="searchControl"
+      placeholder="Buscar por nombre, principio activo..."
+      autocomplete="off"
+      role="combobox"
+      aria-expanded="true"
+      aria-autocomplete="list"
+      [attr.aria-describedby]="campoId('busqueda-ayuda')"
+      class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+    />
+    <p [id]="campoId('busqueda-ayuda')" class="text-xs text-gray-500">
+      Escriba al menos 2 caracteres. Se muestran principio activo, concentración y forma
+      farmacéutica.
+    </p>
+    <p *ngIf="isSearching()" class="text-xs text-[#25627C]" role="status">Buscando...</p>
+    <p *ngIf="searchError()" class="text-xs text-rose-600" role="alert">{{ searchError() }}</p>
+    <ul
+      *ngIf="searchResults().length > 0"
+      class="divide-y divide-[#E8EDF4] border border-[#E8EDF4] rounded-xl overflow-hidden"
+      role="listbox"
+      [attr.aria-label]="'Resultados para prescripción ' + (index + 1)"
+    >
+      <li *ngFor="let med of searchResults()">
+        <button
+          type="button"
+          (click)="elegirMedicamento(med)"
+          class="w-full text-left px-3 py-2 hover:bg-teal-50 transition focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#049CAB]"
+        >
+          <span class="block text-sm font-semibold text-[#293954]">{{ med.nombre }}</span>
+          <span class="block text-xs text-gray-500">
+            {{ med.principio_activo || 'Sin principio activo' }} ·
+            {{ med.concentracion || 'Sin concentración' }} ·
+            {{ med.forma_farmaceutica || 'Sin forma' }}
+          </span>
+        </button>
+      </li>
+    </ul>
+    <p
+      *ngIf="
+        !isSearching() &&
+        !searchError() &&
+        searchControl.value.trim().length >= 2 &&
+        searchResults().length === 0 &&
+        line.controls.id_medicamento.value === null
+      "
+      class="text-xs text-gray-500"
+      role="status"
+    >
+      No se encontraron medicamentos activos. Pruebe otro término o use la opción manual.
+    </p>
+    <div
+      *ngIf="line.controls.id_medicamento.value !== null"
+      class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs"
+    >
+      <span class="font-semibold text-emerald-800">
+        Seleccionado ID {{ line.controls.id_medicamento.value }} · {{ searchControl.value }}
+      </span>
+      <button
+        type="button"
+        (click)="limpiarSeleccion()"
+        class="text-emerald-700 hover:text-emerald-900 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+      >
+        Cambiar
+      </button>
+    </div>
+    <p
+      *ngIf="line.controls.id_medicamento.touched && line.controls.id_medicamento.value === null"
+      class="text-xs text-rose-600"
+      role="alert"
+    >
+      Seleccione un medicamento del catálogo o cambie a manual.
+    </p>
+  </div>
+
+  <div *ngIf="modo === 'manual'" class="space-y-1">
+    <label [for]="campoId('manual')" class="block text-xs font-semibold text-[#293954]">
+      Nombre manual del medicamento *
+    </label>
+    <input
+      [id]="campoId('manual')"
+      type="text"
+      formControlName="nombre_medicamento_manual"
+      maxlength="200"
+      placeholder="Ej. Amoxicilina 500 mg cápsulas"
+      [attr.aria-describedby]="campoId('manual-error')"
+      class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+    />
+    <p
+      *ngIf="
+        line.controls.nombre_medicamento_manual.touched &&
+        !line.controls.nombre_medicamento_manual.value?.trim()
+      "
+      [id]="campoId('manual-error')"
+      class="text-xs text-rose-600"
+      role="alert"
+    >
+      El nombre manual es obligatorio en modo manual.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div>
+      <label [for]="campoId('dosis')" class="block text-xs font-semibold text-[#293954] mb-1">
+        Dosis *
+      </label>
+      <input
+        [id]="campoId('dosis')"
+        type="text"
+        formControlName="dosis"
+        maxlength="100"
+        placeholder="Ej. 500 mg"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+    </div>
+    <div>
+      <label [for]="campoId('frecuencia')" class="block text-xs font-semibold text-[#293954] mb-1">
+        Frecuencia *
+      </label>
+      <input
+        [id]="campoId('frecuencia')"
+        type="text"
+        formControlName="frecuencia"
+        maxlength="100"
+        placeholder="Ej. Cada 8 horas"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+    </div>
+    <div>
+      <label [for]="campoId('duracion')" class="block text-xs font-semibold text-[#293954] mb-1">
+        Duración *
+      </label>
+      <input
+        [id]="campoId('duracion')"
+        type="text"
+        formControlName="duracion"
+        maxlength="100"
+        placeholder="Ej. 7 días"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+    </div>
+    <div>
+      <label [for]="campoId('via')" class="block text-xs font-semibold text-[#293954] mb-1">
+        Vía *
+      </label>
+      <select
+        [id]="campoId('via')"
+        formControlName="via_administracion"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      >
+        <option *ngFor="let via of vias" [value]="via">{{ via }}</option>
+      </select>
+    </div>
+    <div>
+      <label [for]="campoId('cantidad')" class="block text-xs font-semibold text-[#293954] mb-1">
+        Cantidad *
+      </label>
+      <input
+        [id]="campoId('cantidad')"
+        type="number"
+        formControlName="cantidad"
+        min="1"
+        step="1"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+      <p
+        *ngIf="line.controls.cantidad.touched && line.controls.cantidad.invalid"
+        class="text-xs text-rose-600 mt-1"
+        role="alert"
+      >
+        La cantidad debe ser un entero mayor que cero.
+      </p>
+    </div>
+    <div>
+      <label
+        [for]="campoId('indicaciones')"
+        class="block text-xs font-semibold text-[#293954] mb-1"
+      >
+        Indicaciones
+      </label>
+      <input
+        [id]="campoId('indicaciones')"
+        type="text"
+        formControlName="indicaciones"
+        placeholder="Ej. Con alimentos"
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+    </div>
+  </div>
+</div>

@@ -64,7 +64,7 @@
           <span>Pacientes</span>
         </button>
 
-        <!-- Mensajes con Badge -->
+        <!-- Mensajes -->
         <button
           type="button"
           (click)="cambiarSeccion('mensajes')"
@@ -72,15 +72,10 @@
           [class.text-[#0B2545]]="seccionActiva() === 'mensajes'"
           [class.font-semibold]="seccionActiva() === 'mensajes'"
           [class.text-slate-600]="seccionActiva() !== 'mensajes'"
-          class="flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-slate-100 transition-colors cursor-pointer text-sm w-full text-left"
+          class="flex items-center gap-3.5 px-4 py-3 rounded-2xl hover:bg-slate-100 transition-colors cursor-pointer text-sm w-full text-left"
         >
-          <div class="flex items-center gap-3.5">
-            <span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
-            <span>Mensajes</span>
-          </div>
-          <span class="bg-[#0D746D] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
-            {{ totalNuevosMensajes() }}
-          </span>
+          <span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+          <span>Mensajes</span>
         </button>
       </nav>
     </div>
@@ -134,7 +129,8 @@
           </span>
           <input
             type="text"
-            [(ngModel)]="searchQuery"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
             placeholder="Buscar paciente, ID..."
             class="w-full bg-[#F8FAFC] border border-slate-200/90 rounded-xl pl-10 pr-4 py-2 text-xs md:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-all"
           />
@@ -165,22 +161,16 @@
           <p class="text-xs md:text-sm text-slate-500 mt-1">
             {{ fechaActual() }}
           </p>
+          
         </div>
-
-        <button
-          type="button"
-          (click)="nuevaCita()"
-          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B2545] hover:bg-[#133A6B] text-white text-xs md:text-sm font-semibold transition-all duration-200 shadow-sm cursor-pointer shrink-0"
-        >
-          <span class="material-symbols-outlined text-[18px]">add</span>
-          <span>Nueva Cita</span>
-        </button>
-      </div>
-
-      <!-- ================= 3 TARJETAS DE MÉTRICAS (KPIs) ================= -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+       
         
-        <!-- Tarjeta 1: Consultas Pendientes -->
+      </div>
+      
+      <!-- ================= 3 TARJETAS DE MÉTRICAS (KPIs reales CU28) ================= -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+        <!-- Tarjeta 1: Consultas Pendientes (citas reales atendibles) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-[#E0EDFD] flex items-center justify-center text-[#2563EB] shrink-0">
             <span class="material-symbols-outlined text-[22px]">schedule</span>
@@ -191,25 +181,25 @@
           </div>
         </div>
 
-        <!-- Tarjeta 2: Pacientes en Espera -->
+        <!-- Tarjeta 2: Citas de Hoy (total real cargado) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-[#CCFBF1] flex items-center justify-center text-[#0D9488] shrink-0">
             <span class="material-symbols-outlined text-[22px]">group</span>
           </div>
           <div class="flex flex-col">
-            <span class="text-xs font-medium text-slate-500">Pacientes en Espera</span>
-            <span class="text-2xl font-bold text-slate-900 mt-0.5">{{ totalPacientesEspera() }}</span>
+            <span class="text-xs font-medium text-slate-500">Citas de Hoy</span>
+            <span class="text-2xl font-bold text-slate-900 mt-0.5">{{ totalCitasHoy() }}</span>
           </div>
         </div>
 
-        <!-- Tarjeta 3: Nuevos Mensajes -->
+        <!-- Tarjeta 3: No Atendibles (canceladas/completadas/finalizadas reales) -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
           <div class="w-12 h-12 rounded-2xl bg-[#F3E8FF] flex items-center justify-center text-[#9333EA] shrink-0">
             <span class="material-symbols-outlined text-[22px]">chat_bubble_outline</span>
           </div>
           <div class="flex flex-col">
-            <span class="text-xs font-medium text-slate-500">Nuevos Mensajes</span>
-            <span class="text-2xl font-bold text-slate-900 mt-0.5">{{ totalNuevosMensajes() }}</span>
+            <span class="text-xs font-medium text-slate-500">No Atendibles</span>
+            <span class="text-2xl font-bold text-slate-900 mt-0.5">{{ totalNoAtendibles() }}</span>
           </div>
         </div>
       </div>
@@ -232,7 +222,27 @@
             </button>
           </div>
 
-          <!-- Tabla de Citas del Día -->
+          <!-- Tabla de Citas del Día (datos reales CU28) -->
+          @if (isLoading()) {
+            <div class="px-6 py-10 text-center text-sm text-slate-500">
+              Cargando agenda del día…
+            </div>
+          } @else if (errorMessage()) {
+            <div class="px-6 py-10 text-center flex flex-col items-center gap-3">
+              <p class="text-sm text-red-600">{{ errorMessage() }}</p>
+              <button
+                type="button"
+                (click)="reintentar()"
+                class="px-4 py-2 rounded-xl bg-[#0B2545] text-white text-xs font-semibold hover:bg-[#133A6B] transition-colors cursor-pointer"
+              >
+                Reintentar
+              </button>
+            </div>
+          } @else if (agendaFiltrada().length === 0) {
+            <div class="px-6 py-10 text-center text-sm text-slate-500">
+              No hay citas asignadas para hoy.
+            </div>
+          } @else {
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead class="bg-[#F8FAFC] text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
@@ -245,9 +255,9 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                @for (cita of agendaDelDia(); track cita.id) {
+                @for (cita of agendaFiltrada(); track cita.id_cita) {
                   <tr class="hover:bg-slate-50/70 transition-colors">
-                    
+
                     <!-- Hora -->
                     <td class="py-4 px-6 font-medium text-slate-800 whitespace-nowrap">
                       {{ cita.hora }}
@@ -270,35 +280,27 @@
                       {{ cita.motivo }}
                     </td>
 
-                    <!-- Estado Badge -->
+                    <!-- Estado real (badge solo visual, no altera valor persistido) -->
                     <td class="py-4 px-6 whitespace-nowrap">
-                      @if (cita.estado === 'En curso') {
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#DCFCE7] text-[#15803D]">
-                          En curso
-                        </span>
-                      } @else if (cita.estado === 'En sala') {
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FEF9C3] text-[#A16207]">
-                          En sala
-                        </span>
-                      } @else if (cita.estado === 'Programada') {
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#F1F5F9] text-[#64748B]">
-                          Programada
-                        </span>
-                      }
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold {{ claseEstado(cita.estado) }}">
+                        {{ etiquetaEstado(cita.estado) }}
+                      </span>
                     </td>
 
                     <!-- Acciones Clínicas -->
                     <td class="py-4 px-6 whitespace-nowrap text-right">
                       <div class="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          (click)="atenderCita(cita)"
-                          class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-[11px] font-semibold rounded-lg shadow-xs transition"
-                          title="Registrar atención clínica (CU28)"
-                        >
-                          <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
-                          <span>Atender</span>
-                        </button>
+                        @if (cita.esAtendible) {
+                          <button
+                            type="button"
+                            (click)="atenderCita(cita)"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-[11px] font-semibold rounded-lg shadow-xs transition"
+                            title="Registrar atención clínica (CU28)"
+                          >
+                            <span class="material-symbols-outlined text-[15px]">clinical_notes</span>
+                            <span>Atender</span>
+                          </button>
+                        }
                         <button
                           type="button"
                           (click)="verHcePaciente(cita.id_paciente)"
@@ -315,48 +317,30 @@
               </tbody>
             </table>
           </div>
+          }
         </div>
 
-        <!-- Columna Derecha: Recent Activity (4 de 12 columnas) -->
+        <!-- Columna Derecha: Resumen de la jornada (datos reales CU28) -->
         <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-col gap-5">
-          <h2 class="text-base font-bold text-[#0F172A]">Recent Activity</h2>
+          <h2 class="text-base font-bold text-[#0F172A]">Resumen de la jornada</h2>
 
-          <div class="flex flex-col gap-6 relative">
-            
-            <!-- Item 1: Mensaje recibido -->
-            <div class="flex items-start gap-3.5 relative">
-              <div class="w-3.5 h-3.5 rounded-full border-2 border-[#0D9488] bg-white shrink-0 mt-0.5 z-10"></div>
-              <!-- Línea conectora hacia el siguiente -->
-              <div class="absolute left-[6px] top-3.5 w-0.5 h-14 bg-slate-200 z-0"></div>
-              <div class="flex flex-col min-w-0">
-                <span class="text-xs font-bold text-slate-900 leading-tight">Nuevo mensaje recibido</span>
-                <span class="text-[11px] text-slate-500 mt-0.5">De: Dra. Camila Torres (Laboratorio)</span>
-                <span class="text-[10px] text-slate-400 mt-1">Hace 10 min</span>
-              </div>
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-500">Citas de hoy</span>
+              <span class="font-bold text-slate-900">{{ totalCitasHoy() }}</span>
             </div>
-
-            <!-- Item 2: Resultados subidos -->
-            <div class="flex items-start gap-3.5 relative">
-              <div class="w-3.5 h-3.5 rounded-full border-2 border-[#3B82F6] bg-white shrink-0 mt-0.5 z-10"></div>
-              <!-- Línea conectora hacia el siguiente -->
-              <div class="absolute left-[6px] top-3.5 w-0.5 h-14 bg-slate-200 z-0"></div>
-              <div class="flex flex-col min-w-0">
-                <span class="text-xs font-bold text-slate-900 leading-tight">Resultados subidos</span>
-                <span class="text-[11px] text-slate-500 mt-0.5">Estudio de Juan Carlos Gómez disponible.</span>
-                <span class="text-[10px] text-slate-400 mt-1">Hace 45 min</span>
-              </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-500">Consultas pendientes</span>
+              <span class="font-bold text-slate-900">{{ totalConsultasPendientes() }}</span>
             </div>
-
-            <!-- Item 3: Cita finalizada -->
-            <div class="flex items-start gap-3.5 relative">
-              <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-300 bg-white shrink-0 mt-0.5 z-10"></div>
-              <div class="flex flex-col min-w-0">
-                <span class="text-xs font-bold text-slate-900 leading-tight">Cita finalizada</span>
-                <span class="text-[11px] text-slate-500 mt-0.5">Roberto Sánchez - Control General.</span>
-                <span class="text-[10px] text-slate-400 mt-1">Hace 2 horas</span>
-              </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-500">No atendibles</span>
+              <span class="font-bold text-slate-900">{{ totalNoAtendibles() }}</span>
             </div>
-
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              La acción “Atender” está disponible para las citas del día, salvo canceladas, completadas o finalizadas.
+              Las citas canceladas, completadas o finalizadas no admiten una nueva atención.
+            </p>
           </div>
         </div>
 

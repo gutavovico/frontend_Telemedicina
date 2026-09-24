@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-header',
   imports: [CommonModule, RouterLink],
   templateUrl: './header.html',
-  styleUrl: './header.css'
+  styleUrl: './header.css',
 })
 export class Header {
   readonly authService = inject(AuthService);
@@ -17,7 +17,7 @@ export class Header {
   readonly isDropdownOpen = signal(false);
 
   toggleMobileMenu(): void {
-    this.isMobileMenuOpen.update(value => !value);
+    this.isMobileMenuOpen.update((value) => !value);
   }
 
   closeMobileMenu(): void {
@@ -30,6 +30,24 @@ export class Header {
 
   isRolesRoute(): boolean {
     return this.router.url.startsWith('/roles');
+  }
+
+  isRecetasRoute(): boolean {
+    return this.router.url.startsWith('/recetas');
+  }
+
+  isProductsRoute(): boolean {
+    return this.router.url.startsWith('/medicamentos');
+  }
+
+  // Entrada "Recetas" (CU16, hallazgo 4): visible para ADMIN, MEDICO y PACIENTE
+  // reales; oculta para roles desconocidos y visitantes.
+  canSeeRecetas(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+    const role = this.authService.userRole();
+    return role === 'admin' || role === 'doctor' || role === 'paciente';
   }
 
   showAdminNavigation(): boolean {
@@ -45,7 +63,7 @@ export class Header {
   }
 
   toggleDropdown(): void {
-    this.isDropdownOpen.update(v => !v);
+    this.isDropdownOpen.update((v) => !v);
   }
 
   goToProfile(): void {
@@ -59,6 +77,18 @@ export class Header {
     this.closeDropdown();
     this.closeMobileMenu();
     this.router.navigate(['/medicos']);
+  }
+
+  goToRecetas(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.router.navigate(['/recetas']);
+  }
+
+  goToProducts(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.router.navigate(['/medicamentos']);
   }
 
   logout(): void {

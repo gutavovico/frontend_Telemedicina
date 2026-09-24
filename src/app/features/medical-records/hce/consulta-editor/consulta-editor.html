@@ -75,9 +75,12 @@
               type="number"
               formControlName="id_cita"
               placeholder="Ej: 1"
-              class="w-full px-3.5 py-2.5 bg-[#f8f9fa] border border-[#c2c6d2] rounded-xl text-sm focus:outline-none focus:border-[#003667] transition"
+              class="w-full px-3.5 py-2.5 bg-[#f8f9fa] border border-[#c2c6d2] rounded-xl text-sm focus:outline-none focus:border-[#003667] transition disabled:cursor-not-allowed disabled:opacity-70"
               [class.border-[#ba1a1a]]="form.controls.id_cita.invalid && form.controls.id_cita.touched"
             />
+            <p *ngIf="form.controls.id_cita.disabled" class="text-[11px] text-[#424750]">
+              Cita de origen asignada desde la agenda.
+            </p>
             <p *ngIf="form.controls.id_cita.invalid && form.controls.id_cita.touched" class="text-[11px] text-[#ba1a1a]">
               Ingrese el identificador de la cita médica válida.
             </p>

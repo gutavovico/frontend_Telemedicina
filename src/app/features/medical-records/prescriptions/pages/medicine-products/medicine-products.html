@@ -1,0 +1,218 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#F6F8FB] pt-24 pb-12 px-4 sm:px-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <header class="product-hero rounded-3xl overflow-hidden text-white p-6 sm:p-8">
+      <div class="max-w-2xl">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-cyan-100">
+          CU16 · Catálogo clínico
+        </p>
+        <h1 class="mt-2 text-2xl sm:text-3xl font-bold">Productos farmacológicos</h1>
+        <p class="mt-2 text-sm text-cyan-50/90">
+          Mantenga disponibles los medicamentos que los médicos pueden seleccionar al emitir una
+          receta.
+        </p>
+      </div>
+    </header>
+
+    <div
+      class="grid grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-6 items-start"
+    >
+      <section
+        class="bg-white border border-[#E1E8F0] rounded-2xl shadow-sm overflow-hidden"
+        aria-labelledby="catalog-title"
+      >
+        <div class="p-5 sm:p-6 border-b border-[#E8EDF4]">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h2 id="catalog-title" class="text-lg font-bold text-[#293954]">Catálogo activo</h2>
+              <p class="text-sm text-gray-500">
+                {{ total() }} productos disponibles para prescripción
+              </p>
+            </div>
+            <form class="flex gap-2" (ngSubmit)="loadMedicines()" role="search">
+              <label for="medicine-search" class="sr-only">Buscar producto</label>
+              <input
+                id="medicine-search"
+                type="search"
+                [formControl]="searchControl"
+                placeholder="Nombre o principio activo"
+                class="min-w-0 w-full sm:w-64 px-3 py-2.5 rounded-xl border border-[#D8E1EB] bg-[#F8FAFC] text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+              />
+              <button
+                type="submit"
+                class="px-4 py-2.5 rounded-xl bg-[#25627C] text-white text-sm font-semibold hover:bg-[#1E5369] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25627C]"
+              >
+                Buscar
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading()" class="p-12 text-center text-sm text-[#25627C]" role="status">
+          Cargando productos…
+        </div>
+        <div
+          *ngIf="loadError()"
+          class="m-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700"
+          role="alert"
+        >
+          {{ loadError() }}
+          <button type="button" (click)="loadMedicines()" class="ml-2 font-bold underline">
+            Reintentar
+          </button>
+        </div>
+        <div
+          *ngIf="!isLoading() && !loadError() && medicines().length === 0"
+          class="p-10 text-center"
+        >
+          <span class="material-symbols-outlined text-4xl text-[#049CAB]" aria-hidden="true"
+            >medication</span
+          >
+          <h3 class="mt-3 font-bold text-[#293954]">No se encontraron productos</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Cambie la búsqueda o registre el primer medicamento desde el formulario.
+          </p>
+          <button
+            *ngIf="searchControl.value"
+            type="button"
+            (click)="clearSearch()"
+            class="mt-4 text-sm font-semibold text-[#25627C] underline"
+          >
+            Ver todo el catálogo
+          </button>
+        </div>
+
+        <div *ngIf="!isLoading() && medicines().length > 0" class="divide-y divide-[#E8EDF4]">
+          <article
+            *ngFor="let medicine of medicines()"
+            class="p-5 hover:bg-[#F8FBFD] transition-colors"
+          >
+            <div class="flex items-start gap-4">
+              <div class="medicine-mark" aria-hidden="true">
+                <span class="material-symbols-outlined">pill</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="font-bold text-[#293954]">{{ medicine.nombre }}</h3>
+                  <span
+                    class="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700"
+                    >ACTIVO</span
+                  >
+                </div>
+                <p class="mt-1 text-sm text-[#25627C]">
+                  {{ medicine.principio_activo || 'Principio activo no informado' }}
+                </p>
+                <p class="mt-1 text-xs text-gray-500">
+                  {{ medicine.concentracion || 'Sin concentración' }} ·
+                  {{ medicine.forma_farmaceutica || 'Sin forma farmacéutica' }}
+                </p>
+                <p *ngIf="medicine.descripcion" class="mt-2 text-xs text-gray-600">
+                  {{ medicine.descripcion }}
+                </p>
+              </div>
+              <span class="font-mono text-[11px] text-gray-400"
+                >#{{ medicine.id_medicamento }}</span
+              >
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <aside
+        class="bg-white border border-[#E1E8F0] rounded-2xl shadow-sm p-5 sm:p-6 lg:sticky lg:top-24"
+        aria-labelledby="create-title"
+      >
+        <p class="text-xs font-bold uppercase tracking-widest text-[#049CAB]">
+          Alta administrativa
+        </p>
+        <h2 id="create-title" class="mt-1 text-lg font-bold text-[#293954]">Registrar producto</h2>
+        <p class="mt-1 text-xs text-gray-500">
+          El nombre es obligatorio. Complete los datos que ayuden al médico a identificarlo.
+        </p>
+
+        <form
+          [formGroup]="createForm"
+          (ngSubmit)="createMedicine()"
+          class="mt-5 space-y-4"
+          novalidate
+        >
+          <div>
+            <label for="product-name" class="field-label">Nombre *</label>
+            <input id="product-name" formControlName="nombre" maxlength="200" class="field-input" />
+            <p
+              *ngIf="createForm.controls.nombre.touched && createForm.controls.nombre.invalid"
+              class="field-error"
+            >
+              Ingrese el nombre del medicamento.
+            </p>
+          </div>
+          <div>
+            <label for="active-ingredient" class="field-label">Principio activo</label>
+            <input
+              id="active-ingredient"
+              formControlName="principio_activo"
+              maxlength="200"
+              class="field-input"
+            />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <div>
+              <label for="concentration" class="field-label">Concentración</label
+              ><input
+                id="concentration"
+                formControlName="concentracion"
+                maxlength="100"
+                class="field-input"
+                placeholder="Ej. 500 mg"
+              />
+            </div>
+            <div>
+              <label for="pharmaceutical-form" class="field-label">Forma farmacéutica</label
+              ><input
+                id="pharmaceutical-form"
+                formControlName="forma_farmaceutica"
+                maxlength="100"
+                class="field-input"
+                placeholder="Ej. Comprimido"
+              />
+            </div>
+          </div>
+          <div>
+            <label for="product-description" class="field-label">Descripción</label
+            ><textarea
+              id="product-description"
+              formControlName="descripcion"
+              rows="3"
+              class="field-input resize-y"
+            ></textarea>
+          </div>
+
+          <div
+            *ngIf="createError()"
+            class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700"
+            role="alert"
+          >
+            {{ createError() }}
+          </div>
+          <div
+            *ngIf="createSuccess()"
+            class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-700"
+            role="status"
+          >
+            {{ createSuccess() }}
+          </div>
+          <button
+            type="submit"
+            [disabled]="createForm.invalid || isCreating()"
+            class="w-full px-4 py-3 rounded-xl bg-[#049CAB] text-white text-sm font-bold hover:bg-[#038794] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            {{ isCreating() ? 'Registrando…' : 'Registrar producto' }}
+          </button>
+        </form>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>
