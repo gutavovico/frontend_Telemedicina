@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000',
+  apiUrl: 'https://telemedicina-backend-ezx9.onrender.com',
   inactivityTimeoutMinutes: 15
 };
 
