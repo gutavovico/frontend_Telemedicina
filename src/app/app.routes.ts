@@ -229,9 +229,9 @@ export const routes: Routes = [
       {
         path: ':id/consultas/nueva',
         loadComponent: () =>
-          import(
-            './features/medical-records/hce/consulta-editor/consulta-editor'
-          ).then(m => m.ConsultaEditor),
+          import('./features/medical-records/hce/consulta-editor/consulta-editor').then(
+            m => m.ConsultaEditor
+          ),
         title: 'Hospital San Juan de Dios - Registrar Consulta Médica'
       }
     ]
