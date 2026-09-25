@@ -139,6 +139,9 @@ export class ConsultaEditor implements OnInit {
       const citaId = Number(citaQuery);
       this.idCita.set(citaId);
       this.form.controls.id_cita.setValue(citaId);
+      // La atención iniciada desde una cita conserva su vínculo de origen.
+      // getRawValue() mantiene este valor en el payload aunque el control esté bloqueado.
+      this.form.controls.id_cita.disable();
     }
   }
 

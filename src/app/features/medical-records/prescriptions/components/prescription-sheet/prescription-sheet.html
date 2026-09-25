@@ -1,0 +1,207 @@
+<article
+  *ngIf="receta"
+  class="prescription-sheet bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden"
+  aria-label="Boleta web de receta"
+>
+  <p class="print-notice" aria-hidden="true">Vista web informativa</p>
+
+  <div class="p-6 sm:p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-[#25627C]">
+          Hospital San Juan de Dios · Telemedicina
+        </p>
+        <h2 class="text-2xl font-bold text-[#293954] mt-1">Receta médica</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Vista web informativa. El PDF descargado es el documento legal firmado.
+        </p>
+      </div>
+      <div class="flex flex-col items-start sm:items-end gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
+          [ngClass]="badgeClass()"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true"></span>
+          {{ estadoTexto() }} · {{ receta.estado }}
+        </span>
+        <p class="font-mono text-sm font-bold text-[#293954]">{{ receta.folio }}</p>
+      </div>
+    </div>
+
+    <dl
+      class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-[#F0F5FB]/70 border border-[#E8EDF4] text-sm"
+    >
+      <div>
+        <dt class="text-xs font-semibold text-gray-500">Fecha de emisión</dt>
+        <dd class="font-semibold text-[#293954]">{{ receta.fecha_emision }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs font-semibold text-gray-500">Fecha de vencimiento</dt>
+        <dd class="font-semibold text-[#293954]">{{ receta.fecha_vencimiento }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs font-semibold text-gray-500">Consulta</dt>
+        <dd class="font-semibold text-[#293954]">#{{ receta.id_consulta }}</dd>
+      </div>
+    </dl>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section
+        class="p-4 rounded-2xl border border-[#E8EDF4] bg-white"
+        aria-label="Datos del paciente"
+      >
+        <h3 class="text-xs font-bold uppercase tracking-wider text-[#25627C]">Paciente</h3>
+        <p class="text-base font-bold text-[#293954] mt-1">{{ receta.paciente.nombre_completo }}</p>
+        <p class="text-xs text-gray-500 mt-1">ID {{ receta.paciente.id_paciente }}</p>
+      </section>
+      <section
+        class="p-4 rounded-2xl border border-[#E8EDF4] bg-white"
+        aria-label="Datos del profesional"
+      >
+        <h3 class="text-xs font-bold uppercase tracking-wider text-[#25627C]">Profesional</h3>
+        <p class="text-base font-bold text-[#293954] mt-1">{{ receta.medico.nombre_completo }}</p>
+        <p class="text-xs text-gray-600 mt-1">
+          {{ receta.medico.especialidad || 'Medicina general' }} · Mat.
+          {{ receta.medico.matricula_profesional }}
+        </p>
+      </section>
+    </div>
+
+    <section aria-label="Prescripción de medicamentos" class="space-y-4">
+      <h3 class="text-base font-bold text-[#293954]">Prescripción</h3>
+      <ol class="space-y-4 list-none p-0 m-0">
+        <li
+          *ngFor="let detalle of detallesOrdenados(); let i = index"
+          class="prescription-line flex gap-4 p-4 rounded-2xl border border-[#E8EDF4] bg-white"
+        >
+          <div class="flex flex-col items-center gap-2" aria-hidden="true">
+            <span
+              class="w-8 h-8 rounded-full bg-[#049CAB] text-white text-sm font-bold flex items-center justify-center"
+            >
+              {{ i + 1 }}
+            </span>
+            <span class="w-1 flex-1 rounded-full bg-[#049CAB]/30"></span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-base font-bold text-[#293954]">{{ detalle.medicamento_nombre }}</h4>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {{ detalle.principio_activo || 'Sin principio activo' }} ·
+              {{ detalle.concentracion || 'Sin concentración' }} ·
+              {{ detalle.forma_farmaceutica || 'Sin forma farmacéutica' }}
+              <span *ngIf="detalle.id_medicamento"> · Catálogo #{{ detalle.id_medicamento }}</span>
+              <span *ngIf="detalle.nombre_medicamento_manual">
+                · Manual: {{ detalle.nombre_medicamento_manual }}
+              </span>
+            </p>
+            <dl class="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+              <div>
+                <dt class="font-semibold text-gray-500">Dosis</dt>
+                <dd class="font-semibold text-[#293954]">{{ detalle.dosis }}</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-gray-500">Frecuencia</dt>
+                <dd class="font-semibold text-[#293954]">{{ detalle.frecuencia }}</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-gray-500">Duración</dt>
+                <dd class="font-semibold text-[#293954]">{{ detalle.duracion }}</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-gray-500">Vía</dt>
+                <dd class="font-semibold text-[#293954]">{{ detalle.via_administracion }}</dd>
+              </div>
+              <div>
+                <dt class="font-semibold text-gray-500">Cantidad</dt>
+                <dd class="font-semibold text-[#293954]">{{ detalle.cantidad }}</dd>
+              </div>
+            </dl>
+            <p *ngIf="detalle.indicaciones" class="mt-2 text-sm text-gray-700">
+              <span class="font-semibold text-[#293954]">Indicaciones:</span>
+              {{ detalle.indicaciones }}
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section
+      *ngIf="receta.indicaciones_generales"
+      class="p-4 rounded-2xl bg-[#F0F5FB]/70 border border-[#E8EDF4]"
+      aria-label="Indicaciones generales"
+    >
+      <h3 class="text-sm font-bold text-[#293954]">Indicaciones generales</h3>
+      <p class="text-sm text-gray-700 mt-1">{{ receta.indicaciones_generales }}</p>
+    </section>
+
+    <section
+      class="p-4 rounded-2xl border border-[#E8EDF4] bg-white space-y-2"
+      aria-label="Verificación digital"
+    >
+      <h3 class="text-sm font-bold text-[#293954]">Verificación digital</h3>
+      <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div>
+          <dt class="font-semibold text-gray-500">Algoritmo</dt>
+          <dd class="font-mono font-semibold text-[#293954]">{{ receta.algoritmo_firma }}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-gray-500">key_id</dt>
+          <dd class="font-mono font-semibold text-[#293954] break-all">{{ receta.key_id }}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-gray-500">Hash PDF</dt>
+          <dd class="font-mono text-[#293954] break-all">
+            <span *ngIf="!showFullHash()">{{ hashAbreviado() }}</span>
+            <span *ngIf="showFullHash()">{{ receta.hash_pdf }}</span>
+          </dd>
+          <button
+            type="button"
+            (click)="alternarHash()"
+            [attr.aria-expanded]="showFullHash()"
+            class="mt-1 text-xs font-semibold text-[#049CAB] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            {{ showFullHash() ? 'Ocultar hash completo' : 'Ver hash completo' }}
+          </button>
+        </div>
+      </dl>
+      <p class="text-xs text-gray-500">
+        Versión de carga {{ receta.version_payload }} · Documento
+        {{ receta.id_documento ?? '—' }}
+      </p>
+      <p *ngIf="receta.id_receta_sustituta !== null" class="text-xs text-gray-700">
+        Receta sustituta:
+        <span class="font-mono font-bold">#{{ receta.id_receta_sustituta }}</span>
+      </p>
+      <div
+        *ngIf="receta.estado === 'ANULADA'"
+        class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800"
+      >
+        <p class="font-bold">Receta anulada</p>
+        <p class="mt-1">Motivo: {{ receta.motivo_anulacion || '—' }}</p>
+        <p *ngIf="receta.observaciones_anulacion" class="mt-1">
+          Observaciones: {{ receta.observaciones_anulacion }}
+        </p>
+        <p *ngIf="receta.fecha_anulacion" class="mt-1">Fecha: {{ receta.fecha_anulacion }}</p>
+      </div>
+    </section>
+
+    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+      <button
+        *ngIf="canDownload"
+        type="button"
+        (click)="solicitarDescarga()"
+        [disabled]="isDownloading"
+        class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#049CAB] hover:bg-[#038795] disabled:opacity-60 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+      >
+        {{ isDownloading ? 'Descargando...' : 'Descargar PDF legal' }}
+      </button>
+      <button
+        *ngIf="canCancel"
+        type="button"
+        (click)="solicitarAnulacion()"
+        class="px-5 py-2.5 rounded-xl text-sm font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+      >
+        Anular receta
+      </button>
+    </div>
+  </div>
+</article>

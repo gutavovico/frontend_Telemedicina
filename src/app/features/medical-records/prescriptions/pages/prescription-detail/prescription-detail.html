@@ -1,0 +1,81 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <nav aria-label="Migas de pan">
+      <button
+        type="button"
+        (click)="volverAlListado()"
+        class="inline-flex items-center gap-1 text-sm font-semibold text-[#25627C] hover:text-[#049CAB] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"> arrow_back </span>
+        Volver a recetas
+      </button>
+    </nav>
+
+    <div
+      *ngIf="isLoading()"
+      class="bg-white rounded-2xl border border-[#E8EDF4] p-12 text-center space-y-3"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"
+        aria-hidden="true"
+      ></div>
+      <p class="text-sm font-medium text-[#25627C]">Cargando boleta de receta...</p>
+    </div>
+
+    <div
+      *ngIf="!isLoading() && errorMessage()"
+      class="bg-white rounded-2xl border border-rose-200 p-8 text-center space-y-3"
+      role="alert"
+      aria-live="assertive"
+    >
+      <p class="text-base font-bold text-[#293954]">No se pudo cargar la receta</p>
+      <p class="text-sm text-gray-500">{{ errorMessage() }}</p>
+      <button
+        type="button"
+        (click)="recargar()"
+        class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#25627C] hover:bg-[#1e5469] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25627C]"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <div *ngIf="!isLoading() && !errorMessage() && receta()" class="space-y-4" aria-live="polite">
+      <div
+        *ngIf="downloadError()"
+        class="p-4 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-sm"
+        role="alert"
+      >
+        {{ downloadError() }}
+      </div>
+      <div
+        *ngIf="downloadSuccess()"
+        class="p-4 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm"
+        role="status"
+      >
+        {{ downloadSuccess() }}
+      </div>
+
+      <app-prescription-sheet
+        [receta]="receta()"
+        [canDownload]="canDownload()"
+        [canCancel]="canCancel()"
+        [isDownloading]="isDownloading()"
+        (downloadRequested)="descargarPdf()"
+        (cancelRequested)="abrirAnulacion()"
+      ></app-prescription-sheet>
+    </div>
+  </div>
+</main>
+
+<app-cancel-prescription-dialog
+  [open]="cancelOpen()"
+  [recetaId]="receta()?.id_receta ?? null"
+  (closed)="cerrarAnulacion()"
+  (cancelled)="alAnularConfirmada($event)"
+></app-cancel-prescription-dialog>
+
+<app-footer></app-footer>

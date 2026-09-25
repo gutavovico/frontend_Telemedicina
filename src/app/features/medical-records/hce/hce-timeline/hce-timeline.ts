@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HceService } from '../../../../core/services/hce.service';
 import { PatientService } from '../../../../core/services/patient.service';
@@ -14,10 +14,11 @@ import { ConsultaResponse } from '../../../../core/models/hce.models';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, Header, Footer],
   templateUrl: './hce-timeline.html',
-  styleUrl: './hce-timeline.css'
+  styleUrl: './hce-timeline.css',
 })
 export class HceTimeline implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly hceService = inject(HceService);
   readonly patientService = inject(PatientService);
   readonly authService = inject(AuthService);
@@ -33,14 +34,12 @@ export class HceTimeline implements OnInit {
     const q = this.filtroTexto().toLowerCase().trim();
     if (!q) return historia.consultas;
 
-    return historia.consultas.filter(c => {
+    return historia.consultas.filter((c) => {
       const enMotivo = c.motivo_consulta?.toLowerCase().includes(q);
       const enSintomas = c.sintomas?.toLowerCase().includes(q);
       const enEvolucion = c.evolucion?.toLowerCase().includes(q);
       const enDiagnosticos = c.diagnosticos?.some(
-        d =>
-          d.codigo_cie.toLowerCase().includes(q) ||
-          d.descripcion.toLowerCase().includes(q)
+        (d) => d.codigo_cie.toLowerCase().includes(q) || d.descripcion.toLowerCase().includes(q),
       );
       return enMotivo || enSintomas || enEvolucion || enDiagnosticos;
     });
@@ -68,6 +67,30 @@ export class HceTimeline implements OnInit {
     } else {
       this.consultaExpandidaId.set(idConsulta);
     }
+  }
+
+  // Acción contextual CU16 (hallazgo 4): la línea de tiempo HCE representa
+  // consultas registradas/finalizadas, por eso es el punto de entrada elegido
+  // para "Emitir receta" (se documenta la decisión: atenciones ya cerradas con
+  // id_consulta e id_paciente conocidos, sin inventar valores ni usar tenant).
+  // Solo visible para médico y solo con consulta y paciente válidos.
+  puedeEmitirReceta(consulta: ConsultaResponse): boolean {
+    return (
+      this.authService.isDoctor() &&
+      Number.isInteger(consulta.id_consulta) &&
+      consulta.id_consulta > 0 &&
+      Number.isInteger(this.idPaciente()) &&
+      this.idPaciente() > 0
+    );
+  }
+
+  emitirReceta(consulta: ConsultaResponse): void {
+    if (!this.puedeEmitirReceta(consulta)) {
+      return;
+    }
+    void this.router.navigate(['/recetas/emitir'], {
+      queryParams: { id_consulta: consulta.id_consulta, id_paciente: this.idPaciente() },
+    });
   }
 
   // Helpers biométricos de visualización
