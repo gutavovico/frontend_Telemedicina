@@ -47,7 +47,7 @@
     <div class="flex items-center gap-1.5 truncate">
       <span class="material-symbols-outlined text-[15px] text-slate-400">calendar_month</span>
       <span class="font-medium truncate">
-        {{ fechaHoraOverride || ((citaInfo?.motivo || 'Control') + ' · ' + (citaInfo?.fecha_cita || teleconsultaService.cita()?.rangoFechas || 'Hoy') + ' - ' + (citaInfo?.hora_inicio || teleconsultaService.cita()?.horaTeleconsulta || '10:30')) }}
+        {{ fechaHoraOverride || ((citaInfo?.motivo || 'Control') + ' · ' + (citaInfo?.fecha_cita || teleconsultaService.cita().rangoFechas || 'Hoy') + ' - ' + (citaInfo?.hora_inicio || teleconsultaService.cita().horaTeleconsulta || '10:30')) }}
         @if (fichaNumeroOverride || citaInfo?.ficha || citaInfo?.id_cita) {
           · {{ fichaNumeroOverride || citaInfo?.ficha || ('Ficha CAR-' + (citaInfo?.id_cita || '014')) }}
         }

@@ -119,8 +119,22 @@ export const serverRoutes: ServerRoute[] = [
     path: 'audit-log',
     renderMode: RenderMode.Client,
   },
+  // CU15: Teleconsulta y Chat de Cita Médica (rutas del cliente protegidas con sesión activa)
+  {
+    path: 'mis-citas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'teleconsulta',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'citas/:id/teleconsulta',
+    renderMode: RenderMode.Client,
+  },
   {
     path: '**',
     renderMode: RenderMode.Prerender,
   },
 ];
+
