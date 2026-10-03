@@ -90,6 +90,30 @@
             Recetas
           </a>
         }
+        @if (canSeeCitasPaciente()) {
+          <a
+            routerLink="/mis-citas"
+            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+            [class.text-primary]="isMisCitasRoute()"
+            [class.border-primary]="isMisCitasRoute()"
+            [class.text-on-surface-variant]="!isMisCitasRoute()"
+            [class.border-transparent]="!isMisCitasRoute()"
+          >
+            Citas
+          </a>
+        }
+        @if (canSeeTeleconsulta()) {
+          <a
+            routerLink="/teleconsulta"
+            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+            [class.text-primary]="isTeleconsultaRoute()"
+            [class.border-primary]="isTeleconsultaRoute()"
+            [class.text-on-surface-variant]="!isTeleconsultaRoute()"
+            [class.border-transparent]="!isTeleconsultaRoute()"
+          >
+            Teleconsulta
+          </a>
+        }
       } @else {
         <a
           class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
@@ -433,6 +457,32 @@
             >
               <span class="material-symbols-outlined text-[20px] text-primary">prescriptions</span>
               <span>Recetas</span>
+            </a>
+          }
+          @if (canSeeCitasPaciente()) {
+            <a
+              routerLink="/mis-citas"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isMisCitasRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">event</span>
+              <span>Citas</span>
+            </a>
+          }
+          @if (canSeeTeleconsulta()) {
+            <a
+              routerLink="/teleconsulta"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isTeleconsultaRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">video_call</span>
+              <span>Teleconsulta</span>
             </a>
           }
           @if (authService.isAdmin()) {

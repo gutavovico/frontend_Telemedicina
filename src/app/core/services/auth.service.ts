@@ -92,6 +92,17 @@ export class AuthService {
       return rol;
     }
 
+    // Fallback de compatibilidad: si user.rol textual no viene poblado pero existe id_rol numérico
+    if (user.id_rol === 4) {
+      return 'paciente';
+    }
+    if (user.id_rol === 2) {
+      return 'doctor';
+    }
+    if (user.id_rol === 1) {
+      return 'admin';
+    }
+
     // Rol ausente o desconocido: el perfil médico confirmado acredita doctor.
     if (this.perfilMedico() !== null) {
       return 'doctor';
@@ -101,6 +112,7 @@ export class AuthService {
 
   readonly isAdmin = computed(() => this.userRole() === 'admin');
   readonly isDoctor = computed(() => this.userRole() === 'doctor');
+  readonly isPaciente = computed(() => this.userRole() === 'paciente');
 
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile

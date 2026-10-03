@@ -160,9 +160,17 @@
                     }
                   </td>
 
-                  <!-- Acciones: Editar en Tiempo Real + Eliminar Dinámico -->
+                  <!-- Acciones: Chatear (CU15) + Editar en Tiempo Real + Eliminar Dinámico -->
                   <td class="py-4 px-4 text-center">
                     <div class="flex items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        (click)="abrirChatCita(cita)"
+                        class="p-1.5 text-slate-400 hover:text-[#00897b] hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                        title="Chatear con el paciente (CU15)"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">chat</span>
+                      </button>
                       <button
                         type="button"
                         (click)="iniciarEdicion(cita)"
@@ -407,6 +415,15 @@
         </div>
       </div>
     </div>
+  }
+
+  <!-- WIDGET FLOTANTE DE CHAT CU15 (POPOVER ESQUINA INFERIOR DERECHA) -->
+  @if (showChatWidget() && chatCitaActiva()) {
+    <app-chat-floating-widget
+      [idCita]="chatCitaActiva()!.id_cita"
+      [citaInfo]="chatCitaActiva()"
+      (cerrar)="cerrarChatCita()"
+    ></app-chat-floating-widget>
   }
 
 </div>

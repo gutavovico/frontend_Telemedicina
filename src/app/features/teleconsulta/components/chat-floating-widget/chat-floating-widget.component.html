@@ -1,0 +1,203 @@
+<div class="w-[380px] sm:w-[420px] h-[580px] max-h-[88vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden font-sans">
+  
+  <!-- CABECERA DEL WIDGET (Interlocutor, Estado, Cerrar) -->
+  <div class="p-3.5 bg-white border-b border-slate-100 flex items-center justify-between shadow-2xs">
+    <div class="flex items-center gap-3">
+      <!-- Avatar con indicador Online -->
+      <div class="relative flex-shrink-0">
+        @if (interlocutor().avatarUrl) {
+          <img
+            [src]="interlocutor().avatarUrl"
+            alt="Avatar"
+            class="w-10 h-10 rounded-full object-cover border border-slate-200"
+          />
+        } @else {
+          <div class="w-10 h-10 rounded-full bg-[#003b71] text-white flex items-center justify-center font-bold text-xs tracking-wider">
+            {{ interlocutor().iniciales }}
+          </div>
+        }
+        <!-- Punto verde online -->
+        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+      </div>
+
+      <!-- Datos del interlocutor -->
+      <div class="leading-tight">
+        <h3 class="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+          {{ interlocutor().nombre }}
+        </h3>
+        <p class="text-[11px] text-slate-500 font-medium">
+          {{ interlocutor().subtitulo }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Botón de Cerrar (X) -->
+    <button
+      type="button"
+      (click)="cerrarChat()"
+      class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+      title="Cerrar chat"
+    >
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+
+  <!-- CHIP INFORMATIVO DE LA CONSULTA -->
+  <div class="bg-slate-50/90 border-b border-slate-100 px-3.5 py-2 flex items-center justify-between text-[11px] text-slate-600 gap-2">
+    <div class="flex items-center gap-1.5 truncate">
+      <span class="material-symbols-outlined text-[15px] text-slate-400">calendar_month</span>
+      <span class="font-medium truncate">
+        {{ fechaHoraOverride || ((citaInfo?.motivo || 'Control') + ' · ' + (citaInfo?.fecha_cita || teleconsultaService.cita()?.rangoFechas || 'Hoy') + ' - ' + (citaInfo?.hora_inicio || teleconsultaService.cita()?.horaTeleconsulta || '10:30')) }}
+        @if (fichaNumeroOverride || citaInfo?.ficha || citaInfo?.id_cita) {
+          · {{ fichaNumeroOverride || citaInfo?.ficha || ('Ficha CAR-' + (citaInfo?.id_cita || '014')) }}
+        }
+      </span>
+    </div>
+    <span class="bg-rose-50 text-rose-700 border border-rose-200/80 font-bold px-2 py-0.5 rounded text-[10px] flex-shrink-0 flex items-center gap-1">
+      <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+      {{ clinicaNombreOverride || citaInfo?.clinica || teleconsultaService.nombreClinica() || 'Hospital San Juan de Dios' }}
+    </span>
+  </div>
+
+  <!-- HILO DE MENSAJES (SCROLLABLE) -->
+  <div #chatScrollContainer class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f8fafc]">
+    
+    <!-- Separador: Hoy -->
+    <div class="flex items-center justify-center my-1">
+      <span class="text-[10px] font-semibold text-slate-400 bg-white px-3 py-0.5 rounded-full border border-slate-200/70 shadow-2xs">
+        Hoy
+      </span>
+    </div>
+
+    @for (msg of mensajes(); track msg.idMensaje) {
+      @if (msg.esPropio) {
+        <!-- MENSAJE PROPIO (DERECHA - COLOR AZUL MARINO / TEAL) -->
+        <div class="flex flex-col items-end justify-end gap-1">
+          <div class="bg-[#003b71] text-white rounded-2xl rounded-br-xs py-2.5 px-3.5 text-xs max-w-[85%] shadow-xs">
+            
+            <!-- Tarjeta de archivo adjunto si existe -->
+            @if (msg.adjuntoNombre) {
+              <div class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl p-2.5 mb-1.5 flex items-center gap-2.5 transition-colors">
+                <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-[20px] text-white">description</span>
+                </div>
+                <div class="leading-tight truncate flex-1">
+                  <span class="font-semibold text-xs block text-white truncate">{{ msg.adjuntoNombre }}</span>
+                  <span class="text-[10px] text-white/70">{{ msg.adjuntoTamano || 'Documento adjunto' }}</span>
+                </div>
+                <span class="material-symbols-outlined text-[16px] text-white/80">download</span>
+              </div>
+            }
+
+            <p class="leading-relaxed whitespace-pre-wrap">{{ msg.contenido }}</p>
+            <span class="text-[10px] text-blue-100/75 block text-right mt-1 font-medium">{{ msg.horaDisplay }}</span>
+          </div>
+        </div>
+      } @else {
+        <!-- MENSAJE DEL INTERLOCUTOR (IZQUIERDA - BLANCO / GRIS SUAVE) -->
+        <div class="flex items-end justify-start gap-2">
+          <div class="bg-white border border-slate-200/90 text-slate-800 rounded-2xl rounded-bl-xs py-2.5 px-3.5 text-xs max-w-[85%] shadow-2xs">
+            <span class="font-bold text-slate-900 block mb-1 text-[11px]">{{ msg.nombreRemitente }}</span>
+
+            <!-- Tarjeta de archivo adjunto si existe -->
+            @if (msg.adjuntoNombre) {
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 mb-1.5 flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <span class="material-symbols-outlined text-[20px]">description</span>
+                </div>
+                <div class="leading-tight truncate flex-1">
+                  <span class="font-semibold text-xs text-slate-800 block truncate">{{ msg.adjuntoNombre }}</span>
+                  <span class="text-[10px] text-slate-500">{{ msg.adjuntoTamano || 'Documento adjunto' }}</span>
+                </div>
+                <span class="material-symbols-outlined text-[16px] text-slate-400">download</span>
+              </div>
+            }
+
+            <p class="leading-relaxed whitespace-pre-wrap">{{ msg.contenido }}</p>
+            <span class="text-[10px] text-slate-400 block text-right mt-1 font-medium">{{ msg.horaDisplay }}</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Indicador de envío -->
+    @if (enviando()) {
+      <div class="flex items-center gap-1.5 text-slate-400 text-xs py-1">
+        <span class="inline-block w-2 h-2 rounded-full bg-[#00897b] animate-pulse"></span>
+        <span class="text-[11px] italic">Enviando mensaje...</span>
+      </div>
+    }
+  </div>
+
+  <!-- ADJUNTO PENDIENTE (PREVIEW) -->
+  @if (adjuntoPendiente(); as adj) {
+    <div class="px-3 py-1.5 bg-blue-50 border-t border-blue-100 flex items-center justify-between text-xs text-blue-900">
+      <div class="flex items-center gap-2 truncate">
+        <span class="material-symbols-outlined text-[16px] text-blue-600">attach_file</span>
+        <span class="truncate font-semibold">{{ adj.nombre }}</span>
+        <span class="text-[10px] text-blue-500">({{ adj.tamano }})</span>
+      </div>
+      <button
+        type="button"
+        (click)="quitarAdjunto()"
+        class="text-blue-500 hover:text-blue-800 p-0.5 cursor-pointer"
+        title="Quitar archivo adjunto"
+      >
+        <span class="material-symbols-outlined text-[16px]">close</span>
+      </button>
+    </div>
+  }
+
+  <!-- INPUT BOX DEL CHAT -->
+  <div class="p-3 bg-white border-t border-slate-100 flex flex-col gap-1.5 shadow-xs">
+    
+    <div class="flex items-center gap-2">
+      <!-- Input de archivo oculto -->
+      <input
+        #fileInput
+        type="file"
+        (change)="seleccionarArchivo($event)"
+        class="hidden"
+        accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+      />
+
+      <!-- Botón de Adjuntar (Clip) -->
+      <button
+        type="button"
+        (click)="fileInput.click()"
+        class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex-shrink-0"
+        title="Adjuntar archivo o imagen"
+      >
+        <span class="material-symbols-outlined text-[20px]">attach_file</span>
+      </button>
+
+      <!-- Input de Texto -->
+      <input
+        type="text"
+        [ngModel]="nuevoMensaje()"
+        (ngModelChange)="nuevoMensaje.set($event)"
+        (keydown)="onKeyDown($event)"
+        [placeholder]="'Escribe a ' + interlocutor().nombre + '...'"
+        class="flex-1 bg-slate-100/90 border-0 rounded-full py-2.5 px-4 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#003b71]/20 placeholder:text-slate-400 font-normal"
+      />
+
+      <!-- Botón de Enviar (Avión de Papel) -->
+      <button
+        type="button"
+        (click)="enviar()"
+        [disabled]="!nuevoMensaje().trim() && !adjuntoPendiente()"
+        class="w-9 h-9 rounded-full bg-[#003b71] hover:bg-[#00284d] text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex-shrink-0 shadow-xs active:scale-95"
+        title="Enviar mensaje"
+      >
+        <span class="material-symbols-outlined text-[18px]">send</span>
+      </button>
+    </div>
+
+    <!-- Disclaimer de Emergencias -->
+    <div class="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1 mt-0.5">
+      <span class="material-symbols-outlined text-[12px]">local_hospital</span>
+      <span>No es para emergencias: llama al 118.</span>
+    </div>
+  </div>
+
+</div>

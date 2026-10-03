@@ -170,6 +170,15 @@ export const routes: Routes = [
       import('./features/appointments/consultas/consultas').then((m) => m.ConsultasComponent),
     title: 'Hospital San Juan de Dios - Gestión de Citas',
   },
+  {
+    path: 'mis-citas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/mis-citas/mis-citas.component').then(
+        (m) => m.MisCitasComponent
+      ),
+    title: 'Hospital San Juan de Dios - Mis Citas',
+  },
 
   // =========================================================================
   // 3. MÓDULO CANÓNICO: MEDICAL_RECORDS (CU03 - Pacientes y Expedientes, CU28 - HCE)
@@ -371,6 +380,24 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/ai-assistant/ai-assistant').then((m) => m.AiAssistant),
     title: 'Hospital San Juan de Dios - Asistente IA',
+  },
+
+  // =========================================================================
+  // CU15: Teleconsulta y Chat de Cita Médica
+  // =========================================================================
+  {
+    path: 'teleconsulta',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/teleconsulta/teleconsulta-page').then((m) => m.TeleconsultaPage),
+    title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
+  },
+  {
+    path: 'citas/:id/teleconsulta',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/teleconsulta/teleconsulta-page').then((m) => m.TeleconsultaPage),
+    title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
   },
 
   // Fallback

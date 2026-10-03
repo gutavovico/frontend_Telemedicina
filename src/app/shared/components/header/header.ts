@@ -40,6 +40,32 @@ export class Header {
     return this.router.url.startsWith('/medicamentos');
   }
 
+  isTeleconsultaRoute(): boolean {
+    return this.router.url.startsWith('/teleconsulta') || this.router.url.includes('/teleconsulta');
+  }
+
+  isMisCitasRoute(): boolean {
+    return this.router.url.startsWith('/mis-citas') || (this.authService.isPaciente() && this.router.url.startsWith('/citas'));
+  }
+
+  // Entrada "Teleconsulta" (CU15): Solo visible para ADMIN. 
+  // Oculto para MÉDICO (se gestiona desde Gestión de Consultas) y PACIENTE (reemplazado por Citas).
+  canSeeTeleconsulta(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+    const role = this.authService.userRole();
+    return role === 'admin';
+  }
+
+  // Entrada "Citas" para PACIENTE: Navega a la vista de "Mis citas"
+  canSeeCitasPaciente(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+    return this.authService.isPaciente();
+  }
+
   // Entrada "Recetas" (CU16, hallazgo 4): visible para ADMIN, MEDICO y PACIENTE
   // reales; oculta para roles desconocidos y visitantes.
   canSeeRecetas(): boolean {
@@ -69,6 +95,11 @@ export class Header {
   goToProfile(): void {
     this.closeDropdown();
     this.closeMobileMenu();
+    // Si el usuario autenticado tiene rol de paciente, redirige a su vista de Mis citas
+    if (this.authService.isPaciente()) {
+      this.router.navigate(['/mis-citas']);
+      return;
+    }
     // Perfil profesional del médico autenticado (CU04)
     this.router.navigate(['/mi-perfil-medico']);
   }

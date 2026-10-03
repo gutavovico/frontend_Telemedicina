@@ -6,6 +6,6 @@
 //};
 export const environment = {
   production: true,
-  apiUrl: 'https://telemedicina-backend-ezx9.onrender.com',
+  apiUrl: 'https://backend-telemedicina.onrender.com',
   inactivityTimeoutMinutes: 15
 };

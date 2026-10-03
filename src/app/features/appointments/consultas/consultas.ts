@@ -11,10 +11,12 @@ import { Cita, CitaCreateRequest, CitaUpdateRequest } from '../../../core/models
 import { Paciente } from '../../../core/models/patient.models';
 import { MedicoResponse } from '../../../core/models/medico.models';
 
+import { ChatFloatingWidgetComponent } from '../../teleconsulta/components/chat-floating-widget/chat-floating-widget.component';
+
 @Component({
   selector: 'app-consultas',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, Header],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, Header, ChatFloatingWidgetComponent],
   templateUrl: './consultas.html',
   styleUrl: './consultas.css'
 })
@@ -37,6 +39,10 @@ export class ConsultasComponent implements OnInit {
   readonly citaToDelete = signal<Cita | null>(null);
   readonly alertMessage = signal<{ type: 'success' | 'error'; text: string } | null>(null);
   readonly isNewPatient = signal<boolean>(false);
+
+  // Widget flotante de chat CU15
+  readonly showChatWidget = signal<boolean>(false);
+  readonly chatCitaActiva = signal<Cita | null>(null);
 
   // Listas para los dropdowns
   readonly pacientesList = signal<Paciente[]>([]);
@@ -82,6 +88,10 @@ export class ConsultasComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    if (this.authService.isPaciente()) {
+      this.router.navigate(['/mis-citas']);
+      return;
+    }
     this.initForm();
     this.cargarDatosIniciales();
   }
@@ -607,6 +617,22 @@ export class ConsultasComponent implements OnInit {
         this.cerrarModalEliminar();
       }
     });
+  }
+
+  // GESTIÓN DEL CHAT FLOTANTE CU15
+  abrirChat(cita: Cita): void {
+    this.abrirChatCita(cita);
+  }
+
+  abrirChatCita(cita: Cita): void {
+    if (!cita) return;
+    this.chatCitaActiva.set(cita);
+    this.showChatWidget.set(true);
+  }
+
+  cerrarChatCita(): void {
+    this.showChatWidget.set(false);
+    this.chatCitaActiva.set(null);
   }
 
   mostrarAlerta(type: 'success' | 'error', text: string): void {
