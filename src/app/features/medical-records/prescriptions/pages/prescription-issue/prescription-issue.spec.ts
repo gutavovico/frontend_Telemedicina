@@ -14,7 +14,7 @@ describe('PrescriptionIssue (CU16)', () => {
   const serviceMock = {
     issuePrescription: vi.fn(),
   };
-  const routerMock = { navigate: vi.fn() };
+  const routerMock = { navigate: vi.fn(), url: '/recetas/emitir' };
   const authMock = {
     userRole: vi.fn((): AppRole => 'doctor'),
     isDoctor: vi.fn(() => true),

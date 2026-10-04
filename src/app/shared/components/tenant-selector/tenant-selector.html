@@ -1,0 +1,17 @@
+@if (tenantService.isSuperAdmin()) {
+  <div class="tenant-selector-container">
+    <span class="tenant-icon">🏢</span>
+    <label for="tenantSelect" class="sr-only">Clínica Activa:</label>
+    <select
+      id="tenantSelect"
+      [ngModel]="selectedTenantIdStr()"
+      (change)="onClinicaChange($event)"
+      class="tenant-select"
+    >
+      <option value="">🌐 Vista Global (Plataforma)</option>
+      @for (c of clinicas(); track c.clinica_id) {
+        <option [value]="c.clinica_id.toString()">🏥 {{ c.nombre }}</option>
+      }
+    </select>
+  </div>
+}

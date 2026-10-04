@@ -22,6 +22,11 @@ export class DocumentDetail implements OnInit {
   readonly documentsService = inject(ClinicalDocumentsService);
   readonly authService = inject(AuthService);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly downloadInfo = signal<DocumentoDownloadResponse | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingDownload = signal<boolean>(false);
@@ -71,7 +76,10 @@ export class DocumentDetail implements OnInit {
     if (!confirm(`¿Está seguro de anular el documento "${doc.titulo}"?`)) return;
     this.isAnulating.set(true);
     this.documentsService.deleteDocument(doc.id_documento).subscribe({
-      next: () => this.router.navigate(['/documentos']),
+      next: () => {
+        const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+        this.router.navigate([base + '/documentos']);
+      },
       error: () => {
         this.isAnulating.set(false);
         this.errorMessage.set('No se pudo anular el documento.');

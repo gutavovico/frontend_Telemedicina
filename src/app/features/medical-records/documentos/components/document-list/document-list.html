@@ -3,6 +3,18 @@
 <main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
+    <!-- Migas: volver al hub Mi salud (vista propia del paciente) -->
+    @if (isMyDocuments) {
+      <div class="flex items-center gap-2 text-sm">
+        <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+          <span class="material-symbols-outlined text-[16px]">home</span>
+          Mi salud
+        </a>
+        <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+        <span class="text-primary font-medium">Mis documentos</span>
+      </div>
+    }
+
     <!-- Encabezado de Página -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
       <div>
@@ -41,7 +53,7 @@
     <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-[#E8EDF4]">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
         <!-- Búsqueda General -->
-        <div class="lg:col-span-4 relative">
+        <div class="lg:col-span-3 relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <span class="material-symbols-outlined text-[20px]">search</span>
           </div>
@@ -55,7 +67,7 @@
         </div>
 
         <!-- Filtro Tipo de Documento -->
-        <div class="lg:col-span-3">
+        <div class="lg:col-span-2">
           <select
             [(ngModel)]="selectedTipo"
             (change)="onSearch()"
@@ -67,20 +79,20 @@
         </div>
 
         <!-- Rango de Fechas -->
-        <div class="lg:col-span-3 flex items-center gap-2">
+        <div class="lg:col-span-5 flex items-center gap-2">
           <input
             type="date"
             [(ngModel)]="fechaDesde"
             (change)="onSearch()"
-            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            class="min-w-0 flex-1 px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
             title="Fecha desde"
           />
-          <span class="text-gray-400">-</span>
+          <span class="text-gray-400 shrink-0">-</span>
           <input
             type="date"
             [(ngModel)]="fechaHasta"
             (change)="onSearch()"
-            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            class="min-w-0 flex-1 px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
             title="Fecha hasta"
           />
         </div>

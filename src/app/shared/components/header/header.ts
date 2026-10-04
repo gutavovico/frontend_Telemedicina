@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantService } from '../../../core/services/tenant.service';
 
 @Component({
   selector: 'app-header',
@@ -11,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class Header {
   readonly authService = inject(AuthService);
+  readonly tenantService = inject(TenantService);
   private readonly router = inject(Router);
 
   readonly isMobileMenuOpen = signal(false);
@@ -26,6 +28,19 @@ export class Header {
 
   isUsersRoute(): boolean {
     return this.router.url.startsWith('/usuarios');
+  }
+
+  // Dentro del panel /admin manda el topbar del AdminLayout: el header
+  // global se oculta para no duplicar navegación.
+  isAdminRoute(): boolean {
+    return this.router.url.startsWith('/admin');
+  }
+
+  // Landing (/) con header minimalista: sin links de gestión (viven en /admin).
+  // Evita el amontonamiento de 11 enlaces visto en la captura.
+  isLandingRoute(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0].trim();
+    return url === '/' || url === '';
   }
 
   isRolesRoute(): boolean {
@@ -76,6 +91,16 @@ export class Header {
     return role === 'admin' || role === 'doctor' || role === 'paciente';
   }
 
+  // Links de gestión (CU03/CU05/CU09/CU12/CU25): ADMIN, MEDICO y RECEPCION.
+  // Usuarios/Roles/Médicos quedan fuera: son solo ADMIN (CU02/CU26/CU04).
+  canSeeGestion(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+    const role = this.authService.userRole();
+    return role === 'admin' || role === 'doctor' || role === 'recepcion';
+  }
+
   showAdminNavigation(): boolean {
     return this.authService.isAuthenticated() || this.isUsersRoute() || this.isRolesRoute();
   }
@@ -100,6 +125,11 @@ export class Header {
       this.router.navigate(['/mis-citas']);
       return;
     }
+    // Recepción no tiene vista de perfil: va a su panel (agenda)
+    if (this.authService.isRecepcion()) {
+      this.router.navigate(['/admin/agenda']);
+      return;
+    }
     // Perfil profesional del médico autenticado (CU04)
     this.router.navigate(['/mi-perfil-medico']);
   }
@@ -120,6 +150,35 @@ export class Header {
     this.closeDropdown();
     this.closeMobileMenu();
     this.router.navigate(['/medicamentos']);
+  }
+
+  canSeeAdminPanel(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+    return this.tenantService.isSuperAdmin() || this.authService.isAdmin();
+  }
+
+  goToAdminPanel(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    if (this.tenantService.isSuperAdmin()) {
+      this.router.navigate(['/admin/clinicas']);
+    } else {
+      this.router.navigate(['/admin/dashboard']);
+    }
+  }
+
+  goToRecepcionPanel(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.router.navigate(['/admin/agenda']);
+  }
+
+  goToMedicoPanel(): void {
+    this.closeDropdown();
+    this.closeMobileMenu();
+    this.router.navigate(['/admin/agenda']);
   }
 
   logout(): void {

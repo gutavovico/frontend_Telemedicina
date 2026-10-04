@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FichaService } from '../../../../core/services/ficha.service';
 import { FichaClinica } from '../../../../core/models/ficha.models';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -15,8 +15,14 @@ import { AuthService } from '../../../../core/services/auth.service';
 })
 export class FichaListComponent implements OnInit {
   private readonly fichaService = inject(FichaService);
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   readonly fichas = this.fichaService.fichas;
   readonly isLoading = this.fichaService.isLoading;

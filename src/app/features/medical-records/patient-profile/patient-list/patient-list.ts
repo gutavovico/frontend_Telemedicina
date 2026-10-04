@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PatientService } from '../../../../core/services/patient.service';
 import { Paciente } from '../../../../core/models/patient.models';
@@ -16,6 +16,12 @@ import { Footer } from '../../../../shared/components/footer/footer';
 })
 export class PatientList implements OnInit {
   readonly patientService = inject(PatientService);
+  private readonly router = inject(Router);
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   searchTerm = '';
   ciFilter = '';

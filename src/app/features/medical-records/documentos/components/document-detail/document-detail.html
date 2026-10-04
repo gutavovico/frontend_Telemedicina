@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] pt-24 pb-8 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto space-y-6">
 
     <!-- Encabezado -->
@@ -17,7 +17,7 @@
         </div>
       </div>
       <a
-        routerLink="/documentos"
+        [routerLink]="[adminBase + '/documentos']"
         class="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#25627C] bg-[#F0F5FB] hover:bg-[#E8EDF4] rounded-xl transition"
       >
         <span class="material-symbols-outlined text-[18px]">arrow_back</span>

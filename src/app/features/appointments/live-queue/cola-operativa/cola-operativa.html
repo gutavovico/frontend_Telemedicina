@@ -1,0 +1,202 @@
+<div class="space-y-6">
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl"
+      >
+        <span class="material-symbols-outlined text-[24px]">groups</span>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold text-[#293954]">Fila virtual del día</h1>
+        <p class="text-sm text-gray-500">Avance, tiempos estimados, pausas e imprevistos (CU08)</p>
+      </div>
+    </div>
+    <div class="mt-4 flex flex-col sm:flex-row gap-3">
+      @if (!authService.isDoctor()) {
+        <select
+          [(ngModel)]="medicoId"
+          (change)="alCambiarMedico()"
+          class="flex-1 px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+        >
+          <option [ngValue]="null">Selecciona un médico...</option>
+          @for (m of medicos(); track m.id_medico) {
+            <option [ngValue]="m.id_medico">{{ nombreMedico(m) }}</option>
+          }
+        </select>
+      }
+      <input
+        type="date"
+        [(ngModel)]="fecha"
+        (change)="alCambiarFecha()"
+        class="px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+      <button
+        type="button"
+        (click)="cargar()"
+        class="px-4 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl transition cursor-pointer"
+      >
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  @if (queue.error()) {
+    <div
+      class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2"
+    >
+      <span class="material-symbols-outlined text-[20px] text-rose-600">error</span>
+      <span>{{ queue.error() }}</span>
+    </div>
+  }
+
+  @if (queue.cargando() && !queue.cola()) {
+    <div class="bg-white p-12 rounded-2xl shadow-sm border border-[#E8EDF4] text-center space-y-3">
+      <div
+        class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"
+      ></div>
+      <p class="text-sm font-medium text-[#25627C]">Cargando fila virtual...</p>
+    </div>
+  }
+
+  @if (queue.cola(); as cola) {
+    @if (cola.mensajeCola) {
+      <div
+        class="p-4 rounded-xl text-sm flex items-center gap-2"
+        [ngClass]="
+          cola.estadoCola === 'PAUSADA'
+            ? 'bg-amber-50 border border-amber-200 text-amber-800'
+            : cola.estadoCola === 'DEMORADA'
+              ? 'bg-rose-50 border border-rose-200 text-rose-800'
+              : 'bg-sky-50 border border-sky-200 text-sky-800'
+        "
+      >
+        <span class="material-symbols-outlined text-[20px]">info</span>
+        <span class="font-semibold">{{ etiquetaEstado(cola.estadoCola) }}:</span>
+        <span>{{ cola.mensajeCola }}</span>
+      </div>
+    }
+
+    <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden">
+      <div class="px-6 py-4 border-b border-[#E8EDF4] flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-gray-600">
+          <span class="font-bold text-[#293954]">{{ cola.medicoNombre }}</span>
+          <span> · {{ cola.fecha }} · {{ cola.totalPendientes }} pendientes · prom.
+            {{ cola.duracionPromedioMin }} min</span
+          >
+        </div>
+        <button
+          type="button"
+          (click)="mostrarPausa.set(!mostrarPausa())"
+          class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[#049CAB] bg-teal-50 hover:bg-teal-100 rounded-xl transition cursor-pointer"
+        >
+          <span class="material-symbols-outlined text-[18px]">pause_circle</span>
+          Registrar pausa
+        </button>
+      </div>
+
+      @if (mostrarPausa()) {
+        <div class="px-6 py-4 border-b border-[#E8EDF4] bg-[#F0F5FB]/40 flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold uppercase text-gray-500" for="pausa-desde">Desde</label>
+            <input
+              id="pausa-desde"
+              type="time"
+              [(ngModel)]="pausaHoraInicio"
+              class="px-3 py-2 bg-white border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] transition"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold uppercase text-gray-500" for="pausa-hasta">Hasta</label>
+            <input
+              id="pausa-hasta"
+              type="time"
+              [(ngModel)]="pausaHoraFin"
+              class="px-3 py-2 bg-white border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] transition"
+            />
+          </div>
+          <div class="flex-1 flex flex-col gap-1">
+            <label class="text-[11px] font-semibold uppercase text-gray-500" for="pausa-motivo">Motivo</label>
+            <input
+              id="pausa-motivo"
+              type="text"
+              [(ngModel)]="pausaMotivo"
+              placeholder="Ej. Desinfección de consultorio"
+              class="px-3 py-2 bg-white border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] transition"
+            />
+          </div>
+          <button
+            type="button"
+            (click)="enviarPausa()"
+            class="px-4 py-2 bg-[#049CAB] hover:bg-[#1FA7AE] text-white text-sm font-medium rounded-xl transition cursor-pointer"
+          >
+            Guardar
+          </button>
+        </div>
+      }
+
+      @if (cola.entradas.length === 0) {
+        <p class="p-8 text-center text-sm text-gray-500">No hay turnos pendientes para esta fecha.</p>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-[#293954]">
+            <thead
+              class="bg-[#F0F5FB]/70 text-xs uppercase font-semibold text-gray-600 border-b border-[#E8EDF4]"
+            >
+              <tr>
+                <th scope="col" class="px-6 py-4">Pos</th>
+                <th scope="col" class="px-6 py-4">Hora</th>
+                <th scope="col" class="px-6 py-4">Paciente</th>
+                <th scope="col" class="px-6 py-4">Estado</th>
+                <th scope="col" class="px-6 py-4">ETA</th>
+                <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#E8EDF4]">
+              @for (e of cola.entradas; track e.idCita) {
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="px-6 py-4 font-bold">{{ e.posicion }}</td>
+                  <td class="px-6 py-4">{{ e.hora }}</td>
+                  <td class="px-6 py-4 font-medium">{{ e.pacienteNombre }}</td>
+                  <td class="px-6 py-4">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                      [ngClass]="
+                        e.estado === 'EN_CURSO'
+                          ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                          : 'bg-gray-100 text-gray-700 border border-gray-200'
+                      "
+                    >
+                      {{ e.estado }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">{{ e.etaMinutos }} min</td>
+                  <td class="px-6 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        (click)="avanzar(e.idCita)"
+                        title="Marcar atendida y avanzar"
+                        class="inline-flex p-2 text-gray-500 hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="marcarPerdida(e.idCita)"
+                        title="Marcar turno perdido"
+                        class="inline-flex p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">event_busy</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+    <p class="text-xs text-gray-400 text-center">La fila se actualiza automáticamente cada 5 segundos.</p>
+  }
+</div>

@@ -36,8 +36,9 @@ describe('HceTimeline acción Emitir receta (CU16 hallazgo 4)', () => {
   const patientServiceMock = {
     selectedPatient: signal(null),
     getPatientById: vi.fn(() => of(null)),
+    getMyProfile: vi.fn(() => of(null)),
   };
-  const authMock = { isDoctor: vi.fn(() => true) };
+  const authMock = { isDoctor: vi.fn(() => true), isPaciente: vi.fn(() => false) };
   let injector: DestroyableInjector;
 
   function create(): HceTimeline {
@@ -56,6 +57,7 @@ describe('HceTimeline acción Emitir receta (CU16 hallazgo 4)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.isDoctor.mockReturnValue(true);
+    authMock.isPaciente.mockReturnValue(false);
   });
 
   it('médico navega a emitir con IDs del recurso cargado', () => {
@@ -89,6 +91,15 @@ describe('HceTimeline acción Emitir receta (CU16 hallazgo 4)', () => {
     expect(comp.puedeEmitirReceta(consultaBase(45))).toBe(false);
     comp.emitirReceta(consultaBase(45));
     expect(routerMock.navigate).not.toHaveBeenCalled();
+    injector.destroy();
+  });
+
+  it('paciente carga su perfil por /me en vez del detalle por ID (evita 403)', () => {
+    authMock.isPaciente.mockReturnValue(true);
+    const comp = create();
+    comp.ngOnInit();
+    expect(patientServiceMock.getMyProfile).toHaveBeenCalled();
+    expect(patientServiceMock.getPatientById).not.toHaveBeenCalled();
     injector.destroy();
   });
 });

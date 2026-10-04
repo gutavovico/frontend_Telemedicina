@@ -35,9 +35,13 @@ export class ConsultaEditor implements OnInit {
   readonly patientService = inject(PatientService);
   readonly authService = inject(AuthService);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly idPaciente = signal<number>(0);
   readonly idCita = signal<number>(0);
-
   // Lista dinámica de diagnósticos CIE-10 asignados a esta consulta
   readonly diagnosticos = signal<DiagnosticoCreate[]>([]);
 
@@ -223,7 +227,7 @@ export class ConsultaEditor implements OnInit {
     this.hceService.registrarConsulta(this.idPaciente(), payload).subscribe({
       next: () => {
         // Redireccionar al historial cronológico del paciente
-        this.router.navigate(['/pacientes', this.idPaciente(), 'hce']);
+        this.router.navigate([this.adminBase + '/pacientes', this.idPaciente(), 'hce']);
       }
     });
   }

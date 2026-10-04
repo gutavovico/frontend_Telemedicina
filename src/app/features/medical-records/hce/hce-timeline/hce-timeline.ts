@@ -23,8 +23,12 @@ export class HceTimeline implements OnInit {
   readonly patientService = inject(PatientService);
   readonly authService = inject(AuthService);
 
-  readonly idPaciente = signal<number>(0);
-  readonly consultaExpandidaId = signal<number | null>(null);
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
+  readonly idPaciente = signal<number>(0);  readonly consultaExpandidaId = signal<number | null>(null);
   readonly filtroTexto = signal<string>('');
 
   // Consultas filtradas por texto de búsqueda (motivo, diagnóstico o síntoma)
@@ -55,8 +59,13 @@ export class HceTimeline implements OnInit {
   }
 
   cargarDatos(idPaciente: number): void {
-    // Cargar paciente si no está en memoria
-    this.patientService.getPatientById(idPaciente).subscribe();
+    // Cargar paciente si no está en memoria. El paciente usa su endpoint
+    // propio (/me): el detalle por ID es solo-staff y le daría 403.
+    if (this.authService.isPaciente()) {
+      this.patientService.getMyProfile().subscribe();
+    } else {
+      this.patientService.getPatientById(idPaciente).subscribe();
+    }
     // Cargar historia clínica consolidada
     this.hceService.getHistoriaClinica(idPaciente).subscribe();
   }

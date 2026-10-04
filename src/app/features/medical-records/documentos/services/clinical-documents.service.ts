@@ -142,10 +142,17 @@ export class ClinicalDocumentsService {
 
   /** Descarga el contenido binario del PDF usando la URL firmada. */
   async loadDocumentBlob(urlFirmada: string): Promise<Blob> {
-    const isLocal = urlFirmada.includes(environment.apiUrl) || urlFirmada.startsWith('/');
-    const resolved = isLocal
-      ? urlFirmada.startsWith('http') ? urlFirmada : `${environment.apiUrl}${urlFirmada}`
-      : urlFirmada;
+    // URL del propio backend aunque venga con otro host (localhost vs 127.0.0.1):
+    // el path /api/v1/documentos/file/ lo identifica. Va por HttpClient para
+    // que el interceptor adjunte el Bearer (fetch directo daría 401).
+    const esArchivoBackend =
+      urlFirmada.includes('/api/v1/documentos/file/') || urlFirmada.startsWith('/');
+    const isLocal =
+      urlFirmada.includes(environment.apiUrl) || urlFirmada.startsWith('/') || esArchivoBackend;
+    const resolved =
+      isLocal && !urlFirmada.startsWith('http')
+        ? `${environment.apiUrl}${urlFirmada}`
+        : urlFirmada;
 
     if (isLocal) {
       // Vía HttpClient: el interceptor adjunta el Bearer token.

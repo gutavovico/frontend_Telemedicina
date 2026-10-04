@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TeleconsultaService } from './services/teleconsulta.service';
 
 @Component({
@@ -14,6 +14,12 @@ import { TeleconsultaService } from './services/teleconsulta.service';
 export class TeleconsultaPage implements OnInit, OnDestroy {
   protected readonly teleconsultaService = inject(TeleconsultaService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  /** Dentro del panel /admin manda su topbar: se oculta el navbar propio. */
+  get isAdminRoute(): boolean {
+    return this.router.url.startsWith('/admin');
+  }
 
   // Signal para el input de texto del chat
   nuevoMensajeTexto = signal<string>('');

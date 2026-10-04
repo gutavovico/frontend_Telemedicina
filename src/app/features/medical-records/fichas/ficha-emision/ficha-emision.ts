@@ -7,6 +7,8 @@ import { AppointmentService } from '../../../../core/services/appointment.servic
 import { PatientService } from '../../../../core/services/patient.service';
 import { FichaCreateRequest } from '../../../../core/models/ficha.models';
 import { HorarioSlot } from '../../../../core/models/appointment.models';
+import { AuthService } from '../../../../core/services/auth.service';
+import { MedicoService } from '../../../../core/services/medico.service';
 
 interface DoctorOption {
   id_medico: number;
@@ -40,6 +42,13 @@ export class FichaEmisionComponent implements OnInit {
   private readonly patientService = inject(PatientService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly medicoService = inject(MedicoService);
+  readonly authService = inject(AuthService);
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   // Estados reactivos
   isSubmitting = signal<boolean>(false);
@@ -47,14 +56,10 @@ export class FichaEmisionComponent implements OnInit {
   conflictError = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
-  // Pacientes y Médicos
+  // Pacientes y Médicos (médicos siempre desde la API del tenant, nunca mock)
   pacientes = signal<PatientOption[]>([]);
-  medicos = signal<DoctorOption[]>([
-    { id_medico: 1, nombre: 'Dr. Carlos Mendoza', especialidad: 'Cardiología', id_especialidad: 1 },
-    { id_medico: 2, nombre: 'Dra. Elena Ruiz', especialidad: 'Pediatría', id_especialidad: 2 },
-    { id_medico: 3, nombre: 'Dr. Roberto Fernandez', especialidad: 'Medicina General', id_especialidad: 3 },
-    { id_medico: 4, nombre: 'Dra. Sofia Vaca', especialidad: 'Dermatología', id_especialidad: 4 },
-  ]);
+  medicos = signal<DoctorOption[]>([]);
+  medicosError = signal<string | null>(null);
 
   // Horarios / Slots
   slotsDisponibles = signal<SlotFicha[]>([]);
@@ -92,6 +97,7 @@ export class FichaEmisionComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPacientes();
+    this.cargarMedicos();
     this.cargarSlots();
 
     // Escuchar cambios de médico o fecha para refrescar slots
@@ -108,8 +114,7 @@ export class FichaEmisionComponent implements OnInit {
     });
   }
 
-  cargarPacientes(): void {
-    this.patientService.getPatients().subscribe({
+  cargarPacientes(): void {    this.patientService.getPatients().subscribe({
       next: (res) => {
         if (res && res.items) {
           this.pacientes.set(
@@ -128,6 +133,41 @@ export class FichaEmisionComponent implements OnInit {
           { id_paciente: 2, nombre: 'Juan Carlos Gómez', ci: '2345678' },
           { id_paciente: 3, nombre: 'Ana López', ci: '3456789' },
         ]);
+      },
+    });
+  }
+
+  cargarMedicos(): void {
+    this.medicosError.set(null);
+    this.medicoService.listarMedicos({ limit: 100 }).subscribe({
+      next: (res) => {
+        const opciones: DoctorOption[] = (res?.items ?? []).map((m) => {
+          const nombre = m.usuario
+            ? `${m.usuario.nombres} ${m.usuario.apellidos}`.trim()
+            : `Mat. ${m.matricula_profesional}`;
+          const principal =
+            m.especialidades?.find((e) => e.es_principal) ?? m.especialidades?.[0];
+          return {
+            id_medico: m.id_medico,
+            nombre,
+            especialidad: principal?.nombre ?? 'Sin especialidad',
+            id_especialidad: principal?.id_especialidad ?? 0,
+          };
+        });
+        this.medicos.set(opciones);
+        const actual = Number(this.form.get('id_medico')?.value);
+        const vigente = opciones.some((o) => o.id_medico === actual);
+        const primero = opciones[0];
+        if (primero && !vigente) {
+          this.form.patchValue({
+            id_medico: primero.id_medico,
+            id_especialidad: primero.id_especialidad,
+          });
+        }
+      },
+      error: () => {
+        this.medicos.set([]);
+        this.medicosError.set('No se pudo cargar el cuerpo médico de tu clínica.');
       },
     });
   }
@@ -220,7 +260,8 @@ export class FichaEmisionComponent implements OnInit {
           `¡Ficha ${nuevaFicha.correlativo} emitida con éxito! Redirigiendo al expediente...`
         );
         setTimeout(() => {
-          this.router.navigate(['/fichas', nuevaFicha.id_ficha]);
+          const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+          this.router.navigate([base + '/fichas', nuevaFicha.id_ficha]);
         }, 1200);
       },
       error: (err) => {

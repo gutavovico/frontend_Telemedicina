@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Header } from '../../../shared/components/header/header';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -43,7 +44,7 @@ function limpiarTituloMedico(nombre: string | null | undefined): string {
 @Component({
   selector: 'app-mis-citas',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header, ChatFloatingWidgetComponent],
+  imports: [CommonModule, FormsModule, RouterLink, Header, ChatFloatingWidgetComponent],
   templateUrl: './mis-citas.component.html',
   styleUrl: './mis-citas.component.css'
 })

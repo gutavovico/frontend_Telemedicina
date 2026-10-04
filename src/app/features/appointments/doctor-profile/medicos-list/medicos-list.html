@@ -33,7 +33,7 @@
             <span>{{ mostrarFormEspecialidad() ? 'Cerrar formulario' : 'Nueva especialidad' }}</span>
           </button>
           <a
-            routerLink="/medicos/nuevo"
+            [routerLink]="[adminBase + '/medicos/nuevo']"
             class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md"
           >
             <span class="material-symbols-outlined text-[20px]">person_add</span>
@@ -243,7 +243,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
           @for (medico of medicos(); track medico.id_medico) {
             <a
-              [routerLink]="['/medicos', medico.id_medico]"
+              [routerLink]="[adminBase + '/medicos', medico.id_medico]"
               class="bg-surface-container-lowest rounded-3xl p-6 shadow-level-1 hover:shadow-level-2 transition-all duration-300 border border-outline-variant/20 hover:border-primary/30 flex flex-col gap-4 group cursor-pointer transform hover:-translate-y-1"
             >
               <!-- Cabecera: avatar + estado -->

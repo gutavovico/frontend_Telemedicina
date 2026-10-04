@@ -238,3 +238,10 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Panel /admin: las páginas hijas traen padding-top para compensar el
+   header global fijo; dentro del panel el topbar es sticky y ese aire
+   sobra, así que se anula solo bajo .admin-panel. */
+.admin-panel main[class*='pt-'] {
+  padding-top: 0;
+}

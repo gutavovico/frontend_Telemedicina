@@ -25,6 +25,11 @@ export class PatientForm implements OnInit {
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   ngOnInit(): void {
     this.initForm();
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -107,7 +112,8 @@ export class PatientForm implements OnInit {
         next: () => {
           this.successMessage.set('Expediente del paciente actualizado correctamente.');
           setTimeout(() => {
-            this.router.navigate(['/pacientes', this.patientId()]);
+            const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+            this.router.navigate([base + '/pacientes', this.patientId()]);
           }, 1500);
         },
         error: (err) => {
@@ -119,7 +125,8 @@ export class PatientForm implements OnInit {
         next: (created) => {
           this.successMessage.set('Paciente registrado exitosamente en el sistema.');
           setTimeout(() => {
-            this.router.navigate(['/pacientes', created.id_paciente]);
+            const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+            this.router.navigate([base + '/pacientes', created.id_paciente]);
           }, 1500);
         },
         error: (err) => {

@@ -86,7 +86,8 @@ export class DocumentList implements OnInit {
     } else if (this.idPacienteParam) {
       this.router.navigate(['/documentos/paciente', this.idPacienteParam, 'documento', doc.id_documento]);
     } else {
-      this.router.navigate(['/documentos', doc.id_documento]);
+      const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+      this.router.navigate([base + '/documentos', doc.id_documento]);
     }
   }
 
