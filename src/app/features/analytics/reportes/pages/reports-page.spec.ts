@@ -35,6 +35,7 @@ describe('CU22/CU27 pantalla de reportes', () => {
     isAuthenticated: WritableSignal<boolean>;
     isAdmin: WritableSignal<boolean>;
     isDoctor: WritableSignal<boolean>;
+    isPaciente: WritableSignal<boolean>;
     logout: ReturnType<typeof vi.fn>;
     userPhoto: WritableSignal<null>;
     userDisplayName: WritableSignal<string>;
@@ -84,7 +85,7 @@ describe('CU22/CU27 pantalla de reportes', () => {
     auth = {
       currentUser: signal({ rol: 'ADMIN', estado: 'ACTIVO', id_clinica: 12 }),
       isAuthenticated: signal(true), profileVerified: signal(true), userRole: signal('admin'),
-      isAdmin: signal(true), isDoctor: signal(false), logout: vi.fn(),
+      isAdmin: signal(true), isDoctor: signal(false), isPaciente: signal(false), logout: vi.fn(),
       userPhoto: signal(null), userDisplayName: signal('Administrador'), userInitials: signal('AD'),
     };
     await TestBed.configureTestingModule({
