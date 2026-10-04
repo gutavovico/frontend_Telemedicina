@@ -12,13 +12,15 @@ import {
   UsuarioResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
-  ResetPasswordRequest
+  ResetPasswordRequest,
+  AppRole,
+  normalizeAppRole,
 } from '../models/auth.models';
 import { MedicoResponse } from '../models/medico.models';
 import { InactivityService } from './inactivity.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -52,7 +54,7 @@ export class AuthService {
   readonly userInitials = computed(() => {
     const user = this.currentUser();
     if (!user) return 'US';
-    
+
     if (user.nombres && user.apellidos) {
       const n = user.nombres.trim().charAt(0).toUpperCase();
       const a = user.apellidos.trim().charAt(0).toUpperCase();
@@ -74,30 +76,43 @@ export class AuthService {
     return this.currentUser()?.foto_perfil || null;
   });
 
-  readonly userRole = computed<'admin' | 'doctor' | 'paciente'>(() => {
+  // Rol real del usuario (CU16, hallazgo 1): fuente primaria `currentUser().rol`
+  // normalizada con `normalizeAppRole`. Sin heurísticas de correo, nombre ni IDs.
+  // El perfil de `/medicos/me` solo confirma perfil médico cuando el rol explícito
+  // está ausente o no es reconocido; nunca convierte un ADMIN ni reemplaza un rol
+  // explícito incompatible. Rol desconocido = sin privilegios.
+  readonly userRole = computed<AppRole>(() => {
     const user = this.currentUser();
-    if (!user) return 'paciente';
+    if (!user) {
+      return 'unknown';
+    }
 
-    const correo = (user.correo || '').toLowerCase();
-    const nombres = (user.nombres || '').toLowerCase();
+    const rol = normalizeAppRole(user.rol);
+    if (rol === 'admin' || rol === 'doctor' || rol === 'paciente') {
+      return rol;
+    }
 
-    // Admin: heurística temporal hasta que exista la tabla roles (CU02)
-    if (correo.includes('admin') || nombres.includes('admin') || user.id_usuario === 1) {
+    // Fallback de compatibilidad: si user.rol textual no viene poblado pero existe id_rol numérico
+    if (user.id_rol === 4) {
+      return 'paciente';
+    }
+    if (user.id_rol === 2) {
+      return 'doctor';
+    }
+    if (user.id_rol === 1) {
       return 'admin';
     }
-    // Doctor: verificado contra el backend con GET /medicos/me (fuente de verdad)
+
+    // Rol ausente o desconocido: el perfil médico confirmado acredita doctor.
     if (this.perfilMedico() !== null) {
       return 'doctor';
     }
-    // Fallback solo para usuarios seed (doctor@telemedicina.com sin perfil cargado aún)
-    if (correo.includes('doctor') || nombres.includes('doctor')) {
-      return 'doctor';
-    }
-    return 'paciente';
+    return 'unknown';
   });
 
   readonly isAdmin = computed(() => this.userRole() === 'admin');
   readonly isDoctor = computed(() => this.userRole() === 'doctor');
+  readonly isPaciente = computed(() => this.userRole() === 'paciente');
 
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
@@ -123,7 +138,7 @@ export class AuthService {
     }
     this.http.get<MedicoResponse>(`${this.apiUrl}/medicos/me`).subscribe({
       next: (perfil) => this.perfilMedico.set(perfil),
-      error: () => this.perfilMedico.set(null)
+      error: () => this.perfilMedico.set(null),
     });
   }
 
@@ -152,7 +167,7 @@ export class AuthService {
     return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((response) => {
         this.saveTokens(response.access_token, response.refresh_token, rememberMe);
-        
+
         // Initial fallback user from email until backend profile loads
         if (!this.currentUser()) {
           const fallbackUser: UsuarioResponse = {
@@ -160,7 +175,7 @@ export class AuthService {
             nombres: correo.split('@')[0],
             apellidos: '',
             correo: correo,
-            estado: 'ACTIVO'
+            estado: 'ACTIVO',
           };
           this.saveUser(fallbackUser);
         }
@@ -169,7 +184,7 @@ export class AuthService {
         this.fetchUserProfile().subscribe();
         // Cargar perfil médico (define el rol doctor, CU04)
         this.fetchPerfilMedico();
-      })
+      }),
     );
   }
 
@@ -182,7 +197,11 @@ export class AuthService {
     return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/auth/forgot-password`, payload);
   }
 
-  resetPassword(correo: string, codigo: string, nuevaPassword: string): Observable<{ detail: string }> {
+  resetPassword(
+    correo: string,
+    codigo: string,
+    nuevaPassword: string,
+  ): Observable<{ detail: string }> {
     const payload: ResetPasswordRequest = { correo, codigo, nueva_password: nuevaPassword };
     return this.http.post<{ detail: string }>(`${this.apiUrl}/auth/reset-password`, payload);
   }
@@ -198,9 +217,9 @@ export class AuthService {
       catchError(() => {
         return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios/me`).pipe(
           tap((user) => this.saveUser(user)),
-          catchError(() => of(null))
+          catchError(() => of(null)),
         );
-      })
+      }),
     );
   }
 
@@ -211,7 +230,7 @@ export class AuthService {
     return this.http.post<TokenResponse>(`${this.apiUrl}/auth/refresh`, payload).pipe(
       tap((response) => {
         this.saveTokens(response.access_token, response.refresh_token || refreshToken || '');
-      })
+      }),
     );
   }
 
@@ -245,13 +264,15 @@ export class AuthService {
       ? this.http.post(`${this.apiUrl}/auth/logout`, { refresh_token: refreshToken })
       : of(null);
 
-    request$.pipe(
-      catchError(() => of(null)),
-      finalize(() => {
-        this.clearTokens();
-        this.router.navigate(['/login']);
-      })
-    ).subscribe();
+    request$
+      .pipe(
+        catchError(() => of(null)),
+        finalize(() => {
+          this.clearTokens();
+          this.router.navigate(['/login']);
+        }),
+      )
+      .subscribe();
   }
 
   clearTokens(): void {

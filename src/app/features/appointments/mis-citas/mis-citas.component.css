@@ -1,0 +1,4 @@
+/* Estilos personalizados para Mis Citas */
+:host {
+  display: block;
+}

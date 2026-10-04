@@ -1,0 +1,206 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Encabezado de Página -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl">
+            <span class="material-symbols-outlined text-[24px]">folder_shared</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-[#293954]">
+              {{ isMyDocuments ? 'Mis Documentos Clínicos' : 'Documentos Clínicos y Exámenes' }}
+            </h1>
+            <p class="text-sm text-gray-500">
+              {{ isMyDocuments
+                ? 'Consulta tus recetas, resultados y certificados médicos'
+                : 'Consulta de expedientes clínicos y exámenes de laboratorio' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback Toast / Banner -->
+    <div
+      *ngIf="actionFeedback()"
+      class="p-4 rounded-xl flex items-center justify-between text-sm transition-all duration-200"
+      [ngClass]="{
+        'bg-emerald-50 text-emerald-800 border border-emerald-200': actionFeedback()?.type === 'success',
+        'bg-rose-50 text-rose-800 border border-rose-200': actionFeedback()?.type === 'error'
+      }"
+    >
+      <span>{{ actionFeedback()?.message }}</span>
+      <button (click)="actionFeedback.set(null)" class="text-gray-400 hover:text-gray-600">&times;</button>
+    </div>
+
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        <!-- Búsqueda General -->
+        <div class="lg:col-span-4 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <span class="material-symbols-outlined text-[20px]">search</span>
+          </div>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            placeholder="Buscar por título..."
+            class="w-full pl-10 pr-4 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+
+        <!-- Filtro Tipo de Documento -->
+        <div class="lg:col-span-3">
+          <select
+            [(ngModel)]="selectedTipo"
+            (change)="onSearch()"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          >
+            <option value="">Todos los tipos</option>
+            <option *ngFor="let tipo of tipos" [value]="tipo">{{ tipo | documentType }}</option>
+          </select>
+        </div>
+
+        <!-- Rango de Fechas -->
+        <div class="lg:col-span-3 flex items-center gap-2">
+          <input
+            type="date"
+            [(ngModel)]="fechaDesde"
+            (change)="onSearch()"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            title="Fecha desde"
+          />
+          <span class="text-gray-400">-</span>
+          <input
+            type="date"
+            [(ngModel)]="fechaHasta"
+            (change)="onSearch()"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            title="Fecha hasta"
+          />
+        </div>
+
+        <!-- Botones de Acción de Filtros -->
+        <div class="lg:col-span-2 flex items-center gap-2">
+          <button
+            (click)="onSearch()"
+            class="flex-1 px-4 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl transition"
+          >
+            Buscar
+          </button>
+          <button
+            (click)="clearFilters()"
+            title="Limpiar filtros"
+            class="px-3 py-2.5 text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition"
+          >
+            <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor de Tabla -->
+    <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden">
+
+      <!-- Estado de Carga -->
+      <div *ngIf="documentsService.isLoading()" class="p-12 text-center text-gray-500 space-y-3">
+        <div class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-sm font-medium text-[#25627C]">Cargando documentos clínicos...</p>
+      </div>
+
+      <!-- Estado Vacío -->
+      <div *ngIf="!documentsService.isLoading() && documentsService.documents().length === 0" class="p-12 text-center space-y-4">
+        <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto">
+          <span class="material-symbols-outlined text-[32px]">folder_off</span>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-[#293954]">No se encontraron documentos</h3>
+          <p class="text-sm text-gray-500 mt-1">Intente ajustar los términos de búsqueda.</p>
+        </div>
+      </div>
+
+      <!-- Tabla de Datos -->
+      <div *ngIf="!documentsService.isLoading() && documentsService.documents().length > 0" class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-[#293954]">
+          <thead class="bg-[#F0F5FB]/70 text-xs uppercase font-semibold text-gray-600 border-b border-[#E8EDF4]">
+            <tr>
+              <th scope="col" class="px-6 py-4">Tipo</th>
+              <th scope="col" class="px-6 py-4">Título</th>
+              <th *ngIf="!isMyDocuments" scope="col" class="px-6 py-4">Paciente</th>
+              <th scope="col" class="px-6 py-4">Fecha</th>
+              <th scope="col" class="px-6 py-4">Estado</th>
+              <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#E8EDF4]">
+            <tr *ngFor="let doc of documentsService.documents()" class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-[#049CAB]"><span class="material-symbols-outlined text-[22px]">{{ doc.tipo_documento | documentIcon }}</span></span>
+                  <span class="text-xs font-medium text-gray-600">{{ doc.tipo_documento | documentType }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="font-semibold text-[#293954] cursor-pointer hover:text-[#049CAB] transition" (click)="openDocument(doc)">
+                  {{ doc.titulo }}
+                </div>
+              </td>
+              <td *ngIf="!isMyDocuments" class="px-6 py-4 font-medium text-gray-700">{{ doc.paciente_nombre || 'Sin paciente' }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ doc.fecha_documento }}</td>
+              <td class="px-6 py-4">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                  [ngClass]="doc.estado === 'ACTIVO'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200'"
+                >
+                  {{ doc.estado }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button
+                  (click)="openDocument(doc)"
+                  title="Ver Documento"
+                  class="inline-flex p-2 text-gray-500 hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition"
+                >
+                  <span class="material-symbols-outlined text-[20px]">visibility</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div *ngIf="!documentsService.isLoading() && documentsService.documents().length > 0" class="px-6 py-4 bg-white border-t border-[#E8EDF4] flex items-center justify-between">
+        <div class="text-xs text-gray-500">
+          Mostrando página <span class="font-semibold text-gray-700">{{ documentsService.currentPage() }}</span> de <span class="font-semibold text-gray-700">{{ documentsService.totalPages() }}</span> (<span class="font-semibold">{{ documentsService.totalRecords() }}</span> documentos)
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            [disabled]="documentsService.currentPage() <= 1"
+            (click)="loadDocuments(documentsService.currentPage() - 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            Anterior
+          </button>
+          <button
+            [disabled]="documentsService.currentPage() >= documentsService.totalPages()"
+            (click)="loadDocuments(documentsService.currentPage() + 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>

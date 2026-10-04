@@ -1,0 +1,207 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] text-center space-y-2">
+      <div
+        class="w-12 h-12 rounded-2xl bg-teal-50 text-[#049CAB] flex items-center justify-center mx-auto"
+        aria-hidden="true"
+      >
+        <span class="material-symbols-outlined text-[28px]">qr_code_2</span>
+      </div>
+      <h1 class="text-2xl font-bold text-[#293954]">Validar receta digital</h1>
+      <p class="text-sm text-gray-500">
+        Verifique la autenticidad de una receta desde el código del QR. No se almacena el código.
+      </p>
+    </div>
+
+    <section
+      class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] space-y-4"
+      aria-label="Formulario de validación pública"
+    >
+      <div>
+        <label for="codigo-validacion" class="block text-xs font-semibold text-[#293954] mb-1">
+          Código de verificación
+        </label>
+        <input
+          id="codigo-validacion"
+          type="text"
+          [(ngModel)]="codigoInput"
+          (keyup.enter)="validar()"
+          placeholder="Pegue el código del QR..."
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="codigo-ayuda"
+          class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+        />
+        <p id="codigo-ayuda" class="text-xs text-gray-500 mt-1">
+          El código solo se usa para esta consulta y no se guarda en el navegador.
+        </p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
+        <button
+          type="button"
+          (click)="limpiar()"
+          class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+        >
+          Limpiar
+        </button>
+        <button
+          type="button"
+          (click)="validar()"
+          [disabled]="estadoVista() === 'cargando' || reintentoEn() > 0 || !codigoInput().trim()"
+          class="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#049CAB] hover:bg-[#038795] disabled:opacity-50 disabled:cursor-not-allowed transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+        >
+          <span *ngIf="estadoVista() !== 'cargando'">Validar</span>
+          <span *ngIf="estadoVista() === 'cargando'">Validando...</span>
+        </button>
+      </div>
+    </section>
+
+    <div
+      *ngIf="estadoVista() !== 'inicial'"
+      class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden"
+      aria-live="polite"
+    >
+      <div class="p-6 space-y-5">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-base font-bold text-[#293954]">Resultado</h2>
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
+            [ngClass]="badgeClass()"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true"></span>
+            {{ estadoTexto() }}
+          </span>
+        </div>
+
+        <div *ngIf="estadoVista() === 'cargando'" class="text-center py-6 space-y-3" role="status">
+          <div
+            class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"
+            aria-hidden="true"
+          ></div>
+          <p class="text-sm text-[#25627C]">Verificando código...</p>
+        </div>
+
+        <div
+          *ngIf="estadoVista() === 'no-encontrada'"
+          class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-700 text-center"
+          role="status"
+        >
+          <p class="font-bold">Código no válido</p>
+          <p class="mt-1">
+            No se encontró una receta válida para el código ingresado. Verifique el código e intente
+            nuevamente.
+          </p>
+        </div>
+
+        <div
+          *ngIf="estadoVista() === 'limitada'"
+          class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800 text-center space-y-2"
+          role="alert"
+        >
+          <p class="font-bold">Demasiadas solicitudes</p>
+          <p>Por seguridad, espere antes de reintentar.</p>
+          <p class="font-mono font-bold" aria-live="polite">Reintente en {{ reintentoEn() }}s</p>
+          <button
+            type="button"
+            (click)="validar()"
+            [disabled]="reintentoEn() > 0"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-amber-200 hover:bg-amber-100 disabled:opacity-50 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
+          >
+            Reintentar
+          </button>
+        </div>
+
+        <div
+          *ngIf="estadoVista() === 'error'"
+          class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-700 text-center"
+          role="alert"
+        >
+          <p class="font-bold">Error de validación</p>
+          <p class="mt-1">{{ mensajeError() }}</p>
+        </div>
+
+        <div *ngIf="detalleEncontrado()" class="space-y-4">
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div class="p-3 rounded-xl bg-[#F0F5FB]/70 border border-[#E8EDF4]">
+              <dt class="text-xs font-semibold text-gray-500">Institución</dt>
+              <dd class="font-semibold text-[#293954]">
+                {{ detalleEncontrado()?.institucion || '—' }}
+              </dd>
+            </div>
+            <div class="p-3 rounded-xl bg-[#F0F5FB]/70 border border-[#E8EDF4]">
+              <dt class="text-xs font-semibold text-gray-500">Folio</dt>
+              <dd class="font-mono font-bold text-[#293954]">
+                {{ detalleEncontrado()?.folio || '—' }}
+              </dd>
+            </div>
+            <div class="p-3 rounded-xl bg-[#F0F5FB]/70 border border-[#E8EDF4]">
+              <dt class="text-xs font-semibold text-gray-500">Fecha de emisión</dt>
+              <dd class="font-semibold text-[#293954]">
+                {{ detalleEncontrado()?.fecha_emision || '—' }}
+              </dd>
+            </div>
+            <div class="p-3 rounded-xl bg-[#F0F5FB]/70 border border-[#E8EDF4]">
+              <dt class="text-xs font-semibold text-gray-500">Fecha de vencimiento</dt>
+              <dd class="font-semibold text-[#293954]">
+                {{ detalleEncontrado()?.fecha_vencimiento || '—' }}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl border border-[#E8EDF4]">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#25627C]">
+                Médico emisor
+              </h3>
+              <p class="text-sm font-bold text-[#293954] mt-1">
+                {{ detalleEncontrado()?.medico_emisor?.nombre || '—' }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                Mat. {{ detalleEncontrado()?.medico_emisor?.matricula || '—' }} ·
+                {{ detalleEncontrado()?.medico_emisor?.especialidad || 'General' }}
+              </p>
+            </div>
+            <div class="p-4 rounded-2xl border border-[#E8EDF4]">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-[#25627C]">
+                Paciente (enmascarado)
+              </h3>
+              <p class="text-sm font-bold text-[#293954] mt-1">
+                {{ detalleEncontrado()?.paciente?.nombre || '—' }}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                Doc. {{ detalleEncontrado()?.paciente?.documento_identidad || '—' }}
+              </p>
+            </div>
+          </div>
+
+          <section aria-label="Medicamentos prescritos">
+            <h3 class="text-sm font-bold text-[#293954] mb-2">Medicamentos prescritos</h3>
+            <ul class="space-y-2">
+              <li
+                *ngFor="let med of detalleEncontrado()?.medicamentos_prescritos || []"
+                class="p-3 rounded-xl border border-[#E8EDF4] bg-white"
+              >
+                <p class="text-sm font-bold text-[#293954]">{{ med.medicamento }}</p>
+                <p class="text-xs text-gray-600 mt-0.5">{{ med.posologia }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">Cantidad: {{ med.cantidad }}</p>
+                <p *ngIf="med.indicaciones" class="text-xs text-gray-700 mt-1">
+                  {{ med.indicaciones }}
+                </p>
+              </li>
+            </ul>
+            <p
+              *ngIf="!detalleEncontrado()?.medicamentos_prescritos?.length"
+              class="text-xs text-gray-500"
+            >
+              Sin medicamentos informados.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>

@@ -1,0 +1,50 @@
+:host {
+  display: block;
+}
+
+.prescription-line {
+  border-left: 4px solid #049cab;
+}
+
+.print-notice {
+  display: none;
+}
+
+button:focus-visible {
+  outline: 2px solid #049cab;
+  outline-offset: 2px;
+}
+
+@media print {
+  .prescription-sheet {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+
+  .print-notice {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px;
+    border-bottom: 1px solid #000;
+  }
+
+  button {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .prescription-line {
+    flex-direction: row;
+  }
+}

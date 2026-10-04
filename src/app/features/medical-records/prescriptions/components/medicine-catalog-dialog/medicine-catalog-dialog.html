@@ -1,0 +1,162 @@
+<div
+  *ngIf="open"
+  class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Catálogo de medicamentos"
+  (keydown)="onKeydown($event)"
+>
+  <div
+    #dialogPanel
+    class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 space-y-5"
+  >
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-bold text-[#293954]">Catálogo de medicamentos</h2>
+      <button
+        #firstField
+        type="button"
+        (click)="cerrar()"
+        aria-label="Cerrar catálogo"
+        class="text-slate-400 hover:text-slate-600 p-1 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+
+    <section *ngIf="canSearch" aria-labelledby="titulo-buscar">
+      <h3 id="titulo-buscar" class="text-sm font-bold text-[#293954] mb-2">
+        Buscar (médico y administrador)
+      </h3>
+      <label for="catalogo-busqueda" class="sr-only">Buscar medicamento</label>
+      <input
+        id="catalogo-busqueda"
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Mínimo 2 caracteres..."
+        class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+      />
+      <p *ngIf="isSearching()" class="text-xs text-[#25627C] mt-1" role="status">Buscando...</p>
+      <p *ngIf="searchError()" class="text-xs text-rose-600 mt-1" role="alert">
+        {{ searchError() }}
+      </p>
+      <ul
+        *ngIf="results().length > 0"
+        class="mt-2 divide-y divide-[#E8EDF4] border border-[#E8EDF4] rounded-xl overflow-hidden max-h-56 overflow-y-auto"
+      >
+        <li *ngFor="let med of results()" class="px-3 py-2">
+          <p class="text-sm font-semibold text-[#293954]">{{ med.nombre }}</p>
+          <p class="text-xs text-gray-500">
+            {{ med.principio_activo || '—' }} · {{ med.concentracion || '—' }} ·
+            {{ med.forma_farmaceutica || '—' }} · {{ med.estado }}
+          </p>
+        </li>
+      </ul>
+    </section>
+
+    <section *ngIf="canCreate" aria-labelledby="titulo-crear">
+      <h3 id="titulo-crear" class="text-sm font-bold text-[#293954] mb-2">
+        Alta de medicamento (solo ADMIN)
+      </h3>
+      <form [formGroup]="createForm" (ngSubmit)="crear()" class="space-y-3" novalidate>
+        <div>
+          <label for="nuevo-nombre" class="block text-xs font-semibold text-[#293954] mb-1">
+            Nombre *
+          </label>
+          <input
+            id="nuevo-nombre"
+            type="text"
+            formControlName="nombre"
+            maxlength="200"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="nuevo-principio" class="block text-xs font-semibold text-[#293954] mb-1">
+              Principio activo
+            </label>
+            <input
+              id="nuevo-principio"
+              type="text"
+              formControlName="principio_activo"
+              maxlength="200"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+          <div>
+            <label
+              for="nuevo-concentracion"
+              class="block text-xs font-semibold text-[#293954] mb-1"
+            >
+              Concentración
+            </label>
+            <input
+              id="nuevo-concentracion"
+              type="text"
+              formControlName="concentracion"
+              maxlength="100"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+          <div>
+            <label for="nuevo-forma" class="block text-xs font-semibold text-[#293954] mb-1">
+              Forma farmacéutica
+            </label>
+            <input
+              id="nuevo-forma"
+              type="text"
+              formControlName="forma_farmaceutica"
+              maxlength="100"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+          <div>
+            <label for="nuevo-descripcion" class="block text-xs font-semibold text-[#293954] mb-1">
+              Descripción
+            </label>
+            <input
+              id="nuevo-descripcion"
+              type="text"
+              formControlName="descripcion"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+        </div>
+        <div
+          *ngIf="createError()"
+          class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200"
+          role="alert"
+        >
+          {{ createError() }}
+        </div>
+        <div
+          *ngIf="createSuccess()"
+          class="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs border border-emerald-200"
+          role="status"
+        >
+          {{ createSuccess() }}
+        </div>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="cerrar()"
+            class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+          >
+            Cerrar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isCreating() || createForm.invalid"
+            class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#049CAB] hover:bg-[#038795] disabled:opacity-50 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            {{ isCreating() ? 'Creando...' : 'Crear' }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <p *ngIf="!canSearch && !canCreate" class="text-sm text-gray-500">
+      No tiene permiso para consultar el catálogo.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,297 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]"
+    >
+      <div>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl"
+            aria-hidden="true"
+          >
+            <span class="material-symbols-outlined text-[24px]">prescriptions</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-[#293954]">Recetas médicas digitales</h1>
+            <p class="text-sm text-gray-500">
+              Emisión, consulta y validación de recetas firmadas digitalmente
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2" *ngIf="canIssue()">
+        <button
+          type="button"
+          (click)="goToIssue()"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#049CAB] hover:bg-[#038795] text-white text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+        >
+          <span class="material-symbols-outlined text-[20px]" aria-hidden="true">add</span>
+          Emitir receta
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-[#E8EDF4]"
+      role="search"
+      aria-label="Filtros de recetas"
+    >
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+        <div class="lg:col-span-2">
+          <label for="filtro-estado" class="block text-xs font-semibold text-[#293954] mb-1">
+            Estado
+          </label>
+          <select
+            id="filtro-estado"
+            [(ngModel)]="estadoFiltro"
+            (change)="onSearch()"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          >
+            <option value="">Todos</option>
+            <option value="EMITIDA">Emitida</option>
+            <option value="ANULADA">Anulada</option>
+          </select>
+        </div>
+        <div class="lg:col-span-2" *ngIf="isStaff()">
+          <label for="filtro-paciente" class="block text-xs font-semibold text-[#293954] mb-1">
+            Paciente (ID)
+          </label>
+          <input
+            id="filtro-paciente"
+            type="number"
+            min="1"
+            [(ngModel)]="idPacienteFiltro"
+            (keyup.enter)="onSearch()"
+            placeholder="Ej. 12"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+        <div class="lg:col-span-2" *ngIf="isStaff()">
+          <label for="filtro-medico" class="block text-xs font-semibold text-[#293954] mb-1">
+            Médico (ID)
+          </label>
+          <input
+            id="filtro-medico"
+            type="number"
+            min="1"
+            [(ngModel)]="idMedicoFiltro"
+            (keyup.enter)="onSearch()"
+            placeholder="Ej. 4"
+            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          />
+        </div>
+        <div class="lg:col-span-4 flex items-end gap-2">
+          <div class="flex-1">
+            <label for="filtro-desde" class="block text-xs font-semibold text-[#293954] mb-1">
+              Desde
+            </label>
+            <input
+              id="filtro-desde"
+              type="date"
+              [(ngModel)]="desdeFiltro"
+              (change)="onSearch()"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+          <span class="text-gray-400 pb-3" aria-hidden="true">-</span>
+          <div class="flex-1">
+            <label for="filtro-hasta" class="block text-xs font-semibold text-[#293954] mb-1">
+              Hasta
+            </label>
+            <input
+              id="filtro-hasta"
+              type="date"
+              [(ngModel)]="hastaFiltro"
+              (change)="onSearch()"
+              class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            />
+          </div>
+        </div>
+        <div class="lg:col-span-2 flex items-end gap-2">
+          <button
+            type="button"
+            (click)="onSearch()"
+            class="flex-1 px-4 py-2.5 bg-[#25627C] hover:bg-[#1e5469] text-white text-sm font-medium rounded-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25627C]"
+          >
+            Buscar
+          </button>
+          <button
+            type="button"
+            (click)="clearFilters()"
+            title="Limpiar filtros"
+            aria-label="Limpiar filtros de recetas"
+            class="px-3 py-2.5 text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
+          >
+            <span class="material-symbols-outlined text-[20px]" aria-hidden="true">
+              restart_alt
+            </span>
+          </button>
+        </div>
+      </div>
+      <p *ngIf="!isStaff()" class="mt-3 text-xs text-gray-500">
+        Se muestran únicamente sus recetas. El alcance lo determina el servidor.
+      </p>
+    </div>
+
+    <div
+      *ngIf="errorMessage()"
+      role="alert"
+      aria-live="assertive"
+      class="p-4 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-sm flex items-center justify-between gap-3"
+    >
+      <span>{{ errorMessage() }}</span>
+      <button
+        type="button"
+        (click)="loadPrescriptions(page())"
+        class="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden">
+      <div
+        *ngIf="isLoading()"
+        class="p-12 text-center text-gray-500 space-y-3"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"
+          aria-hidden="true"
+        ></div>
+        <p class="text-sm font-medium text-[#25627C]">Cargando recetas médicas...</p>
+      </div>
+
+      <div
+        *ngIf="!isLoading() && !errorMessage() && recetas().length === 0"
+        class="p-12 text-center space-y-4"
+        role="status"
+      >
+        <div
+          class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto"
+          aria-hidden="true"
+        >
+          <span class="material-symbols-outlined text-[32px]">prescriptions</span>
+        </div>
+        <div>
+          <h2 class="text-base font-semibold text-[#293954]">No se encontraron recetas</h2>
+          <p class="text-sm text-gray-500 mt-1">
+            Ajuste los filtros o
+            <span *ngIf="canIssue()">emita una nueva receta desde una consulta.</span>
+            <span *ngIf="!canIssue()">consulte con su médico tratante.</span>
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading() && recetas().length > 0" class="overflow-x-auto hidden md:block">
+        <table class="w-full text-left text-sm text-[#293954]">
+          <thead
+            class="bg-[#F0F5FB]/70 text-xs uppercase font-semibold text-gray-600 border-b border-[#E8EDF4]"
+          >
+            <tr>
+              <th scope="col" class="px-6 py-4">Folio</th>
+              <th scope="col" class="px-6 py-4">Paciente</th>
+              <th scope="col" class="px-6 py-4">Emisión</th>
+              <th scope="col" class="px-6 py-4">Vencimiento</th>
+              <th scope="col" class="px-6 py-4">Estado</th>
+              <th scope="col" class="px-6 py-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#E8EDF4]">
+            <tr *ngFor="let receta of recetas()" class="hover:bg-slate-50/80 transition-colors">
+              <td class="px-6 py-4 font-mono text-xs font-bold">{{ receta.folio }}</td>
+              <td class="px-6 py-4 font-medium text-gray-700">
+                {{ receta.paciente.nombre_completo }}
+              </td>
+              <td class="px-6 py-4 text-gray-600">{{ receta.fecha_emision }}</td>
+              <td class="px-6 py-4 text-gray-600">{{ receta.fecha_vencimiento }}</td>
+              <td class="px-6 py-4">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+                  [ngClass]="badgeClass(receta)"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true"></span>
+                  {{ estadoTexto(receta) }} · {{ receta.estado }}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button
+                  type="button"
+                  (click)="openDetail(receta)"
+                  [attr.aria-label]="'Ver receta ' + receta.folio"
+                  class="inline-flex p-2 text-gray-500 hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+                >
+                  <span class="material-symbols-outlined text-[20px]" aria-hidden="true">
+                    visibility
+                  </span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!isLoading() && recetas().length > 0" class="md:hidden divide-y divide-[#E8EDF4]">
+        <article *ngFor="let receta of recetas()" class="p-4 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-mono text-xs font-bold text-[#293954]">{{ receta.folio }}</p>
+            <span
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+              [ngClass]="badgeClass(receta)"
+            >
+              {{ estadoTexto(receta) }} · {{ receta.estado }}
+            </span>
+          </div>
+          <p class="text-sm font-semibold text-[#293954]">{{ receta.paciente.nombre_completo }}</p>
+          <p class="text-xs text-gray-500">
+            Emisión {{ receta.fecha_emision }} · Vence {{ receta.fecha_vencimiento }}
+          </p>
+          <button
+            type="button"
+            (click)="openDetail(receta)"
+            [attr.aria-label]="'Ver receta ' + receta.folio"
+            class="w-full mt-1 px-3 py-2 rounded-xl bg-[#F0F5FB] border border-[#E8EDF4] text-sm font-semibold text-[#25627C] hover:bg-teal-50 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            Ver boleta
+          </button>
+        </article>
+      </div>
+
+      <div
+        *ngIf="!isLoading() && recetas().length > 0"
+        class="px-6 py-4 bg-white border-t border-[#E8EDF4] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+      >
+        <div class="text-xs text-gray-500" aria-live="polite">
+          Mostrando página
+          <span class="font-semibold text-gray-700">{{ page() }}</span>
+          de
+          <span class="font-semibold text-gray-700">{{ totalPages() }}</span>
+          (<span class="font-semibold">{{ total() }}</span> recetas)
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            [disabled]="page() <= 1"
+            (click)="loadPrescriptions(page() - 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            [disabled]="page() >= totalPages()"
+            (click)="loadPrescriptions(page() + 1)"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] disabled:opacity-40 disabled:cursor-not-allowed transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<app-footer></app-footer>
