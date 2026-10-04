@@ -25,7 +25,7 @@ function consultaBase(idConsulta: number): ConsultaResponse {
 }
 
 describe('HceTimeline acción Emitir receta (CU16 hallazgo 4)', () => {
-  const routerMock = { navigate: vi.fn() };
+  const routerMock = { navigate: vi.fn(), url: '/' };
   const routeMock = { snapshot: { paramMap: { get: vi.fn(() => '7') } } };
   const hceServiceMock = {
     historiaActual: signal(null),
@@ -70,6 +70,18 @@ describe('HceTimeline acción Emitir receta (CU16 hallazgo 4)', () => {
     expect(routerMock.navigate).toHaveBeenCalledWith(['/recetas/emitir'], {
       queryParams: { id_consulta: 45, id_paciente: 7 },
     });
+    injector.destroy();
+  });
+
+  it('dentro de /admin navega a /admin/recetas/emitir (conserva el panel)', () => {
+    routerMock.url = '/admin/pacientes/7/hce';
+    const comp = create();
+    comp.ngOnInit();
+    comp.emitirReceta(consultaBase(45));
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/recetas/emitir'], {
+      queryParams: { id_consulta: 45, id_paciente: 7 },
+    });
+    routerMock.url = '/';
     injector.destroy();
   });
 

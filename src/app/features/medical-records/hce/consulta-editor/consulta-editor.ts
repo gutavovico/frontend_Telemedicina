@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
@@ -70,23 +71,43 @@ export class ConsultaEditor implements OnInit {
     observaciones: ['']
   });
 
+  // Señales reactivas desde los inputs (FormControl.value no es signal y no dispara computed).
+  private readonly pesoKg = toSignal(this.form.controls.peso_kg.valueChanges, {
+    initialValue: null as number | null,
+  });
+  private readonly tallaCm = toSignal(this.form.controls.talla_cm.valueChanges, {
+    initialValue: null as number | null,
+  });
+  private readonly presionSis = toSignal(this.form.controls.presion_sistolica_mmhg.valueChanges, {
+    initialValue: null as number | null,
+  });
+  private readonly presionDia = toSignal(this.form.controls.presion_diastolica_mmhg.valueChanges, {
+    initialValue: null as number | null,
+  });
+  private readonly tempCorp = toSignal(this.form.controls.temperatura_corporal_c.valueChanges, {
+    initialValue: null as number | null,
+  });
+  private readonly spo2Sig = toSignal(this.form.controls.saturacion_oxigeno_pct.valueChanges, {
+    initialValue: null as number | null,
+  });
+
   // Cálculo reactivo del IMC
   readonly imcCalculado = computed(() => {
-    const peso = this.form.controls.peso_kg.value;
-    const talla = this.form.controls.talla_cm.value;
-    if (peso && talla && talla > 0) {
-      const tallaM = talla / 100;
-      const imc = peso / (tallaM * tallaM);
-      return Math.round(imc * 100) / 100;
+    const peso = Number(this.pesoKg() ?? this.form.controls.peso_kg.value);
+    const talla = Number(this.tallaCm() ?? this.form.controls.talla_cm.value);
+    if (!Number.isFinite(peso) || peso <= 0 || !Number.isFinite(talla) || talla <= 0) {
+      return null;
     }
-    return null;
+    const tallaM = talla / 100;
+    const imc = peso / (tallaM * tallaM);
+    return Math.round(imc * 100) / 100;
   });
 
   // Alerta reactiva de presión arterial
   readonly alertaPresion = computed(() => {
-    const sis = this.form.controls.presion_sistolica_mmhg.value;
-    const dia = this.form.controls.presion_diastolica_mmhg.value;
-    if (!sis || !dia) return null;
+    const sis = Number(this.presionSis() ?? this.form.controls.presion_sistolica_mmhg.value);
+    const dia = Number(this.presionDia() ?? this.form.controls.presion_diastolica_mmhg.value);
+    if (!Number.isFinite(sis) || !Number.isFinite(dia) || !sis || !dia) return null;
     if (sis >= 140 || dia >= 90) {
       return { nivel: 'CRITICO', texto: 'Hipertensión / Alerta Clínica', color: 'bg-[#ffdad6] text-[#93000a] border-[#ba1a1a]' };
     }
@@ -98,8 +119,8 @@ export class ConsultaEditor implements OnInit {
 
   // Alerta reactiva de temperatura
   readonly alertaTemperatura = computed(() => {
-    const temp = this.form.controls.temperatura_corporal_c.value;
-    if (!temp) return null;
+    const temp = Number(this.tempCorp() ?? this.form.controls.temperatura_corporal_c.value);
+    if (!Number.isFinite(temp) || !temp) return null;
     if (temp >= 37.5) {
       return { nivel: 'CRITICO', texto: 'Febrícula / Fiebre', color: 'bg-[#ffdad6] text-[#93000a] border-[#ba1a1a]' };
     }
@@ -111,8 +132,8 @@ export class ConsultaEditor implements OnInit {
 
   // Alerta reactiva de oxígeno
   readonly alertaSpo2 = computed(() => {
-    const spo2 = this.form.controls.saturacion_oxigeno_pct.value;
-    if (!spo2) return null;
+    const spo2 = Number(this.spo2Sig() ?? this.form.controls.saturacion_oxigeno_pct.value);
+    if (!Number.isFinite(spo2) || !spo2) return null;
     if (spo2 < 90) {
       return { nivel: 'CRITICO', texto: 'Hipoxia Severa', color: 'bg-[#ffdad6] text-[#93000a] border-[#ba1a1a]' };
     }

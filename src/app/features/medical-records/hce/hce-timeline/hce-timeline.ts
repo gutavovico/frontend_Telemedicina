@@ -97,7 +97,7 @@ export class HceTimeline implements OnInit {
     if (!this.puedeEmitirReceta(consulta)) {
       return;
     }
-    void this.router.navigate(['/recetas/emitir'], {
+    void this.router.navigate([`${this.adminBase}/recetas/emitir`], {
       queryParams: { id_consulta: consulta.id_consulta, id_paciente: this.idPaciente() },
     });
   }
