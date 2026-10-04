@@ -1,13 +1,14 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LaboratoryOrdersService } from '../../services/laboratory-orders.service';
 import { OrdenLaboratorioResponse, OrdenLaboratorioDownloadResponse, EstadoOrden } from '../../models/laboratory-order.models';
+import { DocumentViewer } from '../../../documents/components/document-viewer/document-viewer';
 
 @Component({
   selector: 'app-laboratory-order-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, DocumentViewer],
   templateUrl: './laboratory-order-detail.html',
   styleUrl: './laboratory-order-detail.css'
 })
@@ -19,6 +20,10 @@ export class LaboratoryOrderDetail implements OnInit {
   readonly downloadInfo = signal<OrdenLaboratorioDownloadResponse | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoadingDownload = signal<boolean>(false);
+  readonly previewUrl = signal<string | null>(null);
+  readonly isLoadingPreview = signal<boolean>(false);
+
+  readonly previewSource = computed(() => this.previewUrl() || this.downloadInfo()?.url_firmada || null);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -27,8 +32,27 @@ export class LaboratoryOrderDetail implements OnInit {
       return;
     }
     this.service.getOrderById(id).subscribe({
+      next: () => this.autoLoadPreview(),
       error: () => this.errorMessage.set('No se pudo encontrar la orden solicitada.')
     });
+  }
+
+  private autoLoadPreview(): void {
+    const order = this.service.selectedOrder();
+    if (order && order.estado === 'FIRMADA') {
+      this.isLoadingPreview.set(true);
+      this.service.downloadOrder(order.id_orden).subscribe({
+        next: (info) => {
+          this.downloadInfo.set(info);
+          this.previewUrl.set(info.url_firmada);
+          this.isLoadingPreview.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('No tiene permisos para visualizar esta orden.');
+          this.isLoadingPreview.set(false);
+        }
+      });
+    }
   }
 
   loadDownloadUrl(): void {
@@ -36,7 +60,10 @@ export class LaboratoryOrderDetail implements OnInit {
     if (!order) return;
     this.isLoadingDownload.set(true);
     this.service.downloadOrder(order.id_orden).subscribe({
-      next: (info) => this.downloadInfo.set(info),
+      next: (info) => {
+        this.downloadInfo.set(info);
+        this.previewUrl.set(info.url_firmada);
+      },
       error: () => this.errorMessage.set('No tiene permisos para descargar esta orden.'),
       complete: () => this.isLoadingDownload.set(false)
     });

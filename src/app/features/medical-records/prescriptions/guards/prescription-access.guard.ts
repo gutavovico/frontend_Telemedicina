@@ -22,7 +22,7 @@ export const prescriptionAccessGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  const role = authService.userRole();
+  const role = authService.getUserRole().toLowerCase();
   const normalized = allowedRoles.map((r) => r.toLowerCase());
   if (normalized.includes(role)) {
     return true;

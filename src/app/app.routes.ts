@@ -25,12 +25,12 @@ export const routes: Routes = [
   },
   {
     path: 'recuperar',
-    loadComponent: () => import('./features/auth/recover/recover').then(m => m.Recover),
+    loadComponent: () => import('./features/auth/password-recovery/recover/recover').then(m => m.Recover),
     title: 'Hospital San Juan de Dios - Recuperar Contraseña'
   },
   {
     path: 'recuperar-contrasena',
-    loadComponent: () => import('./features/auth/reset-password/reset-password').then(m => m.ResetPassword),
+    loadComponent: () => import('./features/auth/password-recovery/reset-password/reset-password').then(m => m.ResetPassword),
     title: 'Hospital San Juan de Dios - Restablecer Contraseña'
   },
   // ------------------------------------------------------------------ //

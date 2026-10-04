@@ -22,9 +22,9 @@ export const documentAccessGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  const role = authService.userRole()?.toLowerCase() ?? '';
+  const role = (authService.getUserRole() as string).toLowerCase();
   const normalized = allowedRoles.map((r) => r.toLowerCase());
-  if (role && normalized.includes(role)) {
+  if (normalized.includes(role)) {
     return true;
   }
 

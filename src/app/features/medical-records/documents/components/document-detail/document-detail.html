@@ -41,7 +41,7 @@
     <ng-container *ngIf="documentsService.selectedDocument() as doc">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Metadata -->
-        <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 space-y-4">
+        <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 space-y-4 min-h-[600px]">
           <h2 class="text-base font-bold text-[#293954] flex items-center gap-2">
             <span class="material-symbols-outlined text-[20px] text-[#049CAB]">info</span>
             Información del documento
@@ -127,22 +127,44 @@
         </div>
 
         <!-- Visor PDF -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-[#E8EDF4] p-6 min-h-[600px]">
           <h2 class="text-base font-bold text-[#293954] mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-[20px] text-[#049CAB]">picture_as_pdf</span>
             Vista previa
           </h2>
 
-          <div *ngIf="!downloadInfo()" class="text-center py-12 text-gray-400">
-            <span class="material-symbols-outlined text-[48px]">visibility</span>
-            <p class="text-sm">Haga clic en "Preparar Descarga" para visualizar el documento.</p>
+          <!-- Loading preview -->
+          <div *ngIf="isLoadingPreview()" class="h-[500px] flex flex-col items-center justify-center space-y-3 text-center">
+            <div class="w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm font-medium text-[#25627C]">Cargando vista previa...</p>
           </div>
 
+          <!-- Error preview -->
+          <div *ngIf="!isLoadingPreview() && previewSource() === null && !errorMessage()" class="h-[500px] flex flex-col items-center justify-center space-y-3 text-center text-gray-400">
+            <span class="material-symbols-outlined text-[48px]">visibility</span>
+            <p class="text-sm">Cargando vista previa automáticamente...</p>
+          </div>
+
+          <!-- Visor PDF -->
           <app-document-viewer
-            *ngIf="downloadInfo()"
-            [downloadUrl]="downloadInfo()!.url_firmada"
-            [idDocumento]="downloadInfo()!.id_documento"
+            *ngIf="!isLoadingPreview() && previewSource()"
+            [downloadUrl]="previewSource()!"
+            [idDocumento]="downloadInfo()?.id_documento ?? 0"
           ></app-document-viewer>
+
+          <!-- Sin vista previa disponible -->
+          <div *ngIf="!isLoadingPreview() && !previewSource() && errorMessage()" class="h-[500px] flex flex-col items-center justify-center space-y-3 text-center">
+            <span class="material-symbols-outlined text-[48px] text-rose-400">picture_as_pdf</span>
+            <p class="text-sm font-medium text-rose-600">No se pudo cargar la vista previa</p>
+            <button
+              type="button"
+              (click)="loadDownloadUrl()"
+              class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#049CAB] hover:bg-[#1FA7AE] rounded-xl transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">refresh</span>
+              Reintentar
+            </button>
+          </div>
         </div>
       </div>
     </ng-container>

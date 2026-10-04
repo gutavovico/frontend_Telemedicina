@@ -164,11 +164,11 @@ export class InactivityService {
 
   private setupListeners(): void {
     const onActivity = () => {
-      // Cualquier actividad real cancela un aviso ya mostrado. Solo reinicia el
-      // reloj local: la renovacion en el servidor la hace la propia peticion
-      // autenticada que accompanye a la actividad, y el boton explicito.
+      // Cualquier actividad real cancela un aviso ya mostrado y renueva la
+      // sesion en el servidor (POST /auth/session/continue). Solo reiniciar
+      // el reloj local dejaria la sesion expirada en el backend.
       if (this.showWarning()) {
-        this.restartLocalCountdown();
+        this.continueSession();
         return;
       }
       this.reset();

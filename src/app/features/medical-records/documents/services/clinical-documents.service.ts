@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import {
   DocumentoClinico,
@@ -149,7 +149,7 @@ export class ClinicalDocumentsService {
 
     if (isLocal) {
       // Vía HttpClient: el interceptor adjunta el Bearer token.
-      return this.http.get(resolved, { responseType: 'blob' }).toPromise() as Promise<Blob>;
+      return firstValueFrom(this.http.get(resolved, { responseType: 'blob' }));
     }
     // URL presigned MinIO/S3: fetch directo (no interpone token).
     const resp = await fetch(resolved);

@@ -39,9 +39,9 @@
 
     <!-- Barra de Filtros y Búsqueda -->
     <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-[#E8EDF4]">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+      <div class="flex flex-wrap items-center gap-3">
         <!-- Búsqueda General -->
-        <div class="lg:col-span-4 relative">
+        <div class="relative flex-1 min-w-[200px] max-w-xs sm:max-w-md">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <span class="material-symbols-outlined text-[20px]">search</span>
           </div>
@@ -55,7 +55,7 @@
         </div>
 
         <!-- Filtro Tipo de Documento -->
-        <div class="lg:col-span-3">
+        <div class="flex-1 min-w-[160px] max-w-xs">
           <select
             [(ngModel)]="selectedTipo"
             (change)="onSearch()"
@@ -67,29 +67,29 @@
         </div>
 
         <!-- Rango de Fechas -->
-        <div class="lg:col-span-3 flex items-center gap-2">
+        <div class="flex items-center gap-2 min-w-0">
           <input
             type="date"
             [(ngModel)]="fechaDesde"
             (change)="onSearch()"
-            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            class="w-full sm:w-40 px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
             title="Fecha desde"
           />
-          <span class="text-gray-400">-</span>
+          <span class="text-gray-400 shrink-0">-</span>
           <input
             type="date"
             [(ngModel)]="fechaHasta"
             (change)="onSearch()"
-            class="w-full px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+            class="w-full sm:w-40 px-3 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
             title="Fecha hasta"
           />
         </div>
 
         <!-- Botones de Acción de Filtros -->
-        <div class="lg:col-span-2 flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
           <button
             (click)="onSearch()"
-            class="flex-1 px-4 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl transition"
+            class="px-4 py-2.5 bg-[#25627C] hover:bg-[#1E5B76] text-white text-sm font-medium rounded-xl transition whitespace-nowrap"
           >
             Buscar
           </button>

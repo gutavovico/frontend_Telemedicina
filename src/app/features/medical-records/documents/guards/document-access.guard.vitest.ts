@@ -7,7 +7,7 @@ import { documentAccessGuard } from './document-access.guard';
 
 describe('documentAccessGuard (CU12)', () => {
   const routerMock = { createUrlTree: vi.fn(() => 'TREE') };
-  const authMock = { isLoggedIn: vi.fn(), userRole: vi.fn() };
+  const authMock = { isLoggedIn: vi.fn(), getUserRole: vi.fn() };
 
   function runGuard(routeData: Record<string, unknown>): unknown {
     const injector = Injector.create({
@@ -31,7 +31,7 @@ describe('documentAccessGuard (CU12)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.isLoggedIn.mockReturnValue(true);
-    authMock.userRole.mockReturnValue('medico');
+    authMock.getUserRole.mockReturnValue('medico');
   });
 
   it('redirige a /login si no hay sesión', () => {
@@ -48,7 +48,7 @@ describe('documentAccessGuard (CU12)', () => {
   });
 
 it('permite si el rol coincide (insensible a mayúsculas de la ruta)', () => {
-      authMock.userRole.mockReturnValue('medico');
+      authMock.getUserRole.mockReturnValue('medico');
       expect(runGuard({ roles: ['Medico'] })).toBe(true);
     });
 

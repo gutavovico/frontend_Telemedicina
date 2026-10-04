@@ -153,9 +153,42 @@
             </div>
           </div>
 
-          <div class="mt-8 pt-6 border-t border-outline-variant/20">
-            <h3 class="font-semibold text-on-surface mb-4">Información de Auditoría</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+@if (order.estado === 'FIRMADA') {
+              <div class="mt-8 pt-6 border-t border-outline-variant/20">
+                <h3 class="font-semibold text-on-surface mb-4 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[20px] text-primary">picture_as_pdf</span>
+                  Vista previa del PDF
+                </h3>
+
+                <div *ngIf="isLoadingPreview()" class="h-[500px] flex flex-col items-center justify-center space-y-3 text-center">
+                  <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p class="text-sm font-medium text-primary">Cargando vista previa...</p>
+                </div>
+
+                <app-document-viewer
+                  *ngIf="!isLoadingPreview() && previewSource()"
+                  [downloadUrl]="previewSource()!"
+                  [idDocumento]="downloadInfo()?.id_orden ?? 0"
+                ></app-document-viewer>
+
+                <div *ngIf="!isLoadingPreview() && !previewSource() && errorMessage()" class="h-[500px] flex flex-col items-center justify-center space-y-3 text-center">
+                  <span class="material-symbols-outlined text-[48px] text-rose-400">picture_as_pdf</span>
+                  <p class="text-sm font-medium text-rose-600">No se pudo cargar la vista previa</p>
+                  <button
+                    type="button"
+                    (click)="loadDownloadUrl()"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-xl transition"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">refresh</span>
+                    Reintentar
+                  </button>
+                </div>
+              </div>
+            }
+
+              <div class="mt-8 pt-6 border-t border-outline-variant/20">
+              <h3 class="font-semibold text-on-surface mb-4">Información de Auditoría</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div class="p-3 bg-surface-container-lowest/50 rounded-lg">
                 <div class="text-on-surface-variant">Creada</div>
                 <div class="font-medium text-on-surface">{{ formatDateTime(order.created_at) }}</div>

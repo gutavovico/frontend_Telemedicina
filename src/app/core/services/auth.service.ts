@@ -70,9 +70,41 @@ export class AuthService {
     return this.currentUser()?.foto_perfil || null;
   });
 
-  readonly userRole = computed(() => {
-    return this.currentUser()?.rol || null;
+  readonly userRole = computed((): string => {
+    const rol = this.currentUser()?.rol;
+    if (!rol) return 'unknown';
+    const limpio = rol.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (limpio === 'ADMIN' || limpio === 'ADMINISTRADOR' || limpio === 'ADMINISTRACION') return 'admin';
+    if (limpio === 'MEDICO' || limpio === 'DOCTOR') return 'doctor';
+    if (limpio === 'PACIENTE') return 'paciente';
+    if (limpio === 'RECEPCION') return 'recepcion';
+    return 'unknown';
   });
+
+  getUserRole(): string {
+    return this.userRole();
+  }
+
+  /** Redirige según el rol del usuario tras login exitoso. */
+  redirectByRole(tenantContext?: unknown): void {
+    const role = this.getUserRole();
+    switch (role) {
+      case 'admin':
+        this.router.navigate(['/admin/dashboard']);
+        break;
+      case 'doctor':
+        this.router.navigate(['/admin/agenda']);
+        break;
+      case 'recepcion':
+        this.router.navigate(['/admin/agenda']);
+        break;
+      case 'paciente':
+        this.router.navigate(['/mis-citas']);
+        break;
+      default:
+        this.router.navigate(['/']);
+    }
+  }
 
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
@@ -186,6 +218,11 @@ export class AuthService {
     );
   }
 
+  /** Alias para compatibilidad (CU04 auto-registro médico). */
+  fetchPerfilMedico(): Observable<UsuarioResponse | null> {
+    return this.fetchUserProfile();
+  }
+
   refreshToken(): Observable<TokenResponse> {
     const refreshToken = this.getRefreshToken();
     const payload: RefreshTokenRequest = { refresh_token: refreshToken ?? '' };
@@ -283,5 +320,32 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return this.hasValidToken();
+  }
+
+  isAdmin(): boolean {
+    return this.userRole() === 'admin';
+  }
+
+  isPaciente(): boolean {
+    return this.userRole() === 'paciente';
+  }
+
+  isRecepcion(): boolean {
+    return this.userRole() === 'recepcion';
+  }
+
+  isMedico(): boolean {
+    return this.userRole() === 'doctor' || this.userRole() === 'medico';
+  }
+
+  isDoctor(): boolean {
+    return this.userRole() === 'doctor';
+  }
+
+  /** Perfil médico del usuario autenticado (para validar autoría de recetas/órdenes). */
+  perfilMedico(): { id_medico: number } | null {
+    if (!this.isDoctor()) return null;
+    const user = this.currentUser();
+    return user ? { id_medico: user.id_usuario } : null;
   }
 }
