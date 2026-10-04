@@ -1,0 +1,34 @@
+<div class="agenda-overlay" (keydown.escape)="close()">
+  <section class="agenda-dialog" role="dialog" aria-modal="true" aria-labelledby="block-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+    <div class="agenda-heading">
+      <div><p class="agenda-eyebrow">SOLICITUD DE BLOQUEO</p><h2 id="block-title">Reservar un período de ausencia</h2></div>
+      <button type="button" class="agenda-button secondary" aria-label="Cerrar formulario" [disabled]="submitting()" (click)="close()">Cerrar</button>
+    </div>
+    <p class="agenda-muted">{{ medicoNombre() }} · La solicitud quedará pendiente de aprobación.</p>
+    @if (rol() === 'MEDICO') { <p class="agenda-notice">Solo puedes solicitar para mañana, según la hora de Bolivia.</p> }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="agenda-stack">
+      <fieldset [disabled]="submitting()" class="agenda-stack">
+        <label>Servicio<select formControlName="id_servicio" (change)="changeService()" cdkFocusInitial>
+          @for (s of servicios(); track s.id_servicio) {
+            @if (s.estado.toLowerCase() === 'activo') { <option [ngValue]="s.id_servicio">{{ s.nombre }}</option> }
+          }
+        </select></label>
+        <label>Fecha<input type="date" formControlName="fecha" required [min]="rol() === 'MEDICO' ? manana : null" [max]="rol() === 'MEDICO' ? manana : null"></label>
+        <div class="agenda-two">
+          <label>Hora de inicio<select formControlName="hora_inicio"><option value="">Selecciona</option>
+            @for (hora of limites().slice(0, -1); track hora) { <option [value]="hora">{{ hora }}</option> }
+          </select></label>
+          <label>Hora de fin<select formControlName="hora_fin"><option value="">Selecciona</option>
+            @for (hora of limites().slice(1); track hora) { <option [value]="hora">{{ hora }}</option> }
+          </select></label>
+        </div>
+        <label>Motivo<textarea rows="3" formControlName="motivo" placeholder="Explica el motivo de la solicitud" required></textarea></label>
+      </fieldset>
+      @if (validationError()) { <p class="agenda-error" role="alert">{{ validationError() }}</p> }
+      @if (errorMessage()) { <p class="agenda-error" role="alert">{{ errorMessage() }}</p> }
+      <div class="agenda-actions"><button type="button" class="agenda-button secondary" [disabled]="submitting()" (click)="close()">Cancelar</button>
+        <button type="submit" class="agenda-button" [disabled]="submitting()">{{ submitting() ? 'Enviando…' : 'Enviar solicitud' }}</button>
+      </div>
+    </form>
+  </section>
+</div>

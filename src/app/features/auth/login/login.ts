@@ -79,9 +79,13 @@ export class Login implements OnInit {
     const { email, password, rememberMe } = this.loginForm.value;
 
     this.authService.login(email, password, rememberMe).subscribe({
-      next: () => {
+      next: (tenantContext) => {
         this.isLoading.set(false);
-        this.router.navigateByUrl(this.returnUrl);
+        if (this.returnUrl && this.returnUrl !== '/') {
+          this.router.navigateByUrl(this.returnUrl);
+        } else {
+          this.authService.redirectByRole(tenantContext);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);

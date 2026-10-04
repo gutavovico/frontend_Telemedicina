@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Transiciones suaves */
+button {
+  transition: all 0.15s ease-in-out;
+}

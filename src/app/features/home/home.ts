@@ -1,8 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { Router, RouterLink } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { Header } from '../../shared/components/header/header';
 import { Footer } from '../../shared/components/footer/footer';
+import { AuthService } from '../../core/services/auth.service';
+import { TenantService } from '../../core/services/tenant.service';
+import { PatientService } from '../../core/services/patient.service';
 
 interface Step {
   icon: string;
@@ -24,11 +29,40 @@ interface SecurityItem {
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, MatIconModule, Header, Footer],
+  imports: [CommonModule, MatIconModule, RouterLink, Header, Footer],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home {
+export class Home implements OnInit {
+  readonly authService = inject(AuthService);
+  readonly tenantService = inject(TenantService);
+  private readonly patientService = inject(PatientService);
+  private readonly router = inject(Router);
+
+  /** Landing condicionada: el paciente logueado ve su hub "Mi salud". */
+  readonly esPaciente = computed(
+    () => this.authService.isAuthenticated() && this.authService.isPaciente()
+  );
+
+  readonly miPacienteId = signal<number | null>(null);
+
+  ngOnInit(): void {
+    if (this.esPaciente()) {
+      this.patientService
+        .getMyProfile()
+        .pipe(catchError(() => of(null)))
+        .subscribe((perfil) => {
+          if (perfil) this.miPacienteId.set(perfil.id_paciente);
+        });
+    }
+  }
+
+  irMiHce(): void {
+    const id = this.miPacienteId();
+    if (id !== null) {
+      this.router.navigate(['/pacientes', id, 'hce']);
+    }
+  }
   readonly steps: Step[] = [
     {
       icon: 'smart_toy',

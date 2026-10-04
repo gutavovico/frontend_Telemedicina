@@ -1,6 +1,86 @@
 <app-header></app-header>
 <!-- Main Content -->
 <main class="flex-grow pt-[88px]">
+  @if (esPaciente()) {
+    <!-- Hub del paciente: Mi salud -->
+    <section class="px-margin-mobile md:px-margin-desktop py-12 md:py-16 max-w-container-max mx-auto">
+      <div class="flex flex-col gap-2 mb-8">
+        <span
+          class="inline-flex w-fit items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider"
+        >
+          <span class="material-symbols-outlined text-[16px]">favorite</span>
+          <span>Mi salud · {{ tenantService.clinicaNombre() }}</span>
+        </span>
+        <h1 class="text-headline-lg-mobile md:text-display-lg font-headline-lg-mobile md:font-display-lg text-primary">
+          Hola, {{ authService.userDisplayName() }}
+        </h1>
+        <p class="text-body-lg font-body-lg text-on-surface-variant">
+          Gestiona tus citas, documentos y tu historia clínica desde un solo lugar.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <a
+          routerLink="/mis-citas"
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+        >
+          <span class="material-symbols-outlined text-2xl text-[#14B8A6]">calendar_month</span>
+          <h3 class="text-title-md font-title-md text-primary">Mis citas</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Consulta tus turnos y entra a tu teleconsulta.</p>
+        </a>
+        <a
+          routerLink="/fichas/nueva"
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+        >
+          <span class="material-symbols-outlined text-2xl text-[#14B8A6]">add_circle</span>
+          <h3 class="text-title-md font-title-md text-primary">Reservar turno</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Emite tu ficha eligiendo especialidad y especialista.</p>
+        </a>
+        <a
+          routerLink="/mis-documentos"
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+        >
+          <span class="material-symbols-outlined text-2xl text-[#14B8A6]">folder_shared</span>
+          <h3 class="text-title-md font-title-md text-primary">Mis documentos</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Recetas, órdenes y resultados de laboratorio.</p>
+        </a>
+        <a
+          routerLink="/recetas"
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+        >
+          <span class="material-symbols-outlined text-2xl text-[#14B8A6]">prescriptions</span>
+          <h3 class="text-title-md font-title-md text-primary">Mis recetas</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Visualiza y descarga tus recetas digitales.</p>
+        </a>
+        <a
+          routerLink="/mi-cola"
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+        >
+          <span class="material-symbols-outlined text-2xl text-[#14B8A6]">hourglass_top</span>
+          <h3 class="text-title-md font-title-md text-primary">Mi turno de hoy</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Tu posición y espera en la fila virtual.</p>
+        </a>
+        @if (miPacienteId() !== null) {
+          <button
+            type="button"
+            (click)="irMiHce()"
+            class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 text-left cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-2xl text-[#14B8A6]">clinical_notes</span>
+            <h3 class="text-title-md font-title-md text-primary">Mi historia clínica</h3>
+            <p class="text-body-md font-body-md text-on-surface-variant">Tu expediente, evolución y diagnósticos.</p>
+          </button>
+        }
+        <div
+          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 border-l-4 border-outline-variant/40 flex flex-col gap-2 opacity-70"
+        >
+          <span class="material-symbols-outlined text-2xl text-on-surface-variant">schedule</span>
+          <h3 class="text-title-md font-title-md text-primary">Lista de espera y triaje</h3>
+          <p class="text-body-md font-body-md text-on-surface-variant">Próximamente: turnos liberados y orientación preliminar.</p>
+        </div>
+      </div>
+    </section>
+  } @else {
   <!-- Hero Section -->
   <section class="relative px-margin-mobile md:px-margin-desktop py-24 md:py-32 max-w-container-max mx-auto overflow-hidden">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-center relative z-10">
@@ -203,5 +283,6 @@
       </button>
     </div>
   </section>
+  }
 </main>
 <app-footer></app-footer>

@@ -1,0 +1,188 @@
+<!-- Navbar Superior (solo fuera del panel /admin, que tiene topbar propio) -->
+@if (!isAdminRoute) {
+<header class="w-full bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-[#1a56db] text-white flex items-center justify-center shadow-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 21v-8H7v8M7 3v5h8"></path>
+      </svg>
+    </div>
+    <span class="font-semibold text-slate-800 text-sm tracking-tight">{{ teleconsultaService.nombreClinica() }}</span>
+  </div>
+
+  <nav class="hidden md:flex items-center gap-8 text-slate-600 font-medium text-xs">
+    <a routerLink="/" class="hover:text-blue-600 transition">Home</a>
+    <a routerLink="/citas" class="text-blue-600 font-semibold transition">Mis Citas</a>
+    <a routerLink="/perfil" class="hover:text-blue-600 transition">Perfil</a>
+  </nav>
+
+  <div class="flex items-center gap-2 border border-slate-300 rounded-full py-1 px-2.5 bg-white hover:bg-slate-50 transition cursor-pointer shadow-2xs">
+    <div class="w-6 h-6 rounded-full bg-[#102a43] text-white font-bold text-[10px] flex items-center justify-center">
+      {{ teleconsultaService.usuarioActivo().iniciales }}
+    </div>
+    <span class="text-xs font-semibold text-slate-700">{{ teleconsultaService.usuarioActivo().nombre }}</span>
+    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </div>
+</header>
+}
+
+<!-- Contenido Principal -->
+<main class="min-h-[calc(100vh-57px)] bg-[#f8fafc] px-4 md:px-12 py-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Migas y Título de Página -->
+    <div class="mb-5">
+      <span class="text-xs font-medium text-slate-400 lowercase tracking-wide block mb-1">mis citas</span>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
+        Consulta: ({{ teleconsultaService.paciente().nombreCompleto }})
+      </h1>
+    </div>
+
+    <!-- Layout en 2 Columnas -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Columna Izquierda (Mis Datos + Detalles de la Cita) -->
+      <div class="lg:col-span-6 flex flex-col gap-6">
+        <!-- Card: Mis Datos -->
+        <section class="bg-white rounded-2xl p-6 shadow-xs border border-slate-200/80">
+          <h2 class="text-sm font-semibold text-slate-800 mb-4">Mis Datos</h2>
+          
+          <div class="flex items-center gap-5 mb-4">
+            <div class="w-18 h-18 rounded-full bg-[#102a43] text-white flex items-center justify-center text-xl font-bold shadow-inner flex-shrink-0">
+              {{ teleconsultaService.paciente().inicialesAvatar }}
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 leading-snug">{{ teleconsultaService.paciente().nombreCompleto }}</h3>
+              <p class="text-xs text-slate-500 font-normal">Identificación ID: {{ teleconsultaService.paciente().identificacionId }}</p>
+            </div>
+          </div>
+
+          <div class="pl-2 space-y-1 text-xs text-slate-600 border-t border-slate-100 pt-3">
+            <p><span class="text-slate-400 font-normal">ID:</span> <span class="font-medium text-slate-700 ml-1">{{ teleconsultaService.paciente().identificacionId }}</span></p>
+            <p><span class="text-slate-400 font-normal">Seguro Médico:</span> <span class="font-medium text-slate-700 ml-1">{{ teleconsultaService.paciente().seguroProveedor }}</span></p>
+            <p><span class="text-slate-400 font-normal">Seguro Médico:</span> <span class="font-medium text-slate-700 ml-1">{{ teleconsultaService.paciente().seguroPoliza }}</span></p>
+          </div>
+        </section>
+
+        <!-- Card: Detalles de la Cita -->
+        <section class="bg-white rounded-2xl p-6 shadow-xs border border-slate-200/80 space-y-2.5">
+          <h2 class="text-sm font-semibold text-slate-800 mb-3">Detalles de la Cita</h2>
+          
+          <p class="text-xs text-slate-600">
+            <span class="text-slate-400 font-normal">Médico especialista:</span>
+            <span class="font-medium text-slate-800 ml-1">{{ teleconsultaService.cita().nombreMedico }}</span>
+          </p>
+          <p class="text-xs text-slate-600">
+            <span class="text-slate-400 font-normal">Especialidad:</span>
+            <span class="font-medium text-slate-800 ml-1">{{ teleconsultaService.cita().especialidad }}</span>
+          </p>
+          <p class="text-xs text-slate-600">
+            <span class="text-slate-400 font-normal">Fecha:</span>
+            <span class="font-medium text-slate-800 ml-1">{{ teleconsultaService.cita().rangoFechas }}</span>
+          </p>
+          <p class="text-xs text-slate-600">
+            <span class="text-slate-400 font-normal">Hora de Teleconsulta:</span>
+            <span class="font-medium text-slate-800 ml-1">{{ teleconsultaService.cita().horaTeleconsulta }}</span>
+          </p>
+        </section>
+      </div>
+
+      <!-- Columna Derecha (Card Unificada: Perfil del Médico y Chat) -->
+      <div class="lg:col-span-6">
+        <section class="bg-white rounded-2xl p-6 shadow-xs border border-slate-200/80 flex flex-col min-h-[460px]">
+          <!-- Encabezado de la Card -->
+          <h2 class="text-sm font-semibold text-slate-800 mb-4">Perfil del Médico y Chat</h2>
+
+          <!-- Bloque Superior: Médico Especialista -->
+          <div class="flex items-start gap-4 mb-4">
+            <img 
+              [src]="teleconsultaService.medico().fotoUrl" 
+              [alt]="teleconsultaService.medico().nombreCompleto"
+              class="w-20 h-20 rounded-xl object-cover border border-slate-100 shadow-2xs flex-shrink-0"
+            />
+            <div class="space-y-0.5">
+              <span class="text-[11px] font-medium text-slate-400 block">{{ teleconsultaService.medico().cargoEtiqueta }}</span>
+              <h3 class="text-base font-bold text-slate-900">{{ teleconsultaService.medico().nombreCompleto }}</h3>
+              <p class="text-xs text-slate-500 font-normal leading-relaxed line-clamp-3">
+                {{ teleconsultaService.medico().biografia }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Separador Estilo Cápsula/Píldora -->
+          <div class="w-full h-2 bg-slate-200/80 rounded-full my-4"></div>
+
+          <!-- Sub-bloque: Chat con el Médico -->
+          <div class="flex flex-col flex-grow justify-between">
+            <div>
+              <span class="text-[11px] font-medium text-slate-400 block mb-2">Chat</span>
+              
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-9 h-9 rounded-full bg-[#00897b] text-white flex items-center justify-center shadow-xs">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                </div>
+                <h4 class="text-base font-bold text-slate-800 tracking-tight">Chatear con el Médico</h4>
+              </div>
+
+              <!-- Hilo de Mensajes -->
+              <div #chatMessagesContainer class="space-y-3 mb-4 max-h-[190px] overflow-y-auto pr-1 scroll-smooth">
+                @for (msg of teleconsultaService.mensajes(); track msg.idMensaje) {
+                  @if (msg.esPropio) {
+                    <!-- Mensaje del Paciente (Derecha) -->
+                    <div class="flex items-end justify-end gap-2">
+                      <div class="bg-[#00897b] text-white rounded-2xl rounded-br-xs py-2 px-3.5 text-xs max-w-[85%] shadow-2xs">
+                        <p class="leading-relaxed">{{ msg.contenido }}</p>
+                        <span class="text-[10px] text-teal-100 block text-right mt-1">{{ msg.horaDisplay }}</span>
+                      </div>
+                    </div>
+                  } @else {
+                    <!-- Mensaje del Médico (Izquierda) -->
+                    <div class="flex items-end justify-start gap-2">
+                      <div class="bg-slate-100 text-slate-800 rounded-2xl rounded-bl-xs py-2.5 px-3.5 text-xs max-w-[85%] shadow-2xs">
+                        <p class="leading-relaxed">
+                          <span class="font-semibold text-slate-900">{{ msg.nombreRemitente }}: </span>
+                          {{ msg.contenido }}
+                        </p>
+                        <span class="text-[10px] text-slate-400 block text-right mt-0.5">{{ msg.horaDisplay }}</span>
+                      </div>
+                      <img 
+                        [src]="teleconsultaService.medico().fotoUrl" 
+                        class="w-6 h-6 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                        alt="Avatar Médico"
+                      />
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+
+            <!-- Input Box del Chat -->
+            <div class="relative flex items-center mt-2">
+              <input 
+                type="text"
+                [ngModel]="nuevoMensajeTexto()"
+                (ngModelChange)="nuevoMensajeTexto.set($event)"
+                (keydown)="onKeyDown($event)"
+                placeholder="Mensaje..."
+                class="w-full bg-white border border-[#26a69a]/70 focus:border-[#00897b] focus:ring-1 focus:ring-[#00897b] rounded-full py-2.5 pl-4 pr-11 text-xs text-slate-800 placeholder-slate-400 outline-none transition shadow-xs"
+              />
+              <button 
+                type="button"
+                (click)="enviarMensaje()"
+                class="absolute right-2 text-[#00897b] hover:text-[#00695c] hover:scale-105 active:scale-95 p-1.5 transition flex items-center justify-center cursor-pointer"
+                aria-label="Enviar mensaje"
+              >
+                <svg class="w-4 h-4 transform rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>

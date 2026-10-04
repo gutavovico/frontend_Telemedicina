@@ -1,0 +1,310 @@
+<div class="min-h-screen bg-[#F8FAFC]">
+  <!-- BARRA DE NAVEGACIÓN PRINCIPAL PERSISTENTE -->
+  <app-header></app-header>
+
+  <!-- CONTENEDOR PRINCIPAL DE "MIS CITAS" -->
+  <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+
+    <!-- Migas: volver al hub Mi salud -->
+    <div class="flex items-center gap-2 text-sm">
+      <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Mi salud
+      </a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <span class="text-primary font-medium">Mis citas</span>
+    </div>
+
+    <!-- 1. ENCABEZADO Y ACCIONES GLOBALES -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#002d62] tracking-tight">Mis citas</h1>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">En todas tus instituciones</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Selector Dropdown de Instituciones -->
+        <div class="relative">
+          <select
+            [value]="institucionSeleccionada()"
+            (change)="seleccionarInstitucion($event)"
+            class="appearance-none bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl pl-4 pr-9 py-2.5 shadow-2xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#002d62]/20 cursor-pointer"
+          >
+            @for (inst of instituciones; track inst) {
+              <option [value]="inst">{{ inst }}</option>
+            }
+          </select>
+          <span class="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+            expand_more
+          </span>
+        </div>
+
+        <!-- Botón Primario: Nueva Cita (CU09: reservar turno vía ficha) -->
+        <button
+          type="button"
+          routerLink="/fichas/nueva"
+          class="inline-flex items-center gap-2 bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
+        >
+          <span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+          <span>Nueva cita</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. PESTAÑAS DE FILTRADO (TABS) CON CONTADORES DINÁMICOS REALES -->
+    <div class="border-b border-slate-200">
+      <nav class="flex items-center space-x-6 sm:space-x-8 text-xs sm:text-sm">
+        
+        <!-- Tab Próximas -->
+        <button
+          type="button"
+          (click)="cambiarTab('proximas')"
+          class="pb-3.5 font-bold transition-all relative cursor-pointer flex items-center gap-2"
+          [ngClass]="tabActivo() === 'proximas' ? 'text-[#002d62] border-b-2 border-[#002d62]' : 'text-slate-500 hover:text-slate-800'"
+        >
+          <span>Próximas</span>
+          <span
+            class="text-[11px] font-bold px-2 py-0.5 rounded-full"
+            [ngClass]="tabActivo() === 'proximas' ? 'bg-[#002d62]/10 text-[#002d62]' : 'bg-slate-100 text-slate-500'"
+          >
+            {{ conteoProximas() }}
+          </span>
+        </button>
+
+        <!-- Tab Lista de espera -->
+        <button
+          type="button"
+          (click)="cambiarTab('espera')"
+          class="pb-3.5 font-semibold transition-all relative cursor-pointer flex items-center gap-2"
+          [ngClass]="tabActivo() === 'espera' ? 'text-[#002d62] border-b-2 border-[#002d62]' : 'text-slate-500 hover:text-slate-800'"
+        >
+          <span>Lista de espera</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+            {{ conteoEspera() }}
+          </span>
+        </button>
+
+        <!-- Tab Pasadas -->
+        <button
+          type="button"
+          (click)="cambiarTab('pasadas')"
+          class="pb-3.5 font-semibold transition-all relative cursor-pointer flex items-center gap-2"
+          [ngClass]="tabActivo() === 'pasadas' ? 'text-[#002d62] border-b-2 border-[#002d62]' : 'text-slate-500 hover:text-slate-800'"
+        >
+          <span>Pasadas</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+            {{ conteoPasadas() }}
+          </span>
+        </button>
+
+        <!-- Tab Canceladas -->
+        <button
+          type="button"
+          (click)="cambiarTab('canceladas')"
+          class="pb-3.5 font-semibold transition-all relative cursor-pointer flex items-center gap-2"
+          [ngClass]="tabActivo() === 'canceladas' ? 'text-[#002d62] border-b-2 border-[#002d62]' : 'text-slate-500 hover:text-slate-800'"
+        >
+          <span>Canceladas</span>
+          <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+            {{ conteoCanceladas() }}
+          </span>
+        </button>
+
+      </nav>
+    </div>
+
+    <!-- FEEDBACK DE ERROR -->
+    @if (error()) {
+      <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-center justify-between">
+        <span>{{ error() }}</span>
+        <button (click)="cargarCitasDesdeBackend()" class="font-bold underline hover:text-rose-950 cursor-pointer">
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- SPINNER DE CARGA -->
+    @if (cargando()) {
+      <div class="py-16 text-center text-slate-400">
+        <div class="inline-block w-8 h-8 border-4 border-slate-200 border-t-[#002d62] rounded-full animate-spin"></div>
+        <p class="text-xs text-slate-500 mt-2 font-medium">Cargando tus citas desde la clínica...</p>
+      </div>
+    } @else {
+      <!-- 3. LISTADO DE TARJETAS DE CITA 100% REALES -->
+      <div class="space-y-4">
+        @for (cita of citasMostradas(); track cita.id_cita) {
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-200">
+            
+            <!-- Bloque Izquierdo: Fecha + Datos del Médico y Cita -->
+            <div class="flex items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+              
+              <!-- Badge de Fecha Cuadrado (ej. 03 OCT) -->
+              <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-[#eff4fa] border border-[#e2eaf4] flex flex-col items-center justify-center shrink-0 shadow-2xs">
+                <span class="text-xl sm:text-2xl font-black text-[#002d62] leading-none">{{ cita.fechaDia }}</span>
+                <span class="text-[10px] sm:text-xs font-bold text-[#002d62]/70 tracking-wider mt-1">{{ cita.fechaMes }}</span>
+              </div>
+
+              <!-- Información Médica y Contextual -->
+              <div class="space-y-1.5 min-w-0 flex-1">
+                
+                <!-- Título del Médico Limpio + Estado -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <h3 class="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    {{ cita.medicoNombre }}
+                  </h3>
+
+                  <!-- Chip de Estado -->
+                  @if (cita.estado === 'CONFIRMADA') {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      {{ cita.estadoLabel }}
+                    </span>
+                  } @else if (cita.estado === 'PENDIENTE') {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                      {{ cita.estadoLabel }}
+                    </span>
+                  } @else if (cita.estado === 'COMPLETADA') {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                      {{ cita.estadoLabel }}
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      {{ cita.estadoLabel }}
+                    </span>
+                  }
+                </div>
+
+                <!-- Especialidad & Motivo -->
+                <p class="text-xs sm:text-sm text-slate-600 font-medium">
+                  {{ cita.especialidad }} · {{ cita.motivo }}
+                </p>
+
+                <!-- Tag de Institución / Clínica con Círculo -->
+                <div class="flex items-center gap-2 pt-0.5">
+                  <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border" [ngClass]="cita.clinicaColorClass">
+                    <span class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black uppercase text-white bg-current">
+                      <span class="text-slate-900 invert">{{ cita.clinicaCodigo }}</span>
+                    </span>
+                    <span>{{ cita.clinicaNombre }}</span>
+                  </span>
+                </div>
+
+                <!-- Metadatos de Horario, Modalidad y Ficha -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 pt-1">
+                  <span class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[15px] text-slate-400">schedule</span>
+                    <span>{{ cita.horario }}</span>
+                  </span>
+
+                  <span class="inline-flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[15px] text-slate-400">
+                      {{ cita.modalidad === 'VIDEOCONSULTA' ? 'videocam' : 'person' }}
+                    </span>
+                    <span>{{ cita.modalidad === 'VIDEOCONSULTA' ? 'Videoconsulta' : 'Presencial' }}</span>
+                  </span>
+
+                  @if (cita.fichaCodigo) {
+                    <span class="inline-flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[15px] text-slate-400">description</span>
+                      <span>{{ cita.fichaCodigo }}</span>
+                    </span>
+                  }
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Bloque Derecho: Botones de Acción -->
+            <div class="flex items-center gap-2.5 sm:self-center shrink-0 pt-2 md:pt-0">
+              
+              <!-- Botón Secundario: Chatear (Abre Pop-up Flotante) -->
+              <button
+                type="button"
+                (click)="abrirChat(cita)"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 hover:border-[#002d62] hover:bg-slate-50 text-slate-700 hover:text-[#002d62] text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
+              >
+                <span class="material-symbols-outlined text-[17px]">chat</span>
+                <span>Chatear</span>
+              </button>
+
+              <!-- Botón Contextual (Reprogramar / Pagar ahora / Ver receta) -->
+              @if (cita.accionSecundaria === 'PAGAR_AHORA') {
+                <button
+                  type="button"
+                  (click)="ejecutarAccionSecundaria(cita)"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  <span class="material-symbols-outlined text-[17px]">credit_card</span>
+                  <span>Pagar ahora</span>
+                </button>
+              } @else if (cita.accionSecundaria === 'VER_RECETA') {
+                <button
+                  type="button"
+                  routerLink="/recetas"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-[17px]">prescriptions</span>
+                  <span>Ver receta</span>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="ejecutarAccionSecundaria(cita)"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  <span>Reprogramar</span>
+                </button>
+              }
+
+            </div>
+
+          </div>
+        } @empty {
+          <!-- ESTADO VACÍO LIMPIO Y CONTEXTUAL POR PESTAÑA -->
+          <div class="py-16 text-center font-medium bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs">
+            <div class="flex flex-col items-center justify-center gap-3">
+              <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
+              <p class="text-sm font-semibold text-slate-600">
+                @if (tabActivo() === 'proximas') {
+                  No tienes citas próximas agendadas.
+                } @else if (tabActivo() === 'espera') {
+                  No tienes citas en lista de espera.
+                } @else if (tabActivo() === 'pasadas') {
+                  No tienes consultas médicas pasadas.
+                } @else if (tabActivo() === 'canceladas') {
+                  No tienes citas canceladas.
+                }
+              </p>
+              @if (tabActivo() === 'proximas') {
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 bg-[#002d62] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs mt-2 hover:bg-[#001f44] cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-[16px]">add</span>
+                  <span>Agendar una nueva cita</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  </main>
+
+  <!-- 4. WIDGET FLOTANTE DE CHAT CU15 (POPOVER ESQUINA INFERIOR DERECHA) -->
+  @if (showChatWidget() && chatCitaActiva()) {
+    <app-chat-floating-widget
+      [idCita]="chatCitaActiva()!.id_cita"
+      [citaInfo]="chatCitaActiva()"
+      [interlocutorNombreOverride]="chatCitaActiva()!.medicoNombre"
+      [interlocutorSubtituloOverride]="chatCitaActiva()!.especialidad + ' · Suele responder en 2 h'"
+      [clinicaNombreOverride]="chatCitaActiva()!.clinicaNombre"
+      [fechaHoraOverride]="chatCitaActiva()!.motivo + ' - ' + chatCitaActiva()!.fechaDia + ' ' + chatCitaActiva()!.fechaMes + ' - ' + chatCitaActiva()!.horario"
+      [fichaNumeroOverride]="chatCitaActiva()!.fichaCodigo"
+      (cerrar)="cerrarChat()"
+    ></app-chat-floating-widget>
+  }
+</div>
