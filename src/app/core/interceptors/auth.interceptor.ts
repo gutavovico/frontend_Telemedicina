@@ -20,6 +20,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      // El cierre por inactividad (CU23) invalida la sesion en el servidor: intentar
+      // renovar el token daria un par nuevo que seguiria apuntando a la misma sesion
+      // revocada, asi que se cierra directamente en lugar de entrar en un ciclo de
+      // refresh fallido.
+      const cerradoPorInactividad =
+        error.status === 401 && typeof error.error?.detail === 'string'
+          && error.error.detail.includes('inactividad');
+
+      if (cerradoPorInactividad) {
+        authService.onSessionClosedByInactivity();
+        return throwError(() => error);
+      }
+
       // Handle 401 Unauthorized, excluding auth endpoints to prevent endless loops
       if (
         error.status === 401 &&

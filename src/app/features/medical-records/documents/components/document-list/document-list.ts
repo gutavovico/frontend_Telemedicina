@@ -91,8 +91,10 @@ export class DocumentList implements OnInit {
   }
 
   get isStaff(): boolean {
-    const role = this.authService.userRole();
-    return role === 'admin' || role === 'doctor';
+    // El backend devuelve el nombre del rol tal cual esta en la tabla `roles`
+    // (ADMIN, MEDICO, RECEPCION, PACIENTE); se compara sin distinguir mayusculas.
+    const role = (this.authService.userRole() ?? '').toLowerCase();
+    return role === 'admin' || role === 'medico' || role === 'recepcion';
   }
 
   showFeedback(message: string, type: 'success' | 'error'): void {

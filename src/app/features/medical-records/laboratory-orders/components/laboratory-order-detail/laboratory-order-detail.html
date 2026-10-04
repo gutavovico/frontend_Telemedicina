@@ -1,0 +1,193 @@
+<div class="min-h-screen bg-surface bg-grid-pattern relative overflow-hidden">
+  <main class="flex-grow px-margin-mobile md:px-margin-desktop py-8 relative z-10 pt-4">
+    <div class="max-w-4xl mx-auto">
+      @if (service.selectedOrder(); as order) {
+        <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-8 relative border border-white/80 transition-all duration-300 mb-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-secondary/30 text-secondary text-xs font-semibold uppercase tracking-wider mb-2">
+                <span class="material-symbols-outlined text-[14px]">{{ getEstadoIcon(order.estado) }}</span>
+                <span>{{ order.estado }}</span>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-primary tracking-tight font-headline-lg">
+                Orden de Laboratorio #{{ order.id_orden }}
+              </h1>
+              <p class="text-on-surface-variant text-sm mt-1">Paciente: {{ order.paciente_nombre || 'ID: ' + order.id_paciente }} · Médico: {{ order.medico_nombre || 'ID: ' + order.id_medico }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button (click)="goBack()" class="px-4 py-2 rounded-xl border-2 border-secondary/30 bg-secondary/5 hover:bg-secondary/10 text-secondary font-semibold text-sm transition-all duration-200 hover:border-secondary hover:shadow-sm cursor-pointer flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span class="hidden sm:inline">Volver</span>
+              </button>
+              @if (order.estado === 'BORRADOR') {
+                <a [routerLink]="['/ordenes-laboratorio', order.id_orden, 'editar']" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 cursor-pointer flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[20px]">edit</span>
+                  <span>Editar</span>
+                </a>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="flex flex-col gap-4">
+              <div class="p-4 bg-surface-container-lowest/50 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant mb-2">
+                  <span class="material-symbols-outlined text-[20px] text-primary">person</span>
+                  <span class="font-semibold">Paciente</span>
+                </div>
+                <div class="text-lg font-medium text-on-surface">{{ order.paciente_nombre || 'ID: ' + order.id_paciente }}</div>
+                @if (order.id_cita) {
+                  <div class="text-sm text-on-surface-variant">Cita asociada: #{{ order.id_cita }}</div>
+                }
+              </div>
+
+              <div class="p-4 bg-surface-container-lowest/50 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant mb-2">
+                  <span class="material-symbols-outlined text-[20px] text-primary">medical_services</span>
+                  <span class="font-semibold">Médico solicitante</span>
+                </div>
+                <div class="text-lg font-medium text-on-surface">{{ order.medico_nombre || 'ID: ' + order.id_medico }}</div>
+              </div>
+
+              <div class="p-4 bg-surface-container-lowest/50 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant mb-2">
+                  <span class="material-symbols-outlined text-[20px] text-primary">event</span>
+                  <span class="font-semibold">Fecha de la orden</span>
+                </div>
+                <div class="text-lg font-medium text-on-surface">{{ formatDate(order.fecha_orden) }}</div>
+              </div>
+
+              <div class="p-4 bg-surface-container-lowest/50 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant mb-2">
+                  <span class="material-symbols-outlined text-[20px] text-primary">schedule</span>
+                  <span class="font-semibold">Creada / Actualizada</span>
+                </div>
+                <div class="text-sm text-on-surface">
+                  Creada: {{ formatDateTime(order.created_at) }}<br>
+                  Actualizada: {{ formatDateTime(order.updated_at) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <div class="p-4 bg-surface-container-lowest/50 rounded-xl border border-outline-variant/30">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2 text-sm text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[20px] text-primary">science</span>
+                    <span class="font-semibold">Exámenes solicitados ({{ order.examenes.length }})</span>
+                  </div>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                        [class]="getEstadoClass(order.estado)">
+                    <span class="material-symbols-outlined text-[12px]">{{ getEstadoIcon(order.estado) }}</span>
+                    {{ order.estado }}
+                  </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead>
+                      <tr class="border-b border-outline-variant/30 text-left text-sm font-semibold text-on-surface-variant">
+                        <th class="pb-2 pr-4">Código</th>
+                        <th class="pb-2 pr-4">Examen</th>
+                        <th class="pb-2 pr-4">Indicaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (examen of order.examenes; track examen.codigo) {
+                        <tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest/50">
+                          <td class="py-3 pr-4 font-mono text-sm text-primary">{{ examen.codigo }}</td>
+                          <td class="py-3 pr-4 text-on-surface">{{ examen.nombre }}</td>
+                          <td class="py-3 pr-4 text-on-surface-variant text-sm">{{ examen.indicaciones || '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            @if (order.firma_digital) {
+              <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <div class="flex items-center gap-2 text-sm text-emerald-900 mb-3">
+                  <span class="material-symbols-outlined text-emerald-600">verified</span>
+                  <span class="font-semibold">Firma Digital HMAC-SHA256</span>
+                </div>
+                <div class="font-mono text-xs bg-emerald-100 p-3 rounded break-all">{{ order.firma_digital }}</div>
+              </div>
+            }
+
+            @if (order.hash_archivo) {
+              <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div class="flex items-center gap-2 text-sm text-blue-900 mb-3">
+                  <span class="material-symbols-outlined text-blue-600">fingerprint</span>
+                  <span class="font-semibold">Hash SHA-256 del PDF</span>
+                </div>
+                <div class="font-mono text-xs bg-blue-100 p-3 rounded break-all">{{ order.hash_archivo }}</div>
+              </div>
+            }
+
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                (click)="loadDownloadUrl()"
+                [disabled]="isLoadingDownload() || order.estado !== 'FIRMADA'"
+                class="w-full sm:w-auto px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                @if (isLoadingDownload()) {
+                  <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Generando URL...</span>
+                } @else {
+                  <span class="material-symbols-outlined text-[20px]">download</span>
+                  <span>Generar URL de descarga</span>
+                }
+              </button>
+
+              @if (downloadInfo()) {
+                <button
+                  (click)="downloadFile()"
+                  class="w-full sm:w-auto px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/25 transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <span class="material-symbols-outlined text-[20px]">file_download</span>
+                  <span>Descargar PDF</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-outline-variant/20">
+            <h3 class="font-semibold text-on-surface mb-4">Información de Auditoría</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div class="p-3 bg-surface-container-lowest/50 rounded-lg">
+                <div class="text-on-surface-variant">Creada</div>
+                <div class="font-medium text-on-surface">{{ formatDateTime(order.created_at) }}</div>
+              </div>
+              <div class="p-3 bg-surface-container-lowest/50 rounded-lg">
+                <div class="text-on-surface-variant">Actualizada</div>
+                <div class="font-medium text-on-surface">{{ formatDateTime(order.updated_at) }}</div>
+              </div>
+              <div class="p-3 bg-surface-container-lowest/50 rounded-lg">
+                <div class="text-on-surface-variant">ID de la orden</div>
+                <div class="font-medium text-on-surface font-mono">#{{ order.id_orden }}</div>
+              </div>
+              <div class="p-3 bg-surface-container-lowest/50 rounded-lg">
+                <div class="text-on-surface-variant">Tenant (Clínica)</div>
+                <div class="font-medium text-on-surface">{{ order.id_clinica }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      } @else if (errorMessage()) {
+        <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-8 relative border border-white/80 transition-all duration-300 text-center">
+          <div class="mb-4 text-red-600">
+            <span class="material-symbols-outlined text-5xl">error</span>
+          </div>
+          <h2 class="text-xl font-bold text-red-700 mb-2">Orden no encontrada</h2>
+          <p class="text-on-surface-variant mb-6">{{ errorMessage() }}</p>
+          <button (click)="goBack()" class="px-6 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">
+            Volver al listado
+          </button>
+        </div>
+      }
+    </div>
+  </main>
+</div>

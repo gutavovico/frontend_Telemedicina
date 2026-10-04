@@ -17,6 +17,15 @@ export interface RefreshTokenRequest {
 
 export interface ForgotPasswordRequest {
   correo: string;
+  /** Canal de entrega del código (CU23). Por defecto 'email'. */
+  canal?: 'email' | 'sms';
+}
+
+export interface SessionStatusResponse {
+  /** Segundos que quedan antes del cierre automático por inactividad (CU23). */
+  segundos_restantes: number;
+  ventana_segundos: number;
+  aviso_segundos: number;
 }
 
 export interface ForgotPasswordResponse {

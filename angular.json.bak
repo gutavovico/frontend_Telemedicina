@@ -34,7 +34,17 @@
               "src/styles.css"
             ],
             "outputMode": "static",
-            "prerender": false
+            "prerender": {
+              "routes": [
+                "/",
+                "/login",
+                "/register",
+                "/recuperar",
+                "/recuperar-contrasena",
+                "/ordenes-laboratorio",
+                "/ordenes-laboratorio/nueva"
+              ]
+            }
           },
           "configurations": {
             "production": {
@@ -62,10 +72,6 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": {
-            "host": "0.0.0.0",
-            "port": 4200
-          },
           "configurations": {
             "production": {
               "buildTarget": "frontend_Telemedicina:build:production"

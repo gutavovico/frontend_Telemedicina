@@ -20,7 +20,7 @@ export class Recover {
   readonly successMessage = signal<string | null>(null);
 
   readonly recoverForm: FormGroup = this.fb.group({
-    correo: ['', [Validators.required, Validators.email]]
+    correo: ['', [Validators.required, Validators.email]],
   });
 
   isFieldInvalid(fieldName: string): boolean {
@@ -47,9 +47,7 @@ export class Recover {
     this.authService.requestPasswordReset(correo).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.successMessage.set(
-          'Si el correo está registrado, recibirás un código de recuperación de 6 dígitos.'
-        );
+        this.successMessage.set('Si el correo está registrado, recibirás un código de recuperación de 6 dígitos.');
         this.recoverForm.reset();
       },
       error: (err) => {

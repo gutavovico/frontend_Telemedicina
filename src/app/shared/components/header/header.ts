@@ -45,6 +45,6 @@ export class Header {
   logout(): void {
     this.closeDropdown();
     this.closeMobileMenu();
-    this.authService.logout();
+    this.authService.logoutRemoto();
   }
 }

@@ -12,7 +12,8 @@ import {
   UsuarioResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
-  ResetPasswordRequest
+  ResetPasswordRequest,
+  SessionStatusResponse
 } from '../models/auth.models';
 import { InactivityService } from './inactivity.service';
 
@@ -69,6 +70,10 @@ export class AuthService {
     return this.currentUser()?.foto_perfil || null;
   });
 
+  readonly userRole = computed(() => {
+    return this.currentUser()?.rol || null;
+  });
+
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
     if (this.isBrowser && this.hasValidToken()) {
@@ -84,6 +89,16 @@ export class AuthService {
   private onInactivityExpired(): void {
     this.clearTokens();
     this.router.navigate(['/login'], { queryParams: { expired: 'true' } });
+  }
+
+  /**
+   * El servidor cerró la sesión por inactividad (CU23). Se distinguen los dos
+   * motivos de cierre para poder informar: si el servidor cerró la sesión, el
+   * contador local estaba desfasado y avisar de nuevo sería redundante.
+   */
+  onSessionClosedByInactivity(): void {
+    this.clearTokens();
+    this.router.navigate(['/login'], { queryParams: { inactive: 'true' } });
   }
 
   private hasValidToken(): boolean {
@@ -129,9 +144,24 @@ export class AuthService {
     return this.http.post<UsuarioResponse>(`${this.apiUrl}/auth/register`, datos);
   }
 
-  requestPasswordReset(correo: string): Observable<ForgotPasswordResponse> {
-    const payload: ForgotPasswordRequest = { correo };
+  requestPasswordReset(correo: string, canal: 'email' | 'sms' = 'email'): Observable<ForgotPasswordResponse> {
+    const payload: ForgotPasswordRequest = { correo, canal };
     return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/auth/forgot-password`, payload);
+  }
+
+  /**
+   * Tiempo restante de sesión según el servidor (CU23).
+   *
+   * El contador local del navegador puede desviarse cuando la pestaña queda
+   * suspendida, así que al recuperar el foco se consulta la fuente de verdad.
+   */
+  getSessionStatus(): Observable<SessionStatusResponse> {
+    return this.http.get<SessionStatusResponse>(`${this.apiUrl}/auth/session`);
+  }
+
+  /** Renueva la sesion en el servidor (boton "Seguir conectado", CU23). */
+  continueSession(): Observable<SessionStatusResponse> {
+    return this.http.post<SessionStatusResponse>(`${this.apiUrl}/auth/session/continue`, {});
   }
 
   resetPassword(correo: string, codigo: string, nuevaPassword: string): Observable<{ detail: string }> {
@@ -189,8 +219,37 @@ export class AuthService {
     }
   }
 
+  /**
+   * Cierre de sesion SOLO local (CU24).
+   *
+   * Se usa como red de seguridad: cuando el servidor ya dijo que el token no
+   * vale, intentar avisarle de nuevo solo generaria peticiones fallidas.
+   */
   logout(): void {
     this.inactivity.stop();
+    this.clearTokens();
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Cierre de sesion iniciado por el usuario (CU24).
+   *
+   * En este caso si se avisa al servidor para que incremente `token_version` y
+   * caiga la sesion en todos los dispositivos. La limpieza local NO espera a la
+   * respuesta: si el servidor esta caido, el usuario debe igualmente salir de la
+   * aplicacion de inmediato.
+   */
+  logoutRemoto(): void {
+    this.inactivity.stop();
+    const refreshToken = this.getRefreshToken();
+
+    if (refreshToken) {
+      this.http
+        .post<void>(`${this.apiUrl}/auth/logout`, { refresh_token: refreshToken })
+        .pipe(catchError(() => of(void 0)))
+        .subscribe();
+    }
+
     this.clearTokens();
     this.router.navigate(['/login']);
   }

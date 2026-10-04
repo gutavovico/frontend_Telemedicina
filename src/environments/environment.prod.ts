@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
   apiUrl: 'https://tu-backend-en-produccion.com',
-  inactivityTimeoutMinutes: 15
+  inactivityTimeoutMinutes: 15,
+  inactivityWarningSeconds: 60
 };
