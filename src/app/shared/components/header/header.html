@@ -45,6 +45,24 @@
         >
           Roles
         </a>
+        @if (canSeeAgenda()) {
+          <a
+            routerLink="/appointments/agenda"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
+          >
+            Agenda
+          </a>
+        }
+        @if (canSeeReports()) {
+          <a
+            routerLink="/analitica"
+            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1 focus-visible:outline-2 focus-visible:outline-primary"
+            [class.text-primary]="isReportsRoute()"
+            [class.border-primary]="isReportsRoute()"
+            [class.text-on-surface-variant]="!isReportsRoute()"
+            [class.border-transparent]="!isReportsRoute()"
+          >Reportes</a>
+        }
         @if (authService.isAdmin() || authService.isDoctor()) {
           <button
             type="button"
@@ -53,12 +71,7 @@
           >
             Médicos
           </button>
-          <a
-            routerLink="/appointments/agenda"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Agenda
-          </a>
+
           <a
             routerLink="/appointments/consultas"
             class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
@@ -250,9 +263,9 @@
                     <span>Productos</span>
                   </button>
                 }
-                @if (authService.isAdmin() || authService.isDoctor()) {
-                  <a
-                    routerLink="/appointments/agenda"
+        @if (canSeeAgenda()) {
+          <a
+              routerLink="/appointments/agenda"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
                     <span class="material-symbols-outlined text-[20px] text-primary"
@@ -260,6 +273,9 @@
                     >
                     <span>Agenda Médica</span>
                   </a>
+        }
+        @if (authService.isAdmin() || authService.isDoctor()) {
+
                   <a
                     routerLink="/appointments/consultas"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
@@ -392,7 +408,27 @@
             <span class="material-symbols-outlined text-[20px]">shield_person</span>
             <span>Roles</span>
           </a>
-          @if (authService.isAdmin() || authService.isDoctor()) {
+          @if (canSeeAgenda()) {
+          <a
+              routerLink="/appointments/agenda"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+              <span>Agenda Médica</span>
+            </a>
+        }
+        @if (canSeeReports()) {
+          <a
+            routerLink="/analitica"
+            (click)="closeMobileMenu()"
+            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high focus-visible:outline-2 focus-visible:outline-primary"
+          >
+            <span class="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">bar_chart</span>
+            <span>Reportes</span>
+          </a>
+        }
+        @if (authService.isAdmin() || authService.isDoctor()) {
             <button
               type="button"
               (click)="goToMedicos()"
@@ -403,14 +439,7 @@
               >
               <span>Médicos</span>
             </button>
-            <a
-              routerLink="/appointments/agenda"
-              (click)="closeMobileMenu()"
-              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
-            >
-              <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
-              <span>Agenda Médica</span>
-            </a>
+
             <a
               routerLink="/appointments/consultas"
               (click)="closeMobileMenu()"

@@ -34,6 +34,7 @@ export class AuthService {
   // Reactive state signals
   readonly isAuthenticated = signal<boolean>(this.hasValidToken());
   readonly currentUser = signal<UsuarioResponse | null>(this.getStoredUser());
+  readonly profileVerified = signal<boolean>(false);
 
   // Perfil médico del usuario autenticado (CU04): 200 en /medicos/me = es doctor.
   // Se carga tras el login y al revalidar la sesión.
@@ -208,16 +209,26 @@ export class AuthService {
 
   fetchUserProfile(): Observable<UsuarioResponse | null> {
     if (!this.getAccessToken()) {
+      this.profileVerified.set(false);
       return of(null);
     }
 
     // Try /auth/me first, fallback to /usuarios/me
     return this.http.get<UsuarioResponse>(`${this.apiUrl}/auth/me`).pipe(
-      tap((user) => this.saveUser(user)),
+      tap((user) => {
+        this.saveUser(user);
+        this.profileVerified.set(true);
+      }),
       catchError(() => {
         return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios/me`).pipe(
-          tap((user) => this.saveUser(user)),
-          catchError(() => of(null)),
+          tap((user) => {
+            this.saveUser(user);
+            this.profileVerified.set(true);
+          }),
+          catchError(() => {
+            this.profileVerified.set(false);
+            return of(null);
+          }),
         );
       }),
     );
@@ -276,6 +287,7 @@ export class AuthService {
   }
 
   clearTokens(): void {
+    this.profileVerified.set(false);
     if (this.isBrowser) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');

@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { InactivityService } from './inactivity.service';
 import { normalizeAppRole, type AppRole, type UsuarioResponse } from '../models/auth.models';
@@ -75,7 +75,10 @@ describe('normalizeAppRole (CU16 hallazgo 1)', () => {
 });
 
 describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
-  const httpMock = { get: vi.fn(() => of(null)), post: vi.fn(() => of(null)) };
+  const httpMock = {
+    get: vi.fn((..._args: unknown[]): Observable<unknown> => of(null)),
+    post: vi.fn(() => of(null)),
+  };
   const routerMock = { navigate: vi.fn() };
   const inactivityMock = {
     start: vi.fn(),
@@ -227,5 +230,29 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
   it('perfil médico no reemplaza un rol explícito incompatible (PACIENTE)', () => {
     setContext(makeUser({ id_rol: 73, rol: 'PACIENTE' }), makePerfilMedico(7));
     expect(service.userRole()).toBe('paciente');
+  });
+
+  it('verifica perfil fresco y limpia acceso del Header al cerrar sesión', () => {
+    service.saveTokens('token-sintetico', 'refresh-sintetico');
+    httpMock.get.mockReturnValueOnce(of(makeUser({ rol: 'Administración', id_clinica: 1 })));
+    service.fetchUserProfile().subscribe();
+    expect(service.profileVerified()).toBe(true);
+    expect(service.userRole()).toBe('admin');
+    httpMock.post.mockReturnValueOnce(of(null));
+    service.logout();
+    expect(service.profileVerified()).toBe(false);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.currentUser()).toBeNull();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('no confirma un perfil si ambos endpoints fallan', () => {
+    service.saveTokens('token-sintetico', 'refresh-sintetico');
+    httpMock.get.mockReturnValueOnce(throwError(() => new Error('auth/me')))
+      .mockReturnValueOnce(throwError(() => new Error('usuarios/me')));
+    let profile: UsuarioResponse | null = makeUser();
+    service.fetchUserProfile().subscribe((user) => profile = user);
+    expect(profile).toBeNull();
+    expect(service.profileVerified()).toBe(false);
   });
 });

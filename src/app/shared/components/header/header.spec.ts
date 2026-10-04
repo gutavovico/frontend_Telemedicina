@@ -19,6 +19,7 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
 
   function create(): Header {
     const authMock = {
+      currentUser: () => ({ rol: 'Recepción' }),
       isAuthenticated,
       userRole,
       isAdmin: () => userRole() === 'admin',
@@ -38,6 +39,14 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     routerMock.url = '/';
     isAuthenticated = signal(true);
     userRole = signal<AppRole>('doctor');
+  });
+
+  it('muestra Agenda a Recepción autenticada y la oculta sin sesión', () => {
+    const header = create();
+    expect(header.canSeeAgenda()).toBe(true);
+    isAuthenticated.set(false);
+    expect(header.canSeeAgenda()).toBe(false);
+    injector.destroy();
   });
 
   it('visible para admin, doctor y paciente reales', () => {

@@ -1,0 +1,82 @@
+.report-label {
+  display: block;
+  margin-bottom: .375rem;
+  color: var(--color-on-surface-variant);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.report-control {
+  display: block;
+  width: 100%;
+  min-height: 2.65rem;
+  padding: .55rem .75rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: .75rem;
+  background: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+}
+
+.report-request-field { position: relative; }
+.report-request-textarea { padding-right: 3.75rem; }
+.report-clear-text {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--color-outline-variant);
+  background: var(--color-surface-container-lowest);
+}
+
+.report-panel {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 65%, transparent);
+  border-radius: 1rem;
+}
+
+.report-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .45rem .7rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: .7rem;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.report-chip input { accent-color: var(--color-primary); }
+
+.report-icon-button, .report-secondary-button, .report-primary-button {
+  border-radius: .7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.report-icon-button { padding: .1rem .5rem; color: var(--color-primary); }
+.report-secondary-button { padding: .55rem .8rem; border: 1px solid var(--color-outline-variant); color: var(--color-primary); }
+.report-primary-button { padding: .7rem 1.3rem; background: var(--color-primary); color: white; }
+.report-secondary-button:hover, .report-icon-button:hover { background: var(--color-primary-fixed); }
+.report-primary-button:hover { background: var(--color-primary-container); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, .report-table:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.report-metric-card {
+  min-width: 0;
+  padding: 1.2rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 1rem;
+  background: white;
+}
+
+.report-table { width: 100%; min-width: 36rem; border-collapse: collapse; font-size: .88rem; }
+.report-table th, .report-table td { padding: .75rem; text-align: left; border-bottom: 1px solid var(--color-outline-variant); white-space: nowrap; }
+.report-table th { color: var(--color-primary); background: var(--color-surface-container-low); font-weight: 700; }

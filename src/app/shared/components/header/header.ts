@@ -66,6 +66,27 @@ export class Header {
     return this.authService.isPaciente();
   }
 
+  isReportsRoute(): boolean {
+    return this.router.url.startsWith('/analitica');
+  }
+
+  canSeeReports(): boolean {
+    const user = this.authService.currentUser();
+    return this.authService.isAuthenticated()
+      && this.authService.profileVerified()
+      && this.authService.userRole() === 'admin'
+      && user?.estado.toUpperCase() === 'ACTIVO'
+      && typeof user.id_clinica === 'number'
+      && user.id_clinica > 0;
+  }
+
+  canSeeAgenda(): boolean {
+    if (!this.authService.isAuthenticated()) return false;
+    const role = (this.authService.currentUser()?.rol ?? '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+    return ['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION', 'MEDICO', 'RECEPCION'].includes(role);
+  }
+
   // Entrada "Recetas" (CU16, hallazgo 4): visible para ADMIN, MEDICO y PACIENTE
   // reales; oculta para roles desconocidos y visitantes.
   canSeeRecetas(): boolean {

@@ -1,0 +1,348 @@
+<div class="min-h-screen flex flex-col bg-surface text-on-surface">
+  <app-header />
+  <main class="w-full max-w-container-max mx-auto flex-1 min-w-0 px-margin-mobile md:px-margin-desktop pt-28 pb-12 space-y-6">
+    <section class="rounded-3xl bg-white border border-outline-variant/40 shadow-level-1 p-5 sm:p-7">
+      <div class="flex items-start gap-4">
+        <span class="material-symbols-outlined rounded-2xl bg-primary-fixed/60 p-3 text-primary text-3xl" aria-hidden="true">bar_chart</span>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-secondary">Analítica clínica</p>
+          <h1 class="text-2xl sm:text-3xl font-bold text-primary mt-1">Reportes clínicos y administrativos</h1>
+          <p class="text-sm text-on-surface-variant mt-2">Configura un reporte para la clínica de tu sesión. Los resultados reflejan los registros disponibles.</p>
+        </div>
+      </div>
+    </section>
+
+    @if (loadingCatalog()) {
+      <div class="rounded-2xl bg-white border border-outline-variant/40 p-6" role="status">Cargando catálogo y opciones…</div>
+    } @else if (catalogError()) {
+      <div class="rounded-2xl bg-error-container text-on-error-container p-5" role="alert">
+        <p>{{ catalogError() }}</p>
+        <button type="button" class="mt-3 underline focus-visible:outline-2 focus-visible:outline-primary" (click)="loadCatalog()">Reintentar</button>
+      </div>
+    } @else if (catalog(); as available) {
+      <section class="rounded-2xl bg-white border border-outline-variant/40 shadow-level-1 p-4 sm:p-6 space-y-3" aria-labelledby="report-request-title">
+        <div>
+          <h2 id="report-request-title" class="text-lg font-bold text-primary">Pide un reporte con texto</h2>
+          <p class="text-sm text-on-surface-variant">Describe el reporte y el período. Podrás revisar y ajustar los filtros antes de generar.</p>
+        </div>
+        <label for="report-request" class="report-label">Solicitud de reporte</label>
+        <div class="report-request-field">
+          <textarea #requestTextarea id="report-request" [formControl]="textRequest" (keydown)="onTextKeydown($event)" maxlength="1000" rows="2"
+            class="report-control report-request-textarea min-h-24 resize-y" placeholder="Ej.: Citas de septiembre de 2026 agrupadas por fecha"
+            aria-describedby="report-request-help"></textarea>
+          @if (hasAnyText()) {
+            <button type="button" class="report-icon-button report-clear-text" (click)="clearText()"
+              [disabled]="!canClearText()" aria-label="Limpiar texto" title="Limpiar texto">
+              <span class="material-symbols-outlined text-xl" aria-hidden="true">close</span>
+            </button>
+          }
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p id="report-request-help" class="text-xs text-on-surface-variant">Enter envía · Shift+Enter añade una línea. El dictado añade texto editable; puedes revisarlo y enviarlo manualmente.</p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" (click)="toggleRecording()"
+              [disabled]="voiceState() === 'requesting' || voiceState() === 'transcribing' ||
+                (voiceState() === 'idle' && (interpreting() || loadingReport() || pendingTranscript() !== null))"
+              [attr.aria-label]="voiceState() === 'recording' ? 'Detener grabación de solicitud' : 'Iniciar dictado de solicitud'"
+              [attr.aria-pressed]="voiceState() === 'recording'"
+              class="report-secondary-button min-h-11 inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-xl" aria-hidden="true">{{ voiceState() === 'recording' ? 'stop_circle' : 'mic' }}</span>
+              {{ voiceState() === 'recording' ? 'Detener' : 'Micrófono' }}
+            </button>
+            <div class="flex flex-col gap-1">
+              <label class="report-chip min-h-11" title="Enviar al terminar">
+                <input type="checkbox" [checked]="sendWhenStopped()" [disabled]="!canToggleAutoSend()"
+                  (change)="onSendWhenStoppedChange($event)" aria-describedby="report-auto-send-help">
+                <span>Enviar al terminar</span>
+              </label>
+              <p id="report-auto-send-help" class="text-xs text-on-surface-variant">Al detener el dictado, transcribe y genera el reporte</p>
+            </div>
+            <button type="button" (click)="interpretText(false)" [disabled]="voiceState() !== 'idle' || interpreting() || loadingReport() || !hasTextRequest()"
+              class="report-secondary-button min-h-11 inline-flex items-center gap-2" aria-label="Aplicar filtros desde la solicitud de texto">
+              <span class="material-symbols-outlined text-xl" aria-hidden="true">filter_alt</span> Aplicar filtros
+            </button>
+            <button type="button" (click)="interpretText(true)" [disabled]="voiceState() !== 'idle' || interpreting() || loadingReport() || !hasTextRequest()"
+              class="report-primary-button min-h-11 inline-flex items-center gap-2" aria-label="Enviar solicitud y generar reporte">
+              <span class="material-symbols-outlined text-xl" aria-hidden="true">send</span> Enviar
+            </button>
+          </div>
+        </div>
+        @if (voiceState() === 'requesting') { <p class="text-sm text-primary" role="status">Solicitando acceso al micrófono…</p> }
+        @if (voiceState() === 'recording') {
+          <p class="text-sm font-semibold text-error" role="status" aria-live="polite">Grabando · {{ recordingDuration() }} / 01:00</p>
+        }
+        @if (voiceState() === 'transcribing') { <p class="text-sm text-primary" role="status">Transcribiendo…</p> }
+        @if (voiceError()) { <p class="text-sm text-error" role="alert">{{ voiceError() }}</p> }
+        @if (voiceNotice()) { <p class="text-sm text-on-surface-variant" role="status">{{ voiceNotice() }}</p> }
+        @if (pendingTranscript(); as transcript) {
+          <div class="rounded-xl border border-outline-variant p-3 space-y-2" role="status">
+            <p class="text-sm">El dictado requiere revisión antes de incorporarse: «{{ transcript }}»</p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" class="report-secondary-button min-h-11" (click)="incorporatePendingTranscript()">Incorporar dictado</button>
+              <button type="button" class="report-secondary-button min-h-11" (click)="discardPendingTranscript()">Descartar dictado</button>
+            </div>
+          </div>
+        }
+        @if (interpreting()) { <p class="text-sm text-primary" role="status">Interpretando solicitud…</p> }
+        @if (interpretError()) { <p class="text-sm text-error" role="alert">{{ interpretError() }}</p> }
+        @if (interpretation(); as interpreted) {
+          <div class="rounded-xl p-4 text-sm" [ngClass]="{'bg-primary-fixed/30': interpreted.estado === 'valida',
+            'bg-amber-50': interpreted.estado === 'aclaracion', 'bg-error-container': interpreted.estado === 'no_admitida'}"
+            [attr.role]="interpreted.estado === 'valida' ? 'status' : 'alert'">
+            <p class="font-semibold">{{ interpreted.estado === 'valida' ? 'Interpretación aplicada' : interpreted.estado === 'aclaracion' ? 'Necesita aclaración' : 'Solicitud no admitida' }}</p>
+            <p class="mt-1">{{ interpreted.resumen }}</p>
+            @if (interpreted.campos_aclaracion.length) {
+              <p class="mt-2">Revisa: {{ clarificationLabels(interpreted.campos_aclaracion) }}</p>
+            }
+            @if (interpreted.advertencias.length) {
+              <ul class="list-disc pl-5 mt-2 space-y-1">
+                @for (notice of interpreted.advertencias; track notice) { <li>{{ warning(notice) }}</li> }
+              </ul>
+            }
+          </div>
+        }
+      </section>
+      <form [formGroup]="form" (ngSubmit)="generate()" class="rounded-2xl bg-white border border-outline-variant/40 shadow-level-1 p-4 sm:p-6 space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-primary">Configurar reporte</h2>
+            <p class="text-sm text-on-surface-variant">Elige datos y organización antes de generar.</p>
+          </div>
+          <button type="button" (click)="clearFilters()" class="text-sm font-semibold text-primary px-3 py-2 rounded-xl hover:bg-primary-fixed/40 focus-visible:outline-2 focus-visible:outline-primary">Limpiar filtros</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="sm:col-span-2">
+            <label for="report-type" class="report-label">Tipo de reporte</label>
+            <select id="report-type" formControlName="reporte" (change)="onReportChange()" class="report-control">
+              @for (item of available.reportes; track item.id) {
+                <option [value]="item.id">{{ item.titulo }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="report-from" class="report-label">Desde</label>
+            <input id="report-from" type="date" formControlName="desde" class="report-control" />
+          </div>
+          <div>
+            <label for="report-to" class="report-label">Hasta</label>
+            <input id="report-to" type="date" formControlName="hasta" class="report-control" />
+          </div>
+          @if (hasFilter('id_medico')) {
+            <div>
+              <label for="report-doctor" class="report-label">Médico</label>
+              <select id="report-doctor" formControlName="id_medico" class="report-control">
+                <option value="">Todos</option>
+                @for (doctor of options()?.medicos ?? []; track doctor.id_medico) {
+                  <option [value]="doctor.id_medico">{{ doctor.nombre }}</option>
+                }
+              </select>
+            </div>
+          }
+          @if (hasFilter('id_especialidad')) {
+            <div>
+              <label for="report-specialty" class="report-label">Especialidad</label>
+              <select id="report-specialty" formControlName="id_especialidad" class="report-control">
+                <option value="">Todas</option>
+                @for (specialty of options()?.especialidades ?? []; track specialty.id_especialidad) {
+                  <option [value]="specialty.id_especialidad">{{ specialty.nombre }}</option>
+                }
+              </select>
+            </div>
+          }
+          @if (hasFilter('estado')) {
+            <div>
+              <label for="report-state" class="report-label">Estado de cita</label>
+              <select id="report-state" formControlName="estado" class="report-control">
+                <option value="">Todos</option>
+                @for (state of states; track state) { <option [value]="state">{{ state }}</option> }
+              </select>
+            </div>
+          }
+          @if (hasFilter('modalidad')) {
+            <div>
+              <label for="report-modality" class="report-label">Modalidad registrada</label>
+              <select id="report-modality" formControlName="modalidad" class="report-control">
+                <option value="">Todas</option>
+                @for (mode of available.modalidades; track mode) { <option [value]="mode">{{ mode }}</option> }
+              </select>
+            </div>
+          }
+        </div>
+
+        @if (currentReport(); as selected) {
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <fieldset class="report-panel">
+              <legend class="font-semibold text-primary px-1">Agrupar por</legend>
+              <p class="text-xs text-on-surface-variant mb-3">Hasta {{ available.limites.agrupaciones }} dimensiones. La columna se incluye automáticamente.</p>
+              <div class="flex flex-wrap gap-2">
+                @for (field of selected.dimensiones; track field) {
+                  <label class="report-chip">
+                    <input type="checkbox" [checked]="groups().includes(field)" (change)="toggleGroup(field)" />
+                    <span>{{ fieldLabel(field) }}</span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+            <fieldset class="report-panel">
+              <legend class="font-semibold text-primary px-1">Columnas</legend>
+              <p class="text-xs text-on-surface-variant mb-3">Hasta {{ available.limites.columnas }}; la métrica principal y cada grupo son obligatorios.</p>
+              <div class="flex flex-wrap gap-2">
+                @for (field of selected.columnas; track field) {
+                  <label class="report-chip" [class.opacity-60]="selected.dimensiones.includes(field) || field === selected.metrica_principal">
+                    <input type="checkbox" [checked]="columns().includes(field)" [disabled]="selected.dimensiones.includes(field) || field === selected.metrica_principal" (change)="toggleColumn(field)" />
+                    <span>{{ fieldLabel(field) }}</span>
+                  </label>
+                }
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <section class="report-panel" aria-labelledby="column-order-title">
+              <h3 id="column-order-title" class="font-semibold text-primary">Orden de columnas</h3>
+              <ol class="space-y-1 mt-3">
+                @for (field of columns(); track field; let index = $index) {
+                  <li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-surface-container-low text-sm">
+                    <span>{{ index + 1 }}. {{ fieldLabel(field) }}</span>
+                    <div class="flex gap-1">
+                      <button type="button" [disabled]="index === 0" (click)="moveColumn(field, -1)" [attr.aria-label]="'Subir ' + fieldLabel(field)" class="report-icon-button">↑</button>
+                      <button type="button" [disabled]="index === columns().length - 1" (click)="moveColumn(field, 1)" [attr.aria-label]="'Bajar ' + fieldLabel(field)" class="report-icon-button">↓</button>
+                    </div>
+                  </li>
+                }
+              </ol>
+            </section>
+            <section class="report-panel" aria-labelledby="sort-title">
+              <h3 id="sort-title" class="font-semibold text-primary">Orden de resultados</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 mt-3">
+                <label for="sort-field" class="sr-only">Campo para ordenar</label>
+                <select id="sort-field" #sortFieldSelect [value]="sortChoice()" (change)="sortChoice.set(sortFieldSelect.value)" class="report-control">
+                  <option value="">Seleccionar columna</option>
+                  @for (field of columns(); track field) {
+                    <option [value]="field">{{ fieldLabel(field) }}</option>
+                  }
+                </select>
+                <label for="sort-direction" class="sr-only">Dirección</label>
+                <select id="sort-direction" #sortDirectionSelect [value]="sortDirection()" (change)="sortDirection.set(sortDirectionSelect.value === 'desc' ? 'desc' : 'asc')" class="report-control">
+                  <option value="asc">Ascendente</option>
+                  <option value="desc">Descendente</option>
+                </select>
+                <button type="button" (click)="addSort()" [disabled]="!sortChoice()" class="report-secondary-button">Añadir</button>
+              </div>
+              <ul class="flex flex-wrap gap-2 mt-3">
+                @for (sort of sorts(); track sort.campo) {
+                  <li class="report-chip">
+                    {{ fieldLabel(sort.campo) }} · {{ sort.direccion === 'asc' ? 'Asc.' : 'Desc.' }}
+                    <button type="button" (click)="removeSort(sort.campo)" [attr.aria-label]="'Quitar orden ' + fieldLabel(sort.campo)" class="font-bold focus-visible:outline-2 focus-visible:outline-primary">×</button>
+                  </li>
+                }
+              </ul>
+            </section>
+          </div>
+        }
+
+        <div class="flex flex-wrap items-end justify-between gap-4 border-t border-outline-variant/40 pt-5">
+          <div>
+            <label for="report-page-size" class="report-label">Filas por página</label>
+            <select id="report-page-size" formControlName="tamano_pagina" class="report-control w-28">
+              @for (size of [10, 20, 50, 100]; track size) {
+                @if (size <= available.limites.tamano_pagina) { <option [ngValue]="size">{{ size }}</option> }
+              }
+              @if (![10, 20, 50, 100].includes(form.controls.tamano_pagina.value)) {
+                <option [ngValue]="form.controls.tamano_pagina.value">{{ form.controls.tamano_pagina.value }}</option>
+              }
+            </select>
+          </div>
+          <button type="submit" [disabled]="loadingReport()" class="report-primary-button">
+            {{ loadingReport() ? 'Generando…' : 'Generar reporte' }}
+          </button>
+        </div>
+        @if (formError()) { <p class="text-sm text-error" role="alert">{{ formError() }}</p> }
+      </form>
+
+      @if (loadingReport()) { <div class="report-panel bg-white" role="status">Consultando resultados…</div> }
+      @if (queryError()) { <div class="rounded-2xl bg-error-container text-on-error-container p-5" role="alert">{{ queryError() }}</div> }
+      @if (result(); as reportResult) {
+        <section class="space-y-5" aria-labelledby="result-title">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="result-title" class="text-xl font-bold text-primary">{{ resultReport()?.titulo }}</h2>
+              <p class="text-sm text-on-surface-variant">{{ reportResult.definicion.periodo.desde }} a {{ reportResult.definicion.periodo.hasta }} · {{ reportResult.total }} grupos</p>
+              <p class="text-xs text-on-surface-variant mt-1">Generado: {{ generatedAt(reportResult.generado_en) }}</p>
+              <p class="text-xs text-on-surface-variant mt-1 max-w-3xl">{{ reportResult.semantica }}</p>
+            </div>
+            @if (dirty()) { <p class="rounded-xl bg-amber-50 text-amber-900 px-4 py-2 text-sm" role="status">Cambiaste la configuración. Genera de nuevo antes de exportar.</p> }
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @for (metricName of resultReport()?.metricas ?? []; track metricName) {
+              @if (reportResult.metricas[metricName]; as metric) {
+                <article class="report-metric-card">
+                  <h3 class="text-sm text-on-surface-variant">{{ fieldLabel(metricName) }}</h3>
+                  <p class="text-3xl font-bold text-primary mt-2">{{ metric.disponible ? metric.valor : 'No disponible' }}</p>
+                  @if (!metric.disponible && metric.causa) { <p class="text-xs text-on-surface-variant mt-1">{{ warning(metric.causa) }}</p> }
+                </article>
+              }
+            }
+            <article class="report-metric-card">
+              <h3 class="text-sm text-on-surface-variant">Ausentismo</h3>
+              <p class="text-xl font-bold text-on-surface-variant mt-2">No disponible</p>
+              <p class="text-xs text-on-surface-variant mt-1">Aún no se registra una ausencia de forma explícita.</p>
+            </article>
+          </div>
+
+          @if (reportResult.advertencias.length > 0) {
+            <div class="rounded-2xl bg-primary-fixed/30 border border-primary-fixed p-4 text-sm text-primary">
+              <h3 class="font-semibold mb-1">Ten en cuenta</h3>
+              <ul class="list-disc pl-5 space-y-1">
+                @for (notice of reportResult.advertencias; track notice) { <li>{{ warning(notice) }}</li> }
+              </ul>
+            </div>
+          }
+
+          <div class="rounded-2xl bg-white border border-outline-variant/40 shadow-level-1 p-4 sm:p-5 min-w-0">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="font-semibold text-primary">Resultados</h3>
+                <p class="text-xs text-on-surface-variant">Columnas: {{ columnsLabel(reportResult.definicion.columnas) }}</p>
+              </div>
+              <div class="flex flex-wrap gap-2" aria-label="Descargar reporte completo">
+                @for (format of available.formatos; track format) {
+                  <button type="button" (click)="export(format)" [disabled]="!canExport()" class="report-secondary-button uppercase" [attr.aria-label]="'Descargar reporte en ' + format">
+                    {{ exporting() === format ? 'Preparando…' : format }}
+                  </button>
+                }
+              </div>
+            </div>
+            @if (exportError()) { <p class="text-sm text-error mb-3" role="alert">{{ exportError() }}</p> }
+            @if (reportResult.total === 0) {
+              <p class="rounded-xl bg-surface-container-low p-5 text-sm" role="status">No hay registros para el período y filtros seleccionados.</p>
+            } @else {
+              <div class="max-w-full overflow-x-auto" tabindex="0" aria-label="Tabla de resultados, desplazar horizontalmente si es necesario">
+                <table class="report-table">
+                  <thead><tr>
+                    @for (field of reportResult.definicion.columnas; track field) { <th scope="col">{{ fieldLabel(field) }}</th> }
+                  </tr></thead>
+                  <tbody>
+                    @for (row of reportResult.filas; track $index) {
+                      <tr>@for (field of reportResult.definicion.columnas; track field) { <td>{{ cell(field, row[field]) }}</td> }</tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
+                <span>Página {{ reportResult.definicion.pagina }} de {{ pageCount() }}</span>
+                <div class="flex gap-2">
+                  <button type="button" class="report-secondary-button" [disabled]="dirty() || loadingReport() || reportResult.definicion.pagina <= 1" (click)="changePage(reportResult.definicion.pagina - 1)">Anterior</button>
+                  <button type="button" class="report-secondary-button" [disabled]="dirty() || loadingReport() || reportResult.definicion.pagina >= pageCount()" (click)="changePage(reportResult.definicion.pagina + 1)">Siguiente</button>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    }
+  </main>
+  <app-footer />
+</div>
