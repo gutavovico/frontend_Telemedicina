@@ -1,0 +1,130 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+
+.document-viewer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #f0f5fb;
+  border: 1px solid #e8edf4;
+}
+
+/* Estado de carga */
+.document-viewer .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.document-viewer .loading-state .spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid #e8edf4;
+  border-top-color: #049CAB;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.document-viewer .loading-state p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #25627C;
+}
+
+/* Estado de error */
+.document-viewer .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  padding: 2rem;
+  gap: 1rem;
+  text-align: center;
+}
+
+.document-viewer .error-state .error-icon {
+  font-size: 3rem;
+  color: #f87171;
+}
+
+.document-viewer .error-state p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ef4444;
+  max-width: 80%;
+}
+
+/* Contenedor del PDF */
+.document-viewer .pdf-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.document-viewer .pdf-container pdf-viewer {
+  flex: 1;
+  display: block;
+  min-width: 100%;
+  min-height: 0;
+}
+
+.document-viewer .pdf-container ::ng-deep pdf-viewer {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Estilos internos del pdf-viewer (ng2-pdf-viewer) */
+.document-viewer ::ng-deep .ng2-pdf-viewer-container {
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 600px;
+}
+
+.document-viewer ::ng-deep .ng2-pdf-viewer-container > div {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbar personalizada */
+.document-viewer ::ng-deep ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.document-viewer ::ng-deep ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.document-viewer ::ng-deep ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.document-viewer ::ng-deep ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

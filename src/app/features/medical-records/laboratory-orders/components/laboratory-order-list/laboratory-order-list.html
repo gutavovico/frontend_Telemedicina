@@ -1,0 +1,212 @@
+<div class="min-h-screen bg-surface bg-grid-pattern relative overflow-hidden">
+  <main class="flex-grow px-margin-mobile md:px-margin-desktop py-8 relative z-10 pt-4">
+    <div class="max-w-container-max mx-auto">
+      <div class="mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-primary tracking-tight font-headline-lg">Órdenes de Laboratorio</h1>
+        <p class="text-on-surface-variant text-sm sm:text-base mt-1">Gestione la creación, firma y emisión de órdenes de exámenes de laboratorio integradas en la HCE.</p>
+      </div>
+
+      @if (actionFeedback()) {
+        <div class="mb-6 p-4 rounded-2xl text-sm font-body-md flex items-start gap-3 animate-fadeIn shadow-sm"
+             [class.bg-emerald-50]="actionFeedback()?.type === 'success'"
+             [class.border-emerald-200]="actionFeedback()?.type === 'success'"
+             [class.text-emerald-900]="actionFeedback()?.type === 'success'"
+             [class.bg-red-50]="actionFeedback()?.type === 'error'"
+             [class.border-red-200]="actionFeedback()?.type === 'error'"
+             [class.text-red-900]="actionFeedback()?.type === 'error'">
+          <span class="material-symbols-outlined shrink-0 mt-0.5" [class.text-emerald-600]="actionFeedback()?.type === 'success'" [class.text-red-600]="actionFeedback()?.type === 'error'">
+            {{ actionFeedback()?.type === 'success' ? 'check_circle' : 'error' }}
+          </span>
+          <div class="flex-grow">{{ actionFeedback()?.message }}</div>
+        </div>
+      }
+
+      <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-8 relative border border-white/80 transition-all duration-300">
+        <div class="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-primary">Listado de Órdenes</h2>
+            <p class="text-on-surface-variant text-sm mt-0.5">{{ service.totalRecords() }} orden{{ service.totalRecords() !== 1 ? 'es' : '' }} encontrada{{ service.totalRecords() !== 1 ? 's' : '' }}</p>
+          </div>
+          <a routerLink="/ordenes-laboratorio/nueva" class="w-full sm:w-auto px-4 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+            <span>Nueva Orden</span>
+          </a>
+        </div>
+
+        <div class="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div class="flex-1 flex flex-col gap-1.5">
+            <label class="font-label-md text-sm font-semibold text-on-surface">Búsqueda</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[22px]">search</span>
+              </div>
+              <input
+                type="text"
+                [(ngModel)]="searchTerm"
+                (ngModelChange)="onSearch()"
+                placeholder="Buscar por paciente, examen..."
+                class="w-full bg-white border rounded-xl pl-12 pr-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                [class.border-outline-variant/60]="true"
+                [class.focus:border-primary]="true"
+                [class.focus:ring-primary/10]="true"
+                [class.focus:ring-4]="true"
+              />
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col gap-1.5 sm:hidden">
+            <label class="font-label-md text-sm font-semibold text-on-surface">Estado</label>
+            <select [(ngModel)]="selectedEstado" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+              <option value="">Todos los estados</option>
+              <option value="BORRADOR">BORRADOR</option>
+              <option value="FIRMADA">FIRMADA</option>
+              <option value="ANULADA">ANULADA</option>
+            </select>
+          </div>
+
+          <div class="flex-1 flex flex-col gap-1.5 sm:hidden">
+            <label class="font-label-md text-sm font-semibold text-on-surface">Fecha desde</label>
+            <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+          </div>
+
+          <div class="flex-1 flex flex-col gap-1.5 sm:hidden">
+            <label class="font-label-md text-sm font-semibold text-on-surface">Fecha hasta</label>
+            <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+          </div>
+
+          <div class="hidden sm:flex sm:items-end gap-3">
+            <div class="flex-1 flex flex-col gap-1.5">
+              <label class="font-label-md text-sm font-semibold text-on-surface">Estado</label>
+              <select [(ngModel)]="selectedEstado" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+                <option value="">Todos</option>
+                <option value="BORRADOR">BORRADOR</option>
+                <option value="FIRMADA">FIRMADA</option>
+                <option value="ANULADA">ANULADA</option>
+              </select>
+            </div>
+            <div class="flex-1 flex flex-col gap-1.5">
+              <label class="font-label-md text-sm font-semibold text-on-surface">Fecha desde</label>
+              <input type="date" [(ngModel)]="fechaDesde" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+            </div>
+            <div class="flex-1 flex flex-col gap-1.5">
+              <label class="font-label-md text-sm font-semibold text-on-surface">Fecha hasta</label>
+              <input type="date" [(ngModel)]="fechaHasta" (ngModelChange)="onSearch()" class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm">
+            </div>
+            <button (click)="clearFilters()" class="w-full sm:w-auto px-4 py-3.5 rounded-xl border-2 border-secondary/30 bg-secondary/5 hover:bg-secondary/10 text-secondary font-semibold text-sm transition-all duration-200 hover:border-secondary hover:shadow-sm cursor-pointer flex items-center justify-center gap-2 h-fit">
+              <span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
+              <span>Limpiar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="relative">
+          @if (service.isLoading()) {
+            <div class="flex justify-center py-12">
+              <div class="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-outline-variant/30 text-left text-sm font-semibold text-on-surface-variant">
+                    <th class="pb-3 pr-4">Paciente</th>
+                    <th class="pb-3 pr-4 hidden md:table-cell">Exámenes</th>
+                    <th class="pb-3 pr-4">Estado</th>
+                    <th class="pb-3 pr-4 hidden lg:table-cell">Fecha</th>
+                    <th class="pb-3 pr-4">Creada</th>
+                    <th class="pb-3 w-20 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (order of service.orders(); track order.id_orden) {
+                    <tr class="border-b border-outline-variant/20 hover:bg-surface-container-lowest/50 transition-colors cursor-pointer" (click)="viewOrder(order)">
+                      <td class="py-4 pr-4 font-medium text-on-surface">{{ order.paciente_nombre || 'Paciente #' + order.id_paciente }}</td>
+                      <td class="py-4 pr-4 hidden md:table-cell text-on-surface-variant text-sm">
+                        <div class="flex flex-wrap gap-1">
+                          @for (codigo of order.examenes_codigos.slice(0, 3); track codigo) {
+                            <span class="px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">{{ codigo }}</span>
+                          }
+                          @if (order.examenes_codigos.length > 3) {
+                            <span class="px-2 py-0.5 text-xs bg-outline-variant/20 text-on-surface-variant rounded-full">+{{ order.examenes_codigos.length - 3 }}</span>
+                          }
+                        </div>
+                      </td>
+                      <td class="py-4 pr-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                              [class]="getEstadoClass(order.estado)">
+                          <span class="material-symbols-outlined text-[12px]">{{ getEstadoIcon(order.estado) }}</span>
+                          {{ order.estado }}
+                        </span>
+                      </td>
+                      <td class="py-4 pr-4 hidden lg:table-cell text-on-surface-variant text-sm">{{ formatDate(order.fecha_orden) }}</td>
+                      <td class="py-4 pr-4 text-on-surface-variant text-sm">{{ formatDate(order.created_at) }}</td>
+                      <td class="py-4 pr-4 w-20 text-center">
+                        <button (click)="viewOrder(order)" class="text-primary hover:text-secondary transition-colors p-2 rounded-lg hover:bg-primary/10" aria-label="Ver orden">
+                          <span class="material-symbols-outlined text-[22px]">visibility</span>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+
+              @if (service.orders().length === 0) {
+                <div class="text-center py-12">
+                  <div class="w-16 h-16 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-primary">science</span>
+                  </div>
+                  <h3 class="text-lg font-semibold text-on-surface mb-2">No se encontraron órdenes</h3>
+                  <p class="text-on-surface-variant mb-6">{{ searchTerm || selectedEstado ? 'Intente ajustar los filtros de búsqueda.' : 'Comience creando su primera orden de laboratorio.' }}</p>
+                  <a routerLink="/ordenes-laboratorio/nueva" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 cursor-pointer">
+                    <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    <span>Crear primera orden</span>
+                  </a>
+                </div>
+              }
+
+              @if (service.totalPages() > 1) {
+                <div class="mt-6 flex items-center justify-center gap-2">
+                  <button
+                    (click)="loadOrders(currentPage - 1)"
+                    [disabled]="currentPage === 1"
+                    class="px-4 py-2 rounded-lg border border-outline-variant/30 bg-surface hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span class="material-symbols-outlined">chevron_left</span>
+                  </button>
+                  @for (page of [1,2,3,4,5].filter(p => p <= service.totalPages()); track page) {
+                    <button
+                      (click)="loadOrders(page)"
+                      [class.bg-primary]="currentPage === page"
+                      [class.text-white]="currentPage === page"
+                      class="w-10 h-10 rounded-lg border border-outline-variant/30 hover:bg-surface-container-high transition-colors font-medium"
+                    >
+                      {{ page }}
+                    </button>
+                  }
+                  @if (service.totalPages() > 5) {
+                    <span class="px-2 text-on-surface-variant">...</span>
+                    <button
+                      (click)="loadOrders(service.totalPages())"
+                      [class.bg-primary]="currentPage === service.totalPages()"
+                      [class.text-white]="currentPage === service.totalPages()"
+                      class="w-10 h-10 rounded-lg border border-outline-variant/30 hover:bg-surface-container-high transition-colors font-medium"
+                    >
+                      {{ service.totalPages() }}
+                    </button>
+                  }
+                  <button
+                    (click)="loadOrders(currentPage + 1)"
+                    [disabled]="currentPage === service.totalPages()"
+                    class="px-4 py-2 rounded-lg border border-outline-variant/30 bg-surface hover:bg-surface-container-high disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <span class="material-symbols-outlined">chevron_right</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,4 @@
+/* Estilos mínimos: el dialogo se posiciona con utilidades de Tailwind. */
+:host {
+  display: contents;
+}

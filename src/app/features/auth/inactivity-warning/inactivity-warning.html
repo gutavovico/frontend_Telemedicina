@@ -1,0 +1,25 @@
+@if (inactivity.showWarning()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="inactivity-title">
+    <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+      <h2 id="inactivity-title" class="text-lg font-semibold text-slate-800">
+        Tu sesión está por cerrarse
+      </h2>
+      <p class="mt-2 text-sm text-slate-600">
+        Por seguridad, la sesión se cerrará automáticamente si no hay actividad.
+      </p>
+      <p class="mt-4 text-center text-4xl font-bold tabular-nums text-slate-800">
+        {{ inactivity.warningSeconds() }}s
+      </p>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button"
+                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                (click)="continue()">
+          Seguir conectado
+        </button>
+      </div>
+    </div>
+  </div>
+}

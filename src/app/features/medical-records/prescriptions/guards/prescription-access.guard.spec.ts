@@ -7,7 +7,7 @@ import { prescriptionAccessGuard } from './prescription-access.guard';
 
 describe('prescriptionAccessGuard (CU16)', () => {
   const routerMock = { createUrlTree: vi.fn(() => 'TREE') };
-  const authMock = { isLoggedIn: vi.fn(), userRole: vi.fn() };
+  const authMock = { isLoggedIn: vi.fn(), getUserRole: vi.fn() };
 
   function runGuard(routeData: Record<string, unknown>): unknown {
     const injector = Injector.create({
@@ -31,7 +31,7 @@ describe('prescriptionAccessGuard (CU16)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.isLoggedIn.mockReturnValue(true);
-    authMock.userRole.mockReturnValue('doctor');
+    authMock.getUserRole.mockReturnValue('doctor');
   });
 
   it('redirige a /login si no hay sesión', () => {
@@ -44,21 +44,21 @@ describe('prescriptionAccessGuard (CU16)', () => {
   });
 
   it('permite a cualquier rol autenticado si no se exigen roles', () => {
-    authMock.userRole.mockReturnValue('paciente');
+    authMock.getUserRole.mockReturnValue('paciente');
     expect(runGuard({})).toBe(true);
   });
 
   it('permite a doctor cuando emitir exige solo doctor', () => {
-    authMock.userRole.mockReturnValue('doctor');
+    authMock.getUserRole.mockReturnValue('doctor');
     expect(runGuard({ roles: ['doctor'] })).toBe(true);
   });
 
   it('bloquea a admin y paciente en ruta de emisión exclusiva del médico', () => {
-    authMock.userRole.mockReturnValue('admin');
+    authMock.getUserRole.mockReturnValue('admin');
     expect(runGuard({ roles: ['doctor'] })).toBe('TREE');
-    authMock.userRole.mockReturnValue('paciente');
+    authMock.getUserRole.mockReturnValue('paciente');
     expect(runGuard({ roles: ['doctor'] })).toBe('TREE');
-    authMock.userRole.mockReturnValue('unknown');
+    authMock.getUserRole.mockReturnValue('unknown');
     expect(runGuard({ roles: ['doctor'] })).toBe('TREE');
     expect(routerMock.createUrlTree).toHaveBeenCalledWith(['/']);
   });

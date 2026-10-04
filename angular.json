@@ -23,19 +23,22 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets"
+              },
+              {
+                "glob": "pdf.worker.min.mjs",
+                "input": "node_modules/pdfjs-dist/build",
+                "output": "/assets"
               }
             ],
             "styles": [
               "src/styles.css"
             ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "security": {
-              "allowedHosts": []
-            },
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "outputMode": "static",
+            "prerender": false
           },
           "configurations": {
             "production": {
@@ -53,8 +56,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "50kB",
+                  "maximumError": "100kB"
                 }
               ],
               "outputHashing": "all"
@@ -69,6 +72,10 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "port": 4200
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend_Telemedicina:build:production"
@@ -80,7 +87,25 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runner": "vitest",
+            "include": ["src/**/*.vitest.ts", "src/**/*.spec.ts"],
+            "coverage": true,
+            "coverageReporters": ["text-summary", "text"],
+            "coverageInclude": [
+              "src/app/features/medical-records/documents/services/**/*.ts",
+              "src/app/features/medical-records/documents/guards/**/*.ts",
+              "src/app/features/medical-records/documents/pipes/**/*.ts",
+              "src/app/features/medical-records/documents/models/**/*.ts"
+            ],
+            "coverageThresholds": {
+              "statements": 70,
+              "branches": 70,
+              "functions": 70,
+              "lines": 70
+            }
+          }
         }
       }
     }

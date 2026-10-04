@@ -1,0 +1,265 @@
+<div class="min-h-screen bg-surface bg-grid-pattern relative overflow-hidden">
+  <main class="flex-grow flex items-start justify-center py-8 lg:py-14 px-margin-mobile md:px-margin-desktop relative z-10 pt-4">
+    <div class="w-full max-w-4xl">
+      <div class="glass-card rounded-[28px] shadow-level-3 p-6 sm:p-10 relative border border-white/80 transition-all duration-300">
+        <div class="mb-7 flex items-center justify-between gap-4">
+          <a routerLink="/ordenes-laboratorio" class="text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md flex items-center gap-2 py-2 px-3.5 rounded-xl hover:bg-surface-container-high/60 border border-transparent hover:border-outline-variant/40 cursor-pointer">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            <span class="hidden sm:inline font-medium">Volver al listado</span>
+          </a>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-primary tracking-tight font-headline-lg">
+              {{ isEditing() ? 'Editar' : 'Crear' }} orden de laboratorio
+            </h1>
+          </div>
+        </div>
+        <div class="mb-7">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/40 border border-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px]">{{ isEditing() ? 'edit' : 'add_circle' }}</span>
+            <span>{{ isEditing() ? 'Editar Orden' : 'Nueva Orden de Laboratorio' }}</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-primary tracking-tight mb-1.5 font-headline-lg">
+            {{ isEditing() ? 'Editar' : 'Crear' }} orden de laboratorio
+          </h1>
+          <p class="text-on-surface-variant text-sm sm:text-base font-body-md">
+            Seleccione los exámenes del catálogo, agregue indicaciones y firme digitalmente para emitir la orden e integrarla en la HCE.
+          </p>
+        </div>
+
+        @if (successMessage()) {
+          <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+            <span class="material-symbols-outlined text-emerald-600 text-[22px] shrink-0 mt-0.5">check_circle</span>
+            <div class="flex-grow">{{ successMessage() }}</div>
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-900 font-body-md text-sm flex items-start gap-3 animate-fadeIn shadow-sm">
+            <span class="material-symbols-outlined text-red-600 text-[22px] shrink-0 mt-0.5">error</span>
+            <div class="flex-grow">
+              <p class="font-semibold">Error</p>
+              <p class="text-red-700 text-xs mt-0.5">{{ errorMessage() }}</p>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5" novalidate>
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm font-semibold text-on-surface" for="paciente">Paciente (ID)</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[22px]">person</span>
+              </div>
+              <input
+                id="paciente"
+                type="number"
+                formControlName="id_paciente"
+                placeholder="Ej: 10"
+                autocomplete="off"
+                class="w-full bg-white border rounded-xl pl-12 pr-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                [class.border-error]="isFieldInvalid('id_paciente')"
+                [class.focus:ring-4]="true"
+                [class.focus:ring-error/15]="isFieldInvalid('id_paciente')"
+                [class.focus:border-error]="isFieldInvalid('id_paciente')"
+                [class.border-outline-variant/60]="!isFieldInvalid('id_paciente')"
+                [class.focus:border-primary]="!isFieldInvalid('id_paciente')"
+                [class.focus:ring-primary/10]="!isFieldInvalid('id_paciente')"
+              />
+            </div>
+            @if (isFieldInvalid('id_paciente')) {
+              <span class="text-xs text-error flex items-center gap-1.5 mt-1 animate-fadeIn font-medium">
+                <span class="material-symbols-outlined text-[15px]">error</span>
+                <span>El ID del paciente es obligatorio.</span>
+              </span>
+            }
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm font-semibold text-on-surface" for="cita">Cita asociada (opcional)</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-outline group-focus-within:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[22px]">event</span>
+              </div>
+              <input
+                id="cita"
+                type="number"
+                formControlName="id_cita"
+                placeholder="Ej: 100 (opcional)"
+                autocomplete="off"
+                class="w-full bg-white border rounded-xl pl-12 pr-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm"
+                [class.border-outline-variant/60]="true"
+                [class.focus:border-primary]="true"
+                [class.focus:ring-primary/10]="true"
+                [class.focus:ring-4]="true"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <label class="font-label-md text-sm font-semibold text-on-surface">Exámenes de laboratorio</label>
+              <button
+                type="button"
+                (click)="addExamen()"
+                class="px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1.5"
+              >
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Añadir examen
+              </button>
+            </div>
+
+            @if (examenes.length === 0) {
+              <div class="text-center py-8 text-on-surface-variant">
+                <span class="material-symbols-outlined text-4xl mb-2 block">science</span>
+                <p>No hay exámenes agregados. Pulse "Añadir examen" para comenzar.</p>
+              </div>
+            }
+
+            <div formArrayName="examenes" class="space-y-4">
+              @for (examen of examenes.controls; track $index; let i = $index) {
+                <div class="border border-outline-variant/60 rounded-xl p-4 bg-surface-container-lowest/50" [formGroupName]="i">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-on-surface">Examen {{ i + 1 }}</h4>
+                    @if (examenes.length > 1) {
+                      <button
+                        type="button"
+                        (click)="removeExamen(i)"
+                        class="text-error hover:text-error/80 transition-colors p-1 rounded"
+                        aria-label="Eliminar examen"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    }
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2 flex flex-col gap-1.5">
+                      <label class="font-label-md text-sm font-semibold text-on-surface">Código del examen</label>
+                      <div class="relative group">
+                        <input
+                          type="text"
+                          formControlName="codigo"
+                          placeholder="Escriba para buscar (ej: HEMOGRAMA)"
+                          autocomplete="off"
+                          (input)="onExamenChange($index)"
+                          class="w-full bg-white border rounded-xl pl-4 pr-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm uppercase"
+                          [class.border-error]="!isExamenValid(i) && examenes.at(i).get('codigo')?.dirty"
+                          [class.focus:ring-4]="true"
+                          [class.focus:ring-error/15]="!isExamenValid(i) && examenes.at(i).get('codigo')?.dirty"
+                          [class.focus:border-error]="!isExamenValid(i) && examenes.at(i).get('codigo')?.dirty"
+                          [class.border-outline-variant/60]="true"
+                          [class.focus:border-primary]="true"
+                          [class.focus:ring-primary/10]="true"
+                          [class.focus:ring-4]="true"
+                        />
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                          <span class="material-symbols-outlined text-[22px]">search</span>
+                        </div>
+                      </div>
+                      @if (!isExamenValid(i) && examenes.at(i).get('codigo')?.dirty) {
+                        <span class="text-xs text-error flex items-center gap-1.5 mt-1 animate-fadeIn font-medium">
+                          <span class="material-symbols-outlined text-[15px]">error</span>
+                          <span>Código no existe en el catálogo activo.</span>
+                        </span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                      <label class="font-label-md text-sm font-semibold text-on-surface">Categoría</label>
+                      <div class="bg-white border rounded-xl px-4 py-3.5 text-on-surface font-body-md text-sm">
+                        {{ getExamLabel(getExamGroup(i)) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col gap-1.5 mt-3">
+                    <label class="font-label-md text-sm font-semibold text-on-surface" for="indicaciones-{{i}}">Indicaciones (opcional)</label>
+                    <textarea
+                      id="indicaciones-{{i}}"
+                      formControlName="indicaciones"
+                      rows="2"
+                      placeholder="Ej: En ayunas 12 horas, Post-prandial 2h..."
+                      class="w-full bg-white border rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline-variant font-body-md text-sm transition-all duration-200 outline-none shadow-sm resize-none"
+                      [class.border-outline-variant/60]="true"
+                      [class.focus:border-primary]="true"
+                      [class.focus:ring-primary/10]="true"
+                      [class.focus:ring-4]="true"
+                    ></textarea>
+                  </div>
+
+                  @if (!isExamenValid(i) && examenes.at(i).get('codigo')?.dirty) {
+                    <div class="text-xs text-error flex items-center gap-1.5 mt-1 animate-fadeIn font-medium">
+                      <span class="material-symbols-outlined text-[15px]">warning</span>
+                      <span>El código "{{ examenes.at(i).get('codigo')?.value }}" no está en el catálogo activo.</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (duplicateExamenes) {
+              <div class="text-xs text-error flex items-center gap-1.5 mt-2 animate-fadeIn font-medium">
+                <span class="material-symbols-outlined text-[15px]">warning</span>
+                <span>No se pueden repetir exámenes en la misma orden.</span>
+              </div>
+            }
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/30">
+            <button
+              type="button"
+              (click)="goBack()"
+              class="w-full sm:w-auto py-3.5 px-6 rounded-xl border-2 border-secondary/30 bg-secondary/5 hover:bg-secondary/10 text-secondary font-semibold text-sm transition-all duration-200 hover:border-secondary hover:shadow-sm cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+              <span>Cancelar</span>
+            </button>
+
+            @if (!isEditing()) {
+              <button
+                type="submit"
+                [disabled]="isLoading() || form.invalid || duplicateExamenes || examenes.controls.some(c => !isExamenValid(examenes.controls.indexOf(c)))"
+                class="w-full sm:w-auto bg-gradient-to-r from-primary via-primary-container to-primary text-white rounded-xl py-3.5 px-6 mt-2 sm:mt-0 font-semibold text-sm flex items-center justify-center gap-2.5 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 active:scale-[0.99] min-h-[50px] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                @if (isLoading()) {
+                  <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creando orden...</span>
+                } @else {
+                  <span>Crear orden en borrador</span>
+                  <span class="material-symbols-outlined text-[20px]">send</span>
+                }
+              </button>
+            } @else if (isBorrador) {
+              <button
+                type="button"
+                (click)="onFirmar()"
+                [disabled]="isLoading()"
+                class="w-full sm:w-auto bg-gradient-to-r from-secondary via-secondary-container to-secondary text-white rounded-xl py-3.5 px-6 font-semibold text-sm flex items-center justify-center gap-2.5 hover:shadow-lg hover:shadow-secondary/25 transition-all duration-300 active:scale-[0.99] min-h-[50px] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                @if (isLoading()) {
+                  <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Firmando y emitiendo...</span>
+                } @else {
+                  <span>Firmar y emitir orden</span>
+                  <span class="material-symbols-outlined text-[20px]">verified</span>
+                }
+              </button>
+            }
+          </div>
+        </form>
+
+        <div class="mt-6 flex items-center justify-center gap-4 text-outline text-xs border-t border-outline-variant/20 pt-4">
+          <div class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+            <span>Firma digital HMAC-SHA256</span>
+          </div>
+          <span class="text-outline-variant">•</span>
+          <div class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px] text-primary">science</span>
+            <span>Integración HCE automática</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

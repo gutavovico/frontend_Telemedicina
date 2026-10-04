@@ -1,0 +1,34 @@
+<div class="document-viewer">
+  <!-- Estado de Carga -->
+  <div *ngIf="isLoading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando documento...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!isLoading() && errorMessage()" class="error-state">
+    <span class="material-symbols-outlined error-icon">picture_as_pdf</span>
+    <p>{{ errorMessage() }}</p>
+  </div>
+
+  <!-- Visor PDF (ng2-pdf-viewer) -->
+  <div *ngIf="!isLoading() && !errorMessage() && pdfSrc()" class="pdf-container">
+    <pdf-viewer
+      [src]="pdfSrc() ?? undefined"
+      [render-text]="renderText"
+      [zoom]="zoom"
+      [show-all]="true"
+      [original-size]="false"
+      [render-text-mode]="0"
+      [page]="1"
+      [rotation]="0"
+      class="min-w-full min-h-[600px]"
+    ></pdf-viewer>
+  </div>
+
+  <!-- Sin URL de descarga -->
+  <div *ngIf="!isLoading() && !errorMessage() && !pdfSrc()" class="error-state">
+    <span class="material-symbols-outlined error-icon">visibility_off</span>
+    <p>Documento no disponible. Haga clic en "Preparar Descarga" para generar la vista previa.</p>
+  </div>
+</div>
