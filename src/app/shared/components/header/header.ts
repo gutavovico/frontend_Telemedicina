@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
+import { normalizeAppRole } from '../../../core/models/auth.models';
 
 @Component({
   selector: 'app-header',
@@ -79,6 +80,27 @@ export class Header {
       return false;
     }
     return this.authService.isPaciente();
+  }
+
+  isReportsRoute(): boolean {
+    return this.router.url.startsWith('/analitica');
+  }
+
+  canSeeReports(): boolean {
+    const user = this.authService.currentUser();
+    return this.authService.isAuthenticated()
+      && this.authService.profileVerified()
+      && normalizeAppRole(user?.rol) === 'admin'
+      && user?.estado.toUpperCase() === 'ACTIVO'
+      && typeof user.id_clinica === 'number'
+      && user.id_clinica > 0;
+  }
+
+  canSeeAgenda(): boolean {
+    if (!this.authService.isAuthenticated()) return false;
+    const role = (this.authService.currentUser()?.rol ?? '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+    return ['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION', 'MEDICO', 'RECEPCION'].includes(role);
   }
 
   // Entrada "Recetas" (CU16, hallazgo 4): visible para ADMIN, MEDICO y PACIENTE

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
+import { normalizeAppRole } from '../../../core/models/auth.models';
 import { TenantSelectorComponent } from '../../../shared/components/tenant-selector/tenant-selector';
 
 @Component({
@@ -18,6 +19,16 @@ export class AdminLayout {
 
   readonly isSidebarOpen = signal(false);
   readonly isDropdownOpen = signal(false);
+
+  canSeeReports(): boolean {
+    const user = this.authService.currentUser();
+    return this.authService.isAuthenticated()
+      && this.authService.profileVerified()
+      && normalizeAppRole(user?.rol) === 'admin'
+      && user?.estado.toUpperCase() === 'ACTIVO'
+      && typeof user.id_clinica === 'number'
+      && user.id_clinica > 0;
+  }
 
   toggleSidebar(): void {
     this.isSidebarOpen.update(v => !v);

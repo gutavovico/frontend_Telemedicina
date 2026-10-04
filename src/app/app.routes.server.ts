@@ -1,6 +1,7 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
+  { path: 'appointments/agenda', renderMode: RenderMode.Client },
   // Rutas protegidas por authGuard (CU04): render del lado del cliente únicamente
   {
     path: 'medicos',
@@ -255,6 +256,10 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'citas/:id/teleconsulta',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'analitica',
     renderMode: RenderMode.Client,
   },
   {

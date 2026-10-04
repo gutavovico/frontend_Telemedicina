@@ -460,6 +460,16 @@
               <span>Bitácora de Auditoría</span>
             </a>
           }
+          @if (canSeeReports()) {
+            <a
+              routerLink="/analitica"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">bar_chart</span>
+              <span>Reportes</span>
+            </a>
+          }
           @if (canSeeRecetas()) {
             <a
               routerLink="/recetas"

@@ -59,6 +59,7 @@ export interface SesionAgenda {
   id_usuario: number;
   id_clinica: number | null;
   id_rol: number | null;
+  rol: string | null;
   nombres: string;
   apellidos: string;
 }

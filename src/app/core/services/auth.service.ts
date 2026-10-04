@@ -37,6 +37,7 @@ export class AuthService {
   // Reactive state signals
   readonly isAuthenticated = signal<boolean>(this.hasValidToken());
   readonly currentUser = signal<UsuarioResponse | null>(this.getStoredUser());
+  readonly profileVerified = signal<boolean>(false);
 
   // Perfil médico del usuario autenticado (CU04): 200 en /medicos/me = es doctor.
   // Se carga tras el login y al revalidar la sesión.
@@ -81,9 +82,7 @@ export class AuthService {
 
   // Rol real del usuario (CU16, hallazgo 1): fuente primaria `currentUser().rol`
   // normalizada con `normalizeAppRole`. Sin heurísticas de correo, nombre ni IDs.
-  // El perfil de `/medicos/me` solo confirma perfil médico cuando el rol explícito
-  // está ausente o no es reconocido; nunca convierte un ADMIN ni reemplaza un rol
-  // explícito incompatible. Rol desconocido = sin privilegios.
+  // El perfil médico no reemplaza el rol de /auth/me. Rol desconocido = sin privilegios.
   readonly userRole = computed<AppRole>(() => {
     const user = this.currentUser();
     if (!user) {
@@ -91,29 +90,7 @@ export class AuthService {
     }
 
     const rol = normalizeAppRole(user.rol);
-    if (rol === 'admin' || rol === 'doctor' || rol === 'paciente') {
-      return rol;
-    }
-
-    // Fallback de compatibilidad: si user.rol textual no viene poblado pero existe id_rol numérico
-    if (user.id_rol === 4) {
-      return 'paciente';
-    }
-    if (user.id_rol === 3) {
-      return 'recepcion';
-    }
-    if (user.id_rol === 2) {
-      return 'doctor';
-    }
-    if (user.id_rol === 1) {
-      return 'admin';
-    }
-
-    // Rol ausente o desconocido: el perfil médico confirmado acredita doctor.
-    if (this.perfilMedico() !== null) {
-      return 'doctor';
-    }
-    return 'unknown';
+    return rol;
   });
 
   readonly isAdmin = computed(() => this.userRole() === 'admin');
@@ -239,16 +216,26 @@ export class AuthService {
 
   fetchUserProfile(): Observable<UsuarioResponse | null> {
     if (!this.getAccessToken()) {
+      this.profileVerified.set(false);
       return of(null);
     }
 
     // Try /auth/me first, fallback to /usuarios/me
     return this.http.get<UsuarioResponse>(`${this.apiUrl}/auth/me`).pipe(
-      tap((user) => this.saveUser(user)),
+      tap((user) => {
+        this.saveUser(user);
+        this.profileVerified.set(true);
+      }),
       catchError(() => {
         return this.http.get<UsuarioResponse>(`${this.apiUrl}/usuarios/me`).pipe(
-          tap((user) => this.saveUser(user)),
-          catchError(() => of(null)),
+          tap((user) => {
+            this.saveUser(user);
+            this.profileVerified.set(true);
+          }),
+          catchError(() => {
+            this.profileVerified.set(false);
+            return of(null);
+          }),
         );
       }),
     );
@@ -307,6 +294,7 @@ export class AuthService {
   }
 
   clearTokens(): void {
+    this.profileVerified.set(false);
     if (this.isBrowser) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');

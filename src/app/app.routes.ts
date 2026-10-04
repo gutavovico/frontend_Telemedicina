@@ -5,6 +5,7 @@ import { tenantGuard } from './core/guards/tenant.guard';
 import { clinicaGuard } from './core/guards/clinica.guard';
 import { superAdminGuard } from './core/guards/super-admin.guard';
 import { prescriptionAccessGuard } from './features/medical-records/prescriptions/guards/prescription-access.guard';
+import { reportsAccessGuard } from './features/analytics/reportes/guards/reports-access.guard';
 
 export const routes: Routes = [
   {
@@ -638,9 +639,10 @@ export const routes: Routes = [
   },
   {
     path: 'analitica',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/analytics/analytics').then((m) => m.Analytics),
-    title: 'Hospital San Juan de Dios - Analítica',
+    canActivate: [authGuard, reportsAccessGuard],
+    loadComponent: () =>
+      import('./features/analytics/reportes/pages/reports-page').then((m) => m.ReportsPage),
+    title: 'Reportes clínicos y administrativos',
   },
   {
     path: 'ia-asistente',

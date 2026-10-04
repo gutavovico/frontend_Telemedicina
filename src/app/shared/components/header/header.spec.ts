@@ -16,12 +16,16 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
   const routerMock = { url: '/', navigate: vi.fn() };
   let isAuthenticated: WritableSignal<boolean>;
   let userRole: WritableSignal<AppRole>;
+  let roleName: WritableSignal<string | null>;
+  let profileVerified: WritableSignal<boolean>;
   let isSuperAdmin: WritableSignal<boolean>;
   let injector: DestroyableInjector;
 
   function create(): Header {
     const authMock = {
+      currentUser: () => ({ rol: roleName(), estado: 'ACTIVO', id_clinica: 1 }),
       isAuthenticated,
+      profileVerified,
       userRole,
       isAdmin: () => userRole() === 'admin',
       isDoctor: () => userRole() === 'doctor',
@@ -48,7 +52,30 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     routerMock.url = '/';
     isAuthenticated = signal(true);
     userRole = signal<AppRole>('doctor');
+    roleName = signal<string | null>('Recepción');
+    profileVerified = signal(true);
     isSuperAdmin = signal(false);
+  });
+
+  it('muestra Agenda a Recepción autenticada y la oculta sin sesión', () => {
+    const header = create();
+    expect(header.canSeeAgenda()).toBe(true);
+    isAuthenticated.set(false);
+    expect(header.canSeeAgenda()).toBe(false);
+    injector.destroy();
+  });
+
+  it('muestra Reportes solo a ADMIN con perfil verificado y clínica', () => {
+    roleName.set('ADMIN');
+    userRole.set('admin');
+    const header = create();
+    expect(header.canSeeReports()).toBe(true);
+    profileVerified.set(false);
+    expect(header.canSeeReports()).toBe(false);
+    profileVerified.set(true);
+    roleName.set('Recepción');
+    expect(header.canSeeReports()).toBe(false);
+    injector.destroy();
   });
 
   it('visible para admin, doctor y paciente reales', () => {

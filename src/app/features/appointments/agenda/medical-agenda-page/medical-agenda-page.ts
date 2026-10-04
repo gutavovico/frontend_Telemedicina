@@ -1,13 +1,12 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, forkJoin, Observable } from 'rxjs';
 import { Header } from '../../../../shared/components/header/header';
-import { AuthService } from '../../../../core/services/auth.service';
+import { normalizeAppRole } from '../../../../core/models/auth.models';
 import { MedicoService } from '../../../../core/services/medico.service';
-import { RolesService } from '../../../../core/services/roles.service';
 import { MedicoResponse } from '../../../../core/models/medico.models';
 import { AgendaBlockForm } from '../block-form/block-form';
 import { AgendaAvailabilityView } from '../availability-view/availability-view';
@@ -22,9 +21,7 @@ import { DIAS_AGENDA, errorAgenda, fechaBolivia } from '../medical-agenda.utils'
 })
 export class MedicalAgendaPage implements OnInit {
   private readonly api = inject(MedicalAgendaService);
-  private readonly authService = inject(AuthService);
   private readonly medicosApi = inject(MedicoService);
-  private readonly rolesApi = inject(RolesService);
   private readonly fb = inject(FormBuilder);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private generation = 0;
@@ -74,40 +71,17 @@ export class MedicalAgendaPage implements OnInit {
         this.limitation.set('Tu usuario no tiene una clínica asociada. Solicita a administración que revise tu cuenta.');
         return;
       }
-      // id_rol=1 es ADMIN_ROLE_ID en el backend, no el id del usuario ni su correo.
-      if (session.id_rol === 1) this.rol.set('ADMIN');
-      else if (session.id_rol !== null) {
-        // La sesión ya informa el nombre del rol (/auth/me → user_profile.rol):
-        // úsalo antes que el catálogo, al que recepción no tiene acceso.
-        const rolSesion = (this.authService.currentUser()?.rol ?? '')
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-        if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(rolSesion)) {
-          this.rol.set('ADMIN');
-        } else if (rolSesion === 'MEDICO' || rolSesion === 'RECEPCION') {
-          this.rol.set(rolSesion);
-        } else {
-          try {
-            const role = await firstValueFrom(this.rolesApi.getRoleById(session.id_rol));
-            const name = role.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-            if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(name)) this.rol.set('ADMIN');
-            else if (name === 'MEDICO' || name === 'RECEPCION') this.rol.set(name);
-          } catch (error) {
-            if (!(error instanceof HttpErrorResponse && error.status === 403)) throw error;
-            // El catálogo exige administración: nunca convertir un 403 en permiso de recepción.
-          }
-        }
+      const role = normalizeAppRole(session.rol);
+      if (role === 'admin') this.rol.set('ADMIN');
+      else if (role === 'doctor') this.rol.set('MEDICO');
+      else if (role === 'recepcion') this.rol.set('RECEPCION');
+      if (this.rol() === 'DESCONOCIDO') {
+        this.limitation.set('Tu sesión no tiene un rol autorizado para gestionar agendas.');
+        return;
       }
-      if (this.rol() === 'DESCONOCIDO' || this.rol() === 'MEDICO') {
-        try {
-          const own = await firstValueFrom(this.medicosApi.obtenerMiPerfil());
-          // Perfil propio y acceso de agenda confirmados por el backend. Solo habilita recursos propios.
-          await firstValueFrom(this.api.getHorarios(own.id_medico));
-          this.rol.set('MEDICO'); this.medicos.set([own]); this.medicoId.set(own.id_medico);
-        } catch (error) {
-          if (!(error instanceof HttpErrorResponse && [403, 404].includes(error.status))) throw error;
-          this.rol.set('DESCONOCIDO');
-          this.limitation.set('No se pudo confirmar tu rol para gestionar agendas. La sesión no informa el nombre del rol y recepción no puede consultar el catálogo. Las acciones permanecerán ocultas; puedes consultar los bloqueos que autorice tu sesión.');
-        }
+      if (this.rol() === 'MEDICO') {
+        const own = await firstValueFrom(this.medicosApi.obtenerMiPerfil());
+        this.medicos.set([own]); this.medicoId.set(own.id_medico);
       }
       if (this.rol() === 'RECEPCION') {
         const doctors: MedicoResponse[] = [];
@@ -127,7 +101,14 @@ export class MedicalAgendaPage implements OnInit {
         this.scheduleForm.controls.id_servicio.setValue(first);
       }
       await this.refresh();
-    } catch (error) { if (!this.destroyed) this.error.set(errorAgenda(error)); }
+    } catch (error) {
+      if (!this.destroyed) {
+        if (error instanceof HttpErrorResponse && [403, 404].includes(error.status)) {
+          this.rol.set('DESCONOCIDO');
+          this.limitation.set('No se pudo confirmar el acceso a la agenda con tu sesión.');
+        } else this.error.set(errorAgenda(error));
+      }
+    }
     finally { if (!this.destroyed) this.loading.set(false); }
   }
 
@@ -150,7 +131,14 @@ export class MedicalAgendaPage implements OnInit {
         const bloques = await firstValueFrom(this.api.getBloqueos());
         if (current === this.generation && !this.destroyed) this.bloqueos.set(bloques);
       }
-    } catch (error) { if (current === this.generation && !this.destroyed) this.error.set(errorAgenda(error)); }
+    } catch (error) {
+      if (current === this.generation && !this.destroyed) {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.rol.set('DESCONOCIDO');
+          this.limitation.set('Tu sesión no tiene acceso a esta agenda.');
+        } else this.error.set(errorAgenda(error));
+      }
+    }
     finally { if (current === this.generation && !this.destroyed) this.loading.set(false); }
   }
   selectFilters(): void {
