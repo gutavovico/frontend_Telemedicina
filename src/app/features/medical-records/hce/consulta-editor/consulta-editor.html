@@ -5,9 +5,9 @@
 
     <!-- Navegación de migas de pan (Breadcrumb) -->
     <nav class="flex items-center gap-2 text-sm text-[#424750]">
-      <a routerLink="/pacientes" class="hover:text-[#003667] transition">Pacientes</a>
+      <a [routerLink]="[adminBase + '/pacientes']" class="hover:text-[#003667] transition">Pacientes</a>
       <span>/</span>
-      <a [routerLink]="['/pacientes', idPaciente(), 'hce']" class="hover:text-[#003667] transition">
+      <a [routerLink]="[adminBase + '/pacientes', idPaciente(), 'hce']" class="hover:text-[#003667] transition">
         HCE ({{ patientService.selectedPatient()?.nombres }} {{ patientService.selectedPatient()?.apellidos }})
       </a>
       <span>/</span>
@@ -430,7 +430,7 @@
       <!-- Barra de Acciones y Guardado Final -->
       <div class="p-6 bg-white rounded-2xl border border-[#e1e3e4] shadow-level-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <a
-          [routerLink]="['/pacientes', idPaciente(), 'hce']"
+          [routerLink]="[adminBase + '/pacientes', idPaciente(), 'hce']"
           class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#f3f4f5] hover:bg-[#edeeef] text-[#424750] text-sm font-semibold rounded-xl transition"
         >
           <span class="material-symbols-outlined text-[18px]">close</span>

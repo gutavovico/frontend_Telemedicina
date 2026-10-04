@@ -1,0 +1,255 @@
+<div class="space-y-6">
+  <!-- Welcome Banner -->
+  <div class="bg-gradient-to-br from-primary via-primary-container to-secondary rounded-2xl p-6 sm:p-8 text-white shadow-level-2 relative overflow-hidden">
+    <!-- Decorative background circle -->
+    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-xs font-semibold text-secondary-fixed">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          {{ tenantService.isSuperAdmin() ? 'Panel de Control Global SaaS' : 'Panel de Control Administrativo' }}
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+          ¡Hola, {{ authService.userDisplayName() }}!
+        </h1>
+        <p class="text-white/80 text-sm max-w-xl">
+          @if (tenantService.isSuperAdmin()) {
+            @if (tenantService.selectedTenantId()) {
+              Inspeccionando la clínica <strong>{{ tenantService.clinicaNombre() }}</strong>. Gestiona usuarios, médicos y roles de este tenant.
+            } @else {
+              Bienvenido al centro de administración global de la plataforma SaaS de Telemedicina. Gestiona todas las clínicas asociadas, usuarios globales y métricas.
+            }
+          } @else {
+            Bienvenido al centro de administración de {{ tenantService.clinicaNombre() }}. Desde aquí puedes gestionar usuarios, roles y el cuerpo médico.
+          }
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        @if (tenantService.isSuperAdmin()) {
+          <a
+            routerLink="/admin/clinicas"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-primary font-semibold text-xs sm:text-sm shadow-xs hover:bg-surface-container-low transition-all duration-150 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">domain</span>
+            <span>Gestionar Clínicas</span>
+          </a>
+        } @else {
+          <a
+            routerLink="/admin/usuarios"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-primary font-semibold text-xs sm:text-sm shadow-xs hover:bg-surface-container-low transition-all duration-150 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">person_add</span>
+            <span>Gestionar Usuarios</span>
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric Statistics Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-5" [class.lg:grid-cols-4]="tenantService.isSuperAdmin()" [class.lg:grid-cols-3]="!tenantService.isSuperAdmin()">
+    <!-- Card Super Admin: Clínicas -->
+    @if (tenantService.isSuperAdmin()) {
+      <div class="bg-white rounded-2xl p-5 border border-outline-variant/30 shadow-level-1 hover:shadow-level-2 transition-all duration-200 flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shadow-xs">
+            <span class="material-symbols-outlined text-[26px]">domain</span>
+          </div>
+          <span class="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+            SaaS Global
+          </span>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-on-surface-variant mb-1">Clínicas Registradas</p>
+          <div class="text-3xl font-bold text-on-surface tracking-tight">
+            @if (isLoading()) {
+              <span class="inline-block w-8 h-8 bg-surface-container animate-pulse rounded"></span>
+            } @else {
+              {{ clinicasTotal() ?? 0 }}
+              <span class="text-xs font-normal text-emerald-600 ml-1">({{ clinicasActivas() ?? 0 }} activas)</span>
+            }
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-outline-variant/20">
+          <a
+            routerLink="/admin/clinicas"
+            class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+          >
+            <span>Ver catálogo global</span>
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Card 1: Usuarios -->
+    <div class="bg-white rounded-2xl p-5 border border-outline-variant/30 shadow-level-1 hover:shadow-level-2 transition-all duration-200 flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-primary-fixed/40 text-primary flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[26px]">group</span>
+        </div>
+        <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+          Activo
+        </span>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-on-surface-variant mb-1">
+          {{ tenantService.selectedTenantId() ? 'Usuarios de Clínica' : 'Usuarios Totales' }}
+        </p>
+        <div class="text-3xl font-bold text-on-surface tracking-tight">
+          @if (isLoading()) {
+            <span class="inline-block w-8 h-8 bg-surface-container animate-pulse rounded"></span>
+          } @else {
+            {{ usersCount() ?? 0 }}
+          }
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-outline-variant/20">
+        <a
+          routerLink="/admin/usuarios"
+          class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+        >
+          <span>Ver listado completo</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 2: Roles y Permisos -->
+    <div class="bg-white rounded-2xl p-5 border border-outline-variant/30 shadow-level-1 hover:shadow-level-2 transition-all duration-200 flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-secondary-fixed/40 text-secondary flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[26px]">shield_person</span>
+        </div>
+        <span class="text-xs font-semibold text-primary bg-primary-fixed/30 px-2.5 py-1 rounded-full">
+          Seguridad
+        </span>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-on-surface-variant mb-1">Roles Configurados</p>
+        <div class="text-3xl font-bold text-on-surface tracking-tight">
+          @if (isLoading()) {
+            <span class="inline-block w-8 h-8 bg-surface-container animate-pulse rounded"></span>
+          } @else {
+            {{ rolesCount() ?? 0 }}
+          }
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-outline-variant/20">
+        <a
+          routerLink="/admin/roles"
+          class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+        >
+          <span>Configurar permisos</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 3: Médicos -->
+    <div class="bg-white rounded-2xl p-5 border border-outline-variant/30 shadow-level-1 hover:shadow-level-2 transition-all duration-200 flex flex-col justify-between">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[26px]">medical_information</span>
+        </div>
+        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+          Especialistas
+        </span>
+      </div>
+      <div>
+        <p class="text-xs font-medium text-on-surface-variant mb-1">Cuerpo Médico</p>
+        <div class="text-3xl font-bold text-on-surface tracking-tight">
+          @if (isLoading()) {
+            <span class="inline-block w-8 h-8 bg-surface-container animate-pulse rounded"></span>
+          } @else {
+            {{ medicosCount() ?? 0 }}
+          }
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-outline-variant/20">
+        <a
+          routerLink="/admin/medicos"
+          class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+        >
+          <span>Directorio médico</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Access & Navigation Cards -->
+  <div class="grid grid-cols-1 gap-5" [class.md:grid-cols-4]="tenantService.isSuperAdmin()" [class.md:grid-cols-3]="!tenantService.isSuperAdmin()">
+    @if (tenantService.isSuperAdmin()) {
+      <a
+        routerLink="/admin/clinicas"
+        class="group bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-level-1 hover:border-primary/40 hover:shadow-level-2 transition-all duration-200 flex items-start gap-4"
+      >
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-[22px]">domain</span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+            Gestión de Clínicas (SaaS)
+          </h3>
+          <p class="text-xs text-on-surface-variant mt-1">
+            Administra el catálogo de clínicas, registra nuevas entidades o suspende accesos.
+          </p>
+        </div>
+      </a>
+    }
+
+    <a
+      routerLink="/admin/usuarios"
+      class="group bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-level-1 hover:border-primary/40 hover:shadow-level-2 transition-all duration-200 flex items-start gap-4"
+    >
+      <div class="w-10 h-10 rounded-xl bg-surface-container-high group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[22px]">manage_accounts</span>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+          Gestión de Usuarios
+        </h3>
+        <p class="text-xs text-on-surface-variant mt-1">
+          Crea, edita, activa o desactiva las cuentas de los usuarios del sistema.
+        </p>
+      </div>
+    </a>
+
+    <a
+      routerLink="/admin/roles"
+      class="group bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-level-1 hover:border-primary/40 hover:shadow-level-2 transition-all duration-200 flex items-start gap-4"
+    >
+      <div class="w-10 h-10 rounded-xl bg-surface-container-high group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[22px]">security</span>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+          Roles y Privilegios
+        </h3>
+        <p class="text-xs text-on-surface-variant mt-1">
+          Define y administra los roles de acceso y permisos para cada perfil.
+        </p>
+      </div>
+    </a>
+
+    <a
+      routerLink="/admin/medicos"
+      class="group bg-white p-5 rounded-2xl border border-outline-variant/30 shadow-level-1 hover:border-primary/40 hover:shadow-level-2 transition-all duration-200 flex items-start gap-4"
+    >
+      <div class="w-10 h-10 rounded-xl bg-surface-container-high group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[22px]">stethoscope</span>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+          Especialidades y Médicos
+        </h3>
+        <p class="text-xs text-on-surface-variant mt-1">
+          Registra perfiles profesionales médicos, especialidades y horarios.
+        </p>
+      </div>
+    </a>
+  </div>
+</div>

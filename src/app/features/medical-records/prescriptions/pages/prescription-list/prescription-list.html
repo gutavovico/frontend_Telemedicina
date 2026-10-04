@@ -2,6 +2,17 @@
 
 <main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Migas: volver al hub Mi salud (vista propia del paciente) -->
+    @if (authService.isPaciente()) {
+      <div class="flex items-center gap-2 text-sm">
+        <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+          <span class="material-symbols-outlined text-[16px]">home</span>
+          Mi salud
+        </a>
+        <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+        <span class="text-primary font-medium">Mis recetas</span>
+      </div>
+    }
     <div
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]"
     >

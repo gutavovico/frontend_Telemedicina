@@ -60,13 +60,13 @@
           </p>
           <p class="flex flex-wrap gap-2 pt-1">
             <a
-              routerLink="/consultas"
+              [routerLink]="[adminBase + '/consultas']"
               class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-semibold hover:bg-amber-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
             >
               Volver a consultas
             </a>
             <a
-              routerLink="/pacientes"
+              [routerLink]="[adminBase + '/pacientes']"
               class="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-semibold hover:bg-amber-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500"
             >
               Ver historias clínicas
@@ -200,7 +200,7 @@
 
       <div class="flex flex-col sm:flex-row justify-end gap-3">
         <a
-          routerLink="/recetas"
+          [routerLink]="[adminBase + '/recetas']"
           class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-[#E8EDF4] hover:bg-slate-50 transition text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-400"
         >
           Cancelar

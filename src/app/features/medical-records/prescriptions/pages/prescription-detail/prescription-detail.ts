@@ -30,6 +30,11 @@ export class PrescriptionDetail implements OnInit {
   private readonly service = inject(PrescriptionsService);
   readonly authService = inject(AuthService);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly receta = signal<RecetaResponse | null>(null);
   readonly isLoading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
@@ -165,7 +170,8 @@ export class PrescriptionDetail implements OnInit {
   }
 
   volverAlListado(): void {
-    void this.router.navigate(['/recetas']);
+    const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+    void this.router.navigate([base + '/recetas']);
   }
 
   private mensajeError(err: unknown): string {

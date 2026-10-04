@@ -24,6 +24,11 @@ export class MedicoNuevo implements OnInit {
   /** CU04: auto-registro cuando un usuario sin perfil médico completa el suyo propio. */
   readonly esAutoRegistro = !this.authService.isAdmin();
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   ngOnInit(): void {
     // Regla 1:1 solo en auto-registro: un usuario que ya tiene su perfil médico
     // no crea otro. El ADMIN registra a un doctor distinto y no debe ser redirigido,
@@ -45,7 +50,8 @@ export class MedicoNuevo implements OnInit {
   }
 
   onSaved(medico: MedicoResponse): void {
-    // Tras crear el perfil, navega al detalle del médico
-    this.router.navigate(['/medicos', medico.id_medico]);
+    // Tras crear el perfil, navega al detalle del médico (dentro de /admin si aplica)
+    const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+    this.router.navigate([base + '/medicos', medico.id_medico]);
   }
 }

@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, forkJoin, Observable } from 'rxjs';
 import { Header } from '../../../../shared/components/header/header';
+import { AuthService } from '../../../../core/services/auth.service';
 import { MedicoService } from '../../../../core/services/medico.service';
 import { RolesService } from '../../../../core/services/roles.service';
 import { MedicoResponse } from '../../../../core/models/medico.models';
@@ -21,6 +22,7 @@ import { DIAS_AGENDA, errorAgenda, fechaBolivia } from '../medical-agenda.utils'
 })
 export class MedicalAgendaPage implements OnInit {
   private readonly api = inject(MedicalAgendaService);
+  private readonly authService = inject(AuthService);
   private readonly medicosApi = inject(MedicoService);
   private readonly rolesApi = inject(RolesService);
   private readonly fb = inject(FormBuilder);
@@ -75,14 +77,24 @@ export class MedicalAgendaPage implements OnInit {
       // id_rol=1 es ADMIN_ROLE_ID en el backend, no el id del usuario ni su correo.
       if (session.id_rol === 1) this.rol.set('ADMIN');
       else if (session.id_rol !== null) {
-        try {
-          const role = await firstValueFrom(this.rolesApi.getRoleById(session.id_rol));
-          const name = role.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
-          if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(name)) this.rol.set('ADMIN');
-          else if (name === 'MEDICO' || name === 'RECEPCION') this.rol.set(name);
-        } catch (error) {
-          if (!(error instanceof HttpErrorResponse && error.status === 403)) throw error;
-          // El catálogo exige administración: nunca convertir un 403 en permiso de recepción.
+        // La sesión ya informa el nombre del rol (/auth/me → user_profile.rol):
+        // úsalo antes que el catálogo, al que recepción no tiene acceso.
+        const rolSesion = (this.authService.currentUser()?.rol ?? '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+        if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(rolSesion)) {
+          this.rol.set('ADMIN');
+        } else if (rolSesion === 'MEDICO' || rolSesion === 'RECEPCION') {
+          this.rol.set(rolSesion);
+        } else {
+          try {
+            const role = await firstValueFrom(this.rolesApi.getRoleById(session.id_rol));
+            const name = role.nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(name)) this.rol.set('ADMIN');
+            else if (name === 'MEDICO' || name === 'RECEPCION') this.rol.set(name);
+          } catch (error) {
+            if (!(error instanceof HttpErrorResponse && error.status === 403)) throw error;
+            // El catálogo exige administración: nunca convertir un 403 en permiso de recepción.
+          }
         }
       }
       if (this.rol() === 'DESCONOCIDO' || this.rol() === 'MEDICO') {

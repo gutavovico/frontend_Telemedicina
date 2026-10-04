@@ -19,6 +19,11 @@ export class MedicosList implements OnInit {
   private readonly router = inject(Router);
   readonly authService = inject(AuthService);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly medicos = signal<MedicoResponse[]>([]);

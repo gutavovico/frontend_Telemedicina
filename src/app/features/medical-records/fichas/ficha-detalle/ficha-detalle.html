@@ -4,13 +4,13 @@
     <!-- Navigation & Status Top Bar -->
     <div class="flex items-center justify-between">
       <a
-        routerLink="/fichas"
+        [routerLink]="authService.isPaciente() ? '/' : [adminBase + '/fichas']"
         class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900 transition"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Volver al Listado de Fichas
+        {{ authService.isPaciente() ? 'Volver a Mi salud' : 'Volver al Listado de Fichas' }}
       </a>
 
       <div class="flex items-center gap-2">
@@ -81,7 +81,8 @@
         </div>
       </div>
 
-      <!-- Clinical Form -->
+      <!-- Clinical Form (solo médico: actos clínicos) -->
+      @if (puedeEditarClinica()) {
       <form [formGroup]="clinicaForm" class="space-y-6">
 
         <!-- 1. Signos Vitales Card -->
@@ -354,10 +355,10 @@
         <!-- Action Buttons Bar -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <a
-            routerLink="/fichas"
+            [routerLink]="authService.isPaciente() ? '/' : [adminBase + '/fichas']"
             class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
           >
-            Volver a la Lista
+            {{ authService.isPaciente() ? 'Volver a Mi salud' : 'Volver a la Lista' }}
           </a>
 
           <div class="flex items-center gap-3">
@@ -388,6 +389,61 @@
         </div>
 
       </form>
+      } @else {
+        <!-- Vista de solo lectura (paciente, recepción, admin): sin actos clínicos -->
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-black text-slate-900 mb-1">Signos Vitales y Somatometría</h2>
+            <p class="text-xs text-slate-500 mb-4">Registrados en la atención</p>
+            @if (ficha()!.signos_vitales && ((ficha()!.signos_vitales | keyvalue) ?? []).length) {
+              <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                @for (sv of (ficha()!.signos_vitales | keyvalue); track sv.key) {
+                  <div class="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                    <dt class="text-[11px] font-semibold text-slate-500 uppercase">{{ sv.key }}</dt>
+                    <dd class="text-sm font-bold text-slate-800 font-mono">{{ sv.value }}</dd>
+                  </div>
+                }
+              </dl>
+            } @else {
+              <p class="text-sm text-slate-400">Sin signos vitales registrados.</p>
+            }
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-black text-slate-900 mb-1">Expediente Clínico</h2>
+            <p class="text-xs text-slate-500 mb-4">Información registrada por el médico tratante</p>
+            @if (ficha()!.secciones_dinamicas && ((ficha()!.secciones_dinamicas | keyvalue) ?? []).length) {
+              <dl class="space-y-3">
+                @for (sec of (ficha()!.secciones_dinamicas | keyvalue); track sec.key) {
+                  <div class="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                    <dt class="text-[11px] font-semibold text-slate-500 uppercase">{{ sec.key }}</dt>
+                    <dd class="text-sm text-slate-800">{{ sec.value }}</dd>
+                  </div>
+                }
+              </dl>
+            } @else {
+              <p class="text-sm text-slate-400">Sin secciones registradas.</p>
+            }
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-3">
+            <h2 class="text-base font-black text-slate-900">Diagnóstico y Evolución</h2>
+            @if (ficha()!.codigo_cie10 || ficha()!.diagnostico_descripcion) {
+              <p class="text-sm text-slate-800">
+                <span class="font-mono font-bold">{{ ficha()!.codigo_cie10 }}</span>
+                <span> — {{ ficha()!.diagnostico_descripcion }}</span>
+              </p>
+            } @else {
+              <p class="text-sm text-slate-400">Sin diagnóstico registrado.</p>
+            }
+            @if (ficha()!.notas_evolucion) {
+              <p class="text-sm text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                {{ ficha()!.notas_evolucion }}
+              </p>
+            }
+          </div>
+        </div>
+      }
 
     </div>
 

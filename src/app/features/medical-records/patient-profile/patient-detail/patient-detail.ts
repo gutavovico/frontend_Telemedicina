@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PatientService } from '../../../../core/services/patient.service';
 import { Header } from '../../../../shared/components/header/header';
 import { Footer } from '../../../../shared/components/footer/footer';
@@ -14,7 +14,13 @@ import { Footer } from '../../../../shared/components/footer/footer';
 })
 export class PatientDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly patientService = inject(PatientService);
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   activeTab = signal<'general' | 'clinico' | 'emergencia'>('general');
   errorMessage = signal<string | null>(null);

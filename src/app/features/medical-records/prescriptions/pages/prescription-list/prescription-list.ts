@@ -106,11 +106,13 @@ export class PrescriptionList implements OnInit {
   }
 
   openDetail(receta: RecetaResponse): void {
-    void this.router.navigate(['/recetas', receta.id_receta]);
+    const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+    void this.router.navigate([base + '/recetas', receta.id_receta]);
   }
 
   goToIssue(): void {
-    void this.router.navigate(['/recetas/emitir']);
+    const base = this.router.url.startsWith('/admin') ? '/admin' : '';
+    void this.router.navigate([base + '/recetas/emitir']);
   }
 
   badgeClass(receta: RecetaResponse): string {

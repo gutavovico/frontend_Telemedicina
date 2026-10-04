@@ -204,6 +204,15 @@ describe('ClinicalDocumentsService (CU12)', () => {
       expect(result).toBeInstanceOf(Blob);
     });
 
+    it('usa HttpClient aunque el host difiera (localhost vs 127.0.0.1)', async () => {
+      const blob = new Blob(['data'], { type: 'application/pdf' });
+      http.get.mockReturnValueOnce(of(blob));
+      const url = 'http://localhost:8000/api/v1/documentos/file/seed/a.pdf?nombre=a.pdf';
+      const result = await service.loadDocumentBlob(url);
+      expect(http.get).toHaveBeenCalledWith(url, { responseType: 'blob' });
+      expect(result).toBeInstanceOf(Blob);
+    });
+
     it('descarga con fetch directo para URL remota presignada', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,

@@ -1,4 +1,5 @@
-<!-- Navbar Superior -->
+<!-- Navbar Superior (solo fuera del panel /admin, que tiene topbar propio) -->
+@if (!isAdminRoute) {
 <header class="w-full bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
   <div class="flex items-center gap-3">
     <div class="w-8 h-8 rounded-lg bg-[#1a56db] text-white flex items-center justify-center shadow-sm">
@@ -26,6 +27,7 @@
     </svg>
   </div>
 </header>
+}
 
 <!-- Contenido Principal -->
 <main class="min-h-[calc(100vh-57px)] bg-[#f8fafc] px-4 md:px-12 py-6">

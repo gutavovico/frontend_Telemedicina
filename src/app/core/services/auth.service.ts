@@ -2,7 +2,7 @@ import { Injectable, inject, PLATFORM_ID, signal, computed } from '@angular/core
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { catchError, finalize, Observable, of, tap } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   LoginRequest,
@@ -17,7 +17,9 @@ import {
   normalizeAppRole,
 } from '../models/auth.models';
 import { MedicoResponse } from '../models/medico.models';
+import { TenantContext } from '../models/tenant.models';
 import { InactivityService } from './inactivity.service';
+import { TenantService } from './tenant.service';
 
 @Injectable({
   providedIn: 'root',
@@ -27,6 +29,7 @@ export class AuthService {
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly inactivity = inject(InactivityService);
+  private readonly tenantService = inject(TenantService);
 
   private readonly apiUrl = environment.apiUrl;
   private readonly isBrowser = isPlatformBrowser(this.platformId);
@@ -96,6 +99,9 @@ export class AuthService {
     if (user.id_rol === 4) {
       return 'paciente';
     }
+    if (user.id_rol === 3) {
+      return 'recepcion';
+    }
     if (user.id_rol === 2) {
       return 'doctor';
     }
@@ -113,6 +119,7 @@ export class AuthService {
   readonly isAdmin = computed(() => this.userRole() === 'admin');
   readonly isDoctor = computed(() => this.userRole() === 'doctor');
   readonly isPaciente = computed(() => this.userRole() === 'paciente');
+  readonly isRecepcion = computed(() => this.userRole() === 'recepcion');
 
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
@@ -162,7 +169,7 @@ export class AuthService {
     }
   }
 
-  login(correo: string, password: string, rememberMe: boolean = false): Observable<TokenResponse> {
+  login(correo: string, password: string, rememberMe: boolean = false): Observable<TenantContext | null> {
     const payload: LoginRequest = { correo, password };
     return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((response) => {
@@ -179,13 +186,37 @@ export class AuthService {
           };
           this.saveUser(fallbackUser);
         }
-
-        // Fetch full profile from backend
-        this.fetchUserProfile().subscribe();
         // Cargar perfil médico (define el rol doctor, CU04)
         this.fetchPerfilMedico();
       }),
+      switchMap(() => {
+        return forkJoin({
+          profile: this.fetchUserProfile().pipe(catchError(() => of(null))),
+          tenant: this.tenantService.loadTenantContext().pipe(catchError(() => of(null))),
+        });
+      }),
+      map((res) => res.tenant),
     );
+  }
+
+  redirectByRole(tenantContext?: TenantContext | null): void {
+    // Prefer the freshly fetched context passed directly; fall back to the signal
+    const tenant = tenantContext ?? this.tenantService.currentTenant();
+    const role = (tenant?.rol || this.currentUser()?.rol || '').toUpperCase();
+
+    if (tenant?.es_super_admin || role.includes('SUPER')) {
+      this.router.navigate(['/admin/clinicas']);
+      return;
+    }
+    if (role.includes('ADMIN')) {
+      this.router.navigate(['/admin/dashboard']);
+    } else if (role.includes('RECEP')) {
+      this.router.navigate(['/admin/agenda']);
+    } else if (role.includes('MEDIC') || role.includes('DOCTOR')) {
+      this.router.navigate(['/admin/agenda']);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   register(datos: RegisterRequest): Observable<UsuarioResponse> {
@@ -284,6 +315,7 @@ export class AuthService {
       this.currentUser.set(null);
       this.isAuthenticated.set(false);
       this.perfilMedico.set(null);
+      this.tenantService.clearTenant();
       this.inactivity.stop();
     }
   }
