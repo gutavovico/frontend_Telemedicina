@@ -27,9 +27,11 @@ interface SecurityItem {
   description: string;
 }
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, MatIconModule, RouterLink, Header, Footer],
+  imports: [CommonModule, RouterModule, MatIconModule, RouterLink, Header, Footer],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })

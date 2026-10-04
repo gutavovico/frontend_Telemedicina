@@ -1,0 +1,241 @@
+<div class="max-w-6xl mx-auto p-4 sm:p-6 bg-slate-50 min-h-screen font-sans text-slate-800">
+  
+  <!-- Banner Protocolo Crítico -->
+  <div *ngIf="hasGraveSigns" class="bg-red-700 text-white p-4 rounded-xl flex flex-col md:flex-row items-center justify-between shadow-lg mb-6 animate-pulse">
+    <div class="flex items-center gap-3 mb-4 md:mb-0">
+      <span class="material-symbols-outlined text-3xl">emergency</span>
+      <div>
+        <h3 class="font-bold text-lg uppercase tracking-wide">Protocolo Crítico Inmediato</h3>
+        <p class="text-sm">Si presenta dolor torácico opresivo, dificultad respiratoria severa o pérdida de consciencia, active el botón de urgencia o acuda a un centro.</p>
+      </div>
+    </div>
+    <a href="tel:3332222" class="bg-white text-red-700 font-bold px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-red-50 transition-colors whitespace-nowrap">
+      <span class="material-symbols-outlined">call</span>
+      Llamar al 3332222 Urgente
+    </a>
+  </div>
+
+  <header class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+      <div class="text-sm text-slate-500">Inicio > Pacientes > Triaje y Evaluación de Urgencias</div>
+      <button type="button" (click)="goHome()" class="flex items-center gap-1 text-sm font-semibold text-indigo-700 hover:text-indigo-900 transition-colors bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-100 w-fit">
+        <span class="material-symbols-outlined text-[18px]">home</span>
+        Volver al Home
+      </button>
+    </div>
+    <div class="flex flex-col md:flex-row md:items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-indigo-900 mb-2">Evaluación Rápida de Urgencia y Triaje Clínico</h1>
+        <p class="text-slate-600 max-w-3xl">Complete el cuestionario guiado o describa sus síntomas con soporte visual para determinar el nivel de prioridad médica y facilitar la derivación instantánea con el médico de guardia.</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex items-center gap-2 bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-semibold border border-teal-100">
+        <span class="w-2.5 h-2.5 bg-teal-500 rounded-full animate-ping"></span>
+        Médicos en guardia: 14 activos
+      </div>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Columna Izquierda: Cuestionario -->
+    <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+      
+      <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-8">
+        <h2 class="font-bold text-teal-700 border-b-2 border-teal-700 pb-4 -mb-[17px] uppercase text-sm tracking-wide">Cuestionario Clínico de Triaje</h2>
+        <span class="text-slate-500 text-sm">Paso 1 de 3: Síntomas Principales</span>
+      </div>
+
+      <!-- 1. Motivo -->
+      <section class="mb-10">
+        <h3 class="flex items-center gap-2 font-bold text-lg text-slate-800 mb-1">
+          <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center text-sm">1</span>
+          ¿Cuál es el motivo principal de la consulta?
+        </h3>
+        <p class="text-sm text-slate-500 ml-8 mb-4">Seleccione la categoría predominante para priorizar la especialidad médica.</p>
+        <div class="ml-8 flex flex-wrap gap-2">
+          <button *ngFor="let m of motivos" 
+                  type="button"
+                  (click)="motivo.set(m)"
+                  [ngClass]="motivo() === m ? 'bg-teal-100 text-teal-800 border-teal-300 shadow-inner' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
+                  class="px-4 py-2 rounded-xl border text-sm font-medium flex items-center gap-2 transition-all">
+            {{ m }}
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Dolor -->
+      <section class="mb-10">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="flex items-center gap-2 font-bold text-lg text-slate-800">
+            <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center text-sm">2</span>
+            Escala de Intensidad del Dolor
+          </h3>
+          <span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-600">Nivel {{ intensidad_dolor() }}</span>
+        </div>
+        <p class="text-sm text-slate-500 ml-8 mb-4">Indique en la escala analógica visual de 1 (mínimo) a 10 (dolor intolerable).</p>
+        
+        <div class="ml-8">
+          <input type="range" min="1" max="10" [ngModel]="intensidad_dolor()" (ngModelChange)="intensidad_dolor.set($event)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer mb-6 accent-teal-600">
+          <div class="flex justify-between text-xs text-slate-400 px-1">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Tiempo -->
+      <section class="mb-10">
+        <h3 class="flex items-center gap-2 font-bold text-lg text-slate-800 mb-4">
+          <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center text-sm">3</span>
+          Tiempo de evolución de los síntomas
+        </h3>
+        <div class="ml-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button *ngFor="let t of tiempos"
+                  type="button"
+                  (click)="tiempo_evolucion.set(t)"
+                  [ngClass]="tiempo_evolucion() === t ? 'bg-teal-100 border-teal-400 shadow-inner' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'"
+                  class="p-4 rounded-xl border text-center transition-all">
+            <span class="block font-bold text-slate-700 text-sm mb-1">{{ t }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 4. Signos Alarma -->
+      <section class="mb-10">
+        <h3 class="flex items-center gap-2 font-bold text-lg text-slate-800 mb-1">
+          <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-800 flex items-center justify-center text-sm">4</span>
+          Signos de alarma acompañantes (Seleccione todos los que correspondan)
+        </h3>
+        <p class="text-sm text-slate-500 ml-8 mb-4">La presencia de alguno de estos factores eleva automáticamente la prioridad.</p>
+        
+        <div class="ml-8 space-y-3">
+          <label *ngFor="let s of signosList" class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                 [ngClass]="signos_alarma().includes(s) ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200 hover:bg-slate-50'">
+            <input type="checkbox" class="mt-1 w-5 h-5 text-red-600 rounded focus:ring-red-500"
+                   [checked]="signos_alarma().includes(s)"
+                   (change)="toggleSigno(s)">
+            <span class="text-sm text-slate-700 font-medium">{{ s }}</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <button type="button" (click)="calcularPreliminar()" [disabled]="loadingPreliminar()"
+                class="w-full sm:w-auto px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2 transition-all">
+          <span *ngIf="loadingPreliminar()" class="material-symbols-outlined animate-spin">refresh</span>
+          <span *ngIf="!loadingPreliminar()" class="material-symbols-outlined">calculate</span>
+          Calcular Nivel (Preliminar)
+        </button>
+        
+        <button type="button" (click)="analizarIA()" [disabled]="loadingIA()"
+                class="w-full sm:w-auto px-6 py-3 bg-indigo-900 text-white font-bold rounded-xl hover:bg-indigo-800 shadow-md flex items-center justify-center gap-2 transition-all">
+          <span *ngIf="loadingIA()" class="material-symbols-outlined animate-spin">refresh</span>
+          <span *ngIf="!loadingIA()" class="material-symbols-outlined">robot_2</span>
+          Analizar Síntomas con IA
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Columna Derecha: Texto, Archivos, Resultado -->
+    <div class="lg:col-span-4 space-y-6">
+      
+      <!-- Consulta Directa -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="material-symbols-outlined text-teal-600">chat</span> Consulta Directa</h3>
+          <span class="text-xs text-slate-400">Obligatorio</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-3">Describa detalladamente qué siente, medicación tomada y antecedentes.</p>
+        <textarea rows="4" 
+                  [ngModel]="consulta_directa()" 
+                  (ngModelChange)="consulta_directa.set($event)"
+                  maxlength="500"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                  placeholder="Ej: Empecé con fiebre de 38.8°C hace 6 horas, acompañada de sarpullido rojo..."></textarea>
+        <div class="text-right text-xs text-slate-400 mt-1">{{ consulta_directa().length }} / 500 caracteres</div>
+      </div>
+
+      <!-- Evidencia Clnica -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="material-symbols-outlined text-teal-600">cloud_upload</span> Evidencia Clínica</h3>
+          <span class="text-xs text-slate-400">{{ archivos().length }} / 5 archivos</span>
+        </div>
+        
+        <label class="block w-full border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4">
+          <span class="material-symbols-outlined text-4xl text-teal-500 mb-2">add_photo_alternate</span>
+          <p class="text-sm text-slate-600 font-medium mb-1">Arrastre fotografías o documentos aquí</p>
+          <p class="text-xs text-slate-400">JPG, PNG, PDF | Máx. 10MB</p>
+          <input type="file" multiple accept=".jpg,.jpeg,.png,.pdf" class="hidden" (change)="onFileChange($event)">
+        </label>
+
+        <!-- Lista Archivos -->
+        <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+          <div *ngFor="let file of archivos(); let i = index" class="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="material-symbols-outlined text-slate-400 text-sm">description</span>
+              <div class="truncate">
+                <p class="text-xs font-bold text-slate-700 truncate">{{ file.name }}</p>
+                <p class="text-[10px] text-teal-600 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> {{ formatSize(file.size) }}</p>
+              </div>
+            </div>
+            <button (click)="removeFile(i)" class="text-slate-400 hover:text-red-500 p-1">
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultado (Ventana Emergente Modal) -->
+      <div *ngIf="resultado()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-[#0f172a] rounded-2xl shadow-2xl overflow-hidden text-white border border-slate-600 w-full max-w-xl relative flex flex-col max-h-[90vh]">
+          
+          <button (click)="resultado.set(null)" class="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center z-10">
+            <span class="material-symbols-outlined text-sm">close</span>
+          </button>
+
+          <div class="p-6 pt-8 overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-teal-400 text-xs font-bold tracking-wider uppercase">Análisis de Inteligencia Artificial completado</p>
+              <span class="material-symbols-outlined text-teal-400">monitoring</span>
+            </div>
+            
+            <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700 mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full" 
+                        [ngStyle]="{'background-color': resultado()!.color === 'Rojo' ? '#ef4444' : resultado()!.color === 'Naranja' ? '#f97316' : resultado()!.color === 'Amarillo' ? '#eab308' : resultado()!.color === 'Verde' ? '#22c55e' : '#3b82f6'}">
+                  </span>
+                  <span class="font-bold text-sm tracking-wide">NIVEL {{ resultado()!.nivel }}: {{ resultado()!.color | uppercase }}</span>
+                </div>
+              </div>
+              <p class="text-slate-300 text-sm mb-3">{{ resultado()!.descripcion_nivel }}</p>
+              <div class="flex items-center gap-2 text-teal-300 text-sm font-medium bg-teal-900/30 px-3 py-2 rounded-lg">
+                <span class="material-symbols-outlined text-sm">schedule</span>
+                Tiempo de atención: {{ resultado()!.tiempo_atencion_max_min === 0 ? 'Inmediato' : 'Menos de ' + resultado()!.tiempo_atencion_max_min + ' minutos' }}
+              </div>
+            </div>
+            
+            <div *ngIf="resultado()!.posibles_causas?.length" class="mb-4 text-sm text-slate-300">
+              <strong class="text-white">Análisis detallado de posibles causas:</strong>
+              <ul class="list-none pl-1 mt-2 space-y-2">
+                <li *ngFor="let c of resultado()!.posibles_causas" class="flex items-start gap-2 bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
+                  <span class="material-symbols-outlined text-teal-500 text-[18px] shrink-0 mt-0.5">info</span>
+                  <span class="leading-relaxed">{{ c }}</span>
+                </li>
+              </ul>
+            </div>
+            
+            <p class="text-xs text-slate-400 text-center italic mt-4">{{ resultado()!.aviso }}</p>
+          </div>
+          
+          <button (click)="derivarGuardia()" class="w-full shrink-0 bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">local_hospital</span>
+            Conectar con Especialista en Guardia
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
