@@ -107,7 +107,7 @@ export class ConsultasComponent implements OnInit {
                    c.id_cita !== editingId)
       .map(c => c.hora_inicio ? c.hora_inicio.substring(0, 5) : '');
   });
-\n  // Modalidad de consulta
+  // Modalidad de consulta
   readonly tipoConsulta = signal<string>('PRESENCIAL');
 
   readonly availableSlots = computed(() => {
@@ -129,27 +129,11 @@ export class ConsultasComponent implements OnInit {
 
   setTipoConsulta(tipo: string): void {
     this.tipoConsulta.set(tipo);
-    this.appointmentForm.patchValue({
-      id_paciente: pId,
-      id_medico: mId,
-      fecha_cita: cita.fecha_cita,
-      hora_inicio: cita.hora_inicio,
-      motivo: cita.motivo || 'Consulta Médica',
-      estado: cita.estado,
-      tipo_consulta: cita.tipo_consulta || 'TELEMEDICINA'
-    });
+    this.appointmentForm.patchValue({ tipo_consulta: tipo });
     this.onFormChange();
     // Reset selected slot when modality changes to avoid invalid slots
     this.selectedSlot.set('09:00');
-    this.appointmentForm.patchValue({
-      id_paciente: pId,
-      id_medico: mId,
-      fecha_cita: cita.fecha_cita,
-      hora_inicio: cita.hora_inicio,
-      motivo: cita.motivo || 'Consulta Médica',
-      estado: cita.estado,
-      tipo_consulta: cita.tipo_consulta || 'TELEMEDICINA'
-    });
+    this.appointmentForm.patchValue({ hora_inicio: '09:00' });
     this.onFormChange();
   }
 
@@ -434,15 +418,7 @@ export class ConsultasComponent implements OnInit {
 
   selectSlot(slot: string): void {
     this.selectedSlot.set(slot);
-    this.appointmentForm.patchValue({
-      id_paciente: pId,
-      id_medico: mId,
-      fecha_cita: cita.fecha_cita,
-      hora_inicio: cita.hora_inicio,
-      motivo: cita.motivo || 'Consulta Médica',
-      estado: cita.estado,
-      tipo_consulta: cita.tipo_consulta || 'TELEMEDICINA'
-    });
+    this.appointmentForm.patchValue({ hora_inicio: slot });
     this.onFormChange();
   }
 
@@ -472,7 +448,7 @@ export class ConsultasComponent implements OnInit {
     this.isEditing.set(true);
     this.editingCitaId.set(cita.id_cita);
     this.isFormOpen.set(true);
-    this.selectedSlot.set(cita.hora_inicio);\n      this.onFormChange();
+    this.selectedSlot.set(cita.hora_inicio);
       this.tipoConsulta.set(cita.tipo_consulta || 'PRESENCIAL');
 
     // Asegurar que el paciente de la cita esté en la lista para que el <select> lo muestre
