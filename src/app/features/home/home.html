@@ -71,13 +71,14 @@
             <p class="text-body-md font-body-md text-on-surface-variant">Tu expediente, evolución y diagnósticos.</p>
           </button>
         }
-        <div
-          class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 border-l-4 border-outline-variant/40 flex flex-col gap-2 opacity-70"
-        >
-          <span class="material-symbols-outlined text-2xl text-on-surface-variant">schedule</span>
-          <h3 class="text-title-md font-title-md text-primary">Lista de espera y triaje</h3>
-          <p class="text-body-md font-body-md text-on-surface-variant">Próximamente: turnos liberados y orientación preliminar.</p>
-        </div>
+                  <a
+            routerLink="/pacientes/triage"
+            class="bg-surface-container-lowest rounded-3xl p-stack-lg shadow-level-1 hover:shadow-level-2 transition-all duration-300 border-l-4 border-[#14B8A6] flex flex-col gap-2 group"
+          >
+            <span class="material-symbols-outlined text-2xl text-[#14B8A6]">emergency</span>
+            <h3 class="text-title-md font-title-md text-primary">Consultas IA</h3>
+            <p class="text-body-md font-body-md text-on-surface-variant">Evalúa tus síntomas de inmediato para sugerirte prioridad de atención.</p>
+          </a>
       </div>
     </section>
   } @else {

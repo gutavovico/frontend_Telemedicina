@@ -1,13 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Header } from '../../../shared/components/header/header';
 import { Router } from '@angular/router';
 import { TriageService, TriageResponse } from '../../../core/services/triage.service';
 
 @Component({
   selector: 'app-triage',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Header],
   templateUrl: './triage.component.html',
   styleUrls: ['./triage.component.css']
 })

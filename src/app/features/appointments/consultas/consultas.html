@@ -34,7 +34,7 @@
 
       <button
         type="button"
-        (click)="cancelarEdicion()"
+        (click)="cancelarEdicion(); isFormOpen.set(true);"
         class="inline-flex items-center justify-center gap-2 bg-[#001738] hover:bg-slate-900 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
       >
         <span class="material-symbols-outlined text-[18px]">add</span>
@@ -42,7 +42,47 @@
       </button>
     </div>
 
-    <!-- BARRA DE BÚSQUEDA Y FILTROS RÁPIDOS -->
+    
+    <!-- TARJETAS DE ESTADISTICAS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Citas Hoy</span>
+          <span class="material-symbols-outlined text-indigo-500 bg-indigo-50 p-1.5 rounded-lg text-[18px]">calendar_today</span>
+        </div>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-black text-slate-800">{{ stats().hoy }}</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow border-t-4 border-t-emerald-500">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Confirmadas</span>
+          <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 p-1.5 rounded-lg text-[18px]">check_circle</span>
+        </div>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-black text-slate-800">{{ stats().confirmadas }}</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow border-t-4 border-t-amber-400">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">En Espera</span>
+          <span class="material-symbols-outlined text-amber-500 bg-amber-50 p-1.5 rounded-lg text-[18px]">hourglass_empty</span>
+        </div>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-black text-slate-800">{{ stats().pendientes }}</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow border-t-4 border-t-rose-500">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Canceladas</span>
+          <span class="material-symbols-outlined text-rose-500 bg-rose-50 p-1.5 rounded-lg text-[18px]">event_busy</span>
+        </div>
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-black text-slate-800">{{ stats().canceladas }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- BARRA DE B BÚSQUEDA Y FILTROS RÁPIDOS -->
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
       <!-- Buscador Inteligente -->
       <div class="relative flex-1">
@@ -98,7 +138,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
       <!-- TABLA DE CITAS MÉDICAS -->
-      <div class="xl:col-span-8 bg-white border border-[#E8EDF4] rounded-2xl shadow-xs overflow-hidden">
+      <div class="xl:col-span-12 bg-white border border-[#E8EDF4] rounded-2xl shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -111,7 +151,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-xs sm:text-sm font-medium text-slate-700">
-              @for (cita of filteredCitas(); track cita.id_cita) {
+              @for (cita of paginatedCitas(); track cita.id_cita) {
                 <tr class="hover:bg-slate-50/80 transition-colors">
                   
                   <!-- Paciente con Iniciales y CI -->
@@ -220,161 +260,170 @@
       </div>
 
       <!-- FORMULARIO LATERAL: AGENDAR / EDITAR CONSULTA -->
-      <div class="xl:col-span-4 bg-white border border-[#E8EDF4] rounded-2xl shadow-xs overflow-hidden">
+  @if (isFormOpen()) {
+    <div class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto flex justify-center items-start animate-fadeIn">
+      <div class="bg-white border border-[#E8EDF4] rounded-2xl shadow-2xl overflow-hidden max-w-[500px] w-full mt-10 mb-20 animate-scaleUp relative flex flex-col">
         
-        <!-- Header Azul Marino -->
-        <div class="bg-[#001738] text-white p-5">
-          <div class="flex items-center justify-between">
-            <h2 class="font-bold text-base text-white tracking-tight">
-              {{ isEditing() ? 'Editar Consulta' : 'Agendar Consulta' }}
-            </h2>
-            @if (isEditing()) {
-              <span class="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full font-bold">
-                Editando #{{ editingCitaId() }}
-              </span>
-            }
+        <!-- HEADER DEL MODAL (Estilo Imagen) -->
+        <div class="bg-[#002D5A] text-white p-6 pb-8 flex items-start justify-between relative overflow-hidden">
+          <div class="flex gap-4 items-center relative z-10">
+            <div class="w-12 h-12 bg-[#004A8C] rounded-xl flex items-center justify-center shrink-0 shadow-inner border border-white/10">
+              <span class="material-symbols-outlined text-[#40E0D0] text-[24px]">event_available</span>
+            </div>
+            <div>
+              <h2 class="font-bold text-2xl text-white tracking-tight leading-tight">
+                {{ isEditing() ? 'Editar Consulta' : 'Agendar Nueva Consulta' }}
+              </h2>
+              <p class="text-blue-200 text-xs font-medium mt-1">Registro de cita presencial o telemedicina</p>
+            </div>
           </div>
-          <p class="text-xs text-slate-300 mt-1 font-normal">
-            {{ isEditing() ? 'Modifique los datos seleccionados para actualizar en tiempo real.' : 'Complete los datos para nueva cita.' }}
-          </p>
+          <div class="bg-[#004A8C] text-[#40E0D0] text-[10px] font-black uppercase px-2.5 py-1 rounded-md text-center leading-tight relative z-10 shadow-sm border border-white/5">
+            PASO<br/>1/2
+          </div>
+          <!-- Decorative curve -->
+          <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
         </div>
 
-        <!-- Campos del Formulario -->
-        <form [formGroup]="appointmentForm" (ngSubmit)="guardarCita()" class="p-5 space-y-4">
+        <!-- FORMULARIO SCROLL -->
+        <form [formGroup]="appointmentForm" (ngSubmit)="guardarCita()" class="p-6 space-y-6 bg-white -mt-4 rounded-t-2xl relative z-20">
           
-          <!-- Paciente registrado o nuevo -->
+          <!-- Paciente -->
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-bold text-slate-700">Paciente</label>
-              @if (!isNewPatient()) {
-                <button type="button" (click)="activarNuevoPaciente()" class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">person_add</span>
-                  Nuevo paciente
-                </button>
-              } @else {
-                <button type="button" (click)="seleccionarPacienteRegistrado()" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">group</span>
-                  Elegir registrado
+            <div class="flex justify-between items-end mb-2">
+              <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A]"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">person</span> Paciente</label>
+              @if (!isEditing()) {
+                <button type="button" (click)="toggleNewPatient()" class="text-[11px] font-bold text-[#004A8C] hover:text-[#002D5A] flex items-center gap-1 transition-colors">
+                  <span class="material-symbols-outlined text-[14px]">person_add</span> + {{ isNewPatient() ? 'Buscar Existente' : 'Nuevo Paciente' }}
                 </button>
               }
             </div>
-
             @if (!isNewPatient()) {
-              <select
-                formControlName="id_paciente"
-                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
-              >
-                <option value="" disabled>Seleccionar paciente...</option>
+              <select formControlName="id_paciente" class="w-full bg-[#F5F7FA] border border-transparent hover:border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20 focus:border-[#002D5A] transition-all cursor-pointer shadow-sm appearance-none">
+                <option value="" disabled selected>Seleccionar paciente...</option>
                 @for (p of pacientesList(); track p.id_paciente) {
-                  <option [value]="p.id_paciente">
-                    {{ p.nombres }} {{ p.apellidos }} (CI: {{ p.ci }})
-                  </option>
+                  <option [ngValue]="p.id_paciente">{{ p.nombres }} {{ p.apellidos }} (HC-{{ p.id_paciente | number:'3.0' }})</option>
                 }
               </select>
             } @else {
-              <div [formGroup]="newPatientForm" class="space-y-3 rounded-xl border border-indigo-100 bg-indigo-50/40 p-3">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Nombres</label>
-                  <input formControlName="nombres" type="text" placeholder="Ej: Maria Elena" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Apellidos</label>
-                  <input formControlName="apellidos" type="text" placeholder="Ej: Rodriguez López" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+              <div class="space-y-3 bg-[#F5F7FA] p-4 rounded-xl border border-slate-100 shadow-sm" [formGroup]="newPatientForm">
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Nombres</label>
+                    <input formControlName="nombres" type="text" placeholder="Ej: Maria Elena" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Apellidos</label>
+                    <input formControlName="apellidos" type="text" placeholder="Ej: Rodriguez Lpez" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">C.I.</label>
-                    <input formControlName="ci" type="text" placeholder="Ej: 9821112" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">C.I.</label>
+                    <input formControlName="ci" type="text" placeholder="Ej: 9821112" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
                   </div>
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Género</label>
-                    <select formControlName="genero" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Gnero</label>
+                    <select formControlName="genero" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20 cursor-pointer">
                       <option value="M">Masculino</option>
                       <option value="F">Femenino</option>
                       <option value="OTRO">Otro</option>
                     </select>
                   </div>
                 </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Fecha de Nacimiento</label>
-                  <input formControlName="fecha_nacimiento" type="date" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">Teléfono</label>
-                  <input formControlName="telefono" type="tel" placeholder="Ej: +591 71234567" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Fecha Nac.</label>
+                    <input formControlName="fecha_nacimiento" type="date" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Telfono</label>
+                    <input formControlName="telefono" type="tel" placeholder="Ej: +591 71234567" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
+                  </div>
                 </div>
               </div>
             }
           </div>
 
-          <!-- Especialista (Cargado desde la base de datos) -->
+          <!-- Especialidad / Medico -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Especialista</label>
-            <select
-              formControlName="id_medico"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
-            >
-              <option value="" disabled selected>Seleccionar especialidad/doctor...</option>
+            <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A] mb-2"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">medical_services</span> Especialidad y Mdico Asignado</label>
+            <select formControlName="id_medico" (change)="onFormChange()" class="w-full bg-[#F5F7FA] border border-transparent hover:border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20 focus:border-[#002D5A] transition-all cursor-pointer shadow-sm appearance-none">
+              <option value="" disabled selected>Seleccionar mdico...</option>
               @for (m of medicosList(); track m.id_medico) {
-                <option [value]="m.id_medico">
-                  Dr(a). {{ m.usuario?.nombres }} {{ m.usuario?.apellidos }} - {{ m.especialidades[0]?.nombre || 'Médico General' }}
+                <option [ngValue]="m.id_medico">
+                  Dr. {{ m.usuario?.apellidos }} - {{ m.especialidades[0]?.nombre || 'General' }}
                 </option>
               }
             </select>
           </div>
 
+          <!-- Modalidad -->
+          <div>
+             <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A] mb-2"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">devices</span> Modalidad de Consulta</label>
+             <div class="grid grid-cols-2 gap-3">
+               <div (click)="setTipoConsulta('TELEMEDICINA')" class="rounded-xl p-3 flex items-center justify-center gap-2 font-bold text-sm cursor-pointer transition-all shadow-sm"
+                 [ngClass]="tipoConsulta() === 'TELEMEDICINA' ? 'bg-[#EBF3FF] border-2 border-[#004A8C] text-[#002D5A]' : 'bg-[#F5F7FA] border-2 border-transparent text-slate-500 hover:border-slate-300'">
+                 <span class="material-symbols-outlined text-[20px]" [class.text-[#004A8C]]="tipoConsulta() === 'TELEMEDICINA'">videocam</span>
+                 Teleconsulta HD
+               </div>
+               <div (click)="setTipoConsulta('PRESENCIAL')" class="rounded-xl p-3 flex items-center justify-center gap-2 font-bold text-sm cursor-pointer transition-all shadow-sm"
+                 [ngClass]="tipoConsulta() === 'PRESENCIAL' ? 'bg-[#EBF3FF] border-2 border-[#004A8C] text-[#002D5A]' : 'bg-[#F5F7FA] border-2 border-transparent text-slate-500 hover:border-slate-300'">
+                 <span class="material-symbols-outlined text-[20px]" [class.text-[#004A8C]]="tipoConsulta() === 'PRESENCIAL'">domain</span>
+                 Presencial Sede
+               </div>
+             </div>
+          </div>
+
           <!-- Fecha -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Fecha</label>
-            <input
-              type="date"
-              formControlName="fecha_cita"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-            />
+            <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A] mb-2"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">calendar_month</span> Fecha de Consulta</label>
+            <input type="date" formControlName="fecha_cita" (change)="onFormChange()" class="w-full bg-[#F5F7FA] border border-transparent hover:border-slate-300 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20 focus:border-[#002D5A] transition-all shadow-sm" />
           </div>
 
           <!-- Horarios Disponibles -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">Horarios Disponibles</label>
-            <div class="grid grid-cols-3 gap-2">
+            <div class="flex justify-between items-end mb-2">
+              <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A]"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">schedule</span> Horarios Disponibles <span class="text-slate-500 font-normal text-xs">(Slots de 30 min)</span></label>
+              <span class="text-[10px] font-bold" [ngClass]="availableSlots().length - reservedSlots().length === 0 ? 'text-red-500' : 'text-[#004A8C]'">{{ availableSlots().length - reservedSlots().length }} cupos libres</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2">
               @for (slot of availableSlots(); track slot) {
-                <button
-                  type="button"
-                  (click)="selectSlot(slot)"
-                  class="py-2 px-2 rounded-lg text-xs font-semibold border transition-all text-center cursor-pointer active:scale-95"
-                  [ngClass]="selectedSlot() === slot
-                    ? 'bg-[#001738] text-white border-[#001738] shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'"
-                >
+                <button type="button" (click)="!reservedSlots().includes(slot) && selectedSlot.set(slot)" class="py-2.5 rounded-lg text-sm font-bold transition-all text-center shadow-sm border flex items-center justify-center gap-1"
+                  [disabled]="reservedSlots().includes(slot)"
+                  [ngClass]="{
+                    'bg-[#002D5A] text-white border-[#002D5A] cursor-pointer': selectedSlot() === slot && !reservedSlots().includes(slot),
+                    'bg-[#F5F7FA] text-slate-600 border-transparent hover:border-slate-300 cursor-pointer': selectedSlot() !== slot && !reservedSlots().includes(slot),
+                    'bg-red-50 text-red-500 border-red-200 cursor-not-allowed opacity-70': reservedSlots().includes(slot)
+                  }">
+                  @if (reservedSlots().includes(slot)) {
+                    <span class="material-symbols-outlined text-[14px]">lock</span>
+                  }
                   {{ slot }}
+                  @if (selectedSlot() === slot && !reservedSlots().includes(slot)) {
+                    <span class="material-symbols-outlined text-[14px] font-black">check</span>
+                  }
                 </button>
               }
             </div>
           </div>
 
-          <!-- Botones de Acción -->
-          <div class="flex items-center gap-3 pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              (click)="cancelarEdicion()"
-              class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all text-center cursor-pointer"
-            >
+          <!-- Botones Footer -->
+          <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+            <button type="button" (click)="isFormOpen.set(false); cancelarEdicion()" class="w-1/3 py-3.5 px-4 rounded-xl bg-[#F5F7FA] hover:bg-slate-200 text-slate-600 text-sm font-bold transition-all text-center cursor-pointer">
               Cancelar
             </button>
-
-            <button
-              type="submit"
-              class="flex-1 py-2.5 px-4 rounded-xl bg-[#001738] hover:bg-slate-900 text-white text-xs sm:text-sm font-bold transition-all text-center shadow-xs cursor-pointer active:scale-95"
-            >
-              {{ isEditing() ? 'Guardar Cambios' : 'Confirmar Cita' }}
+            <button type="submit" class="w-2/3 py-3.5 px-4 rounded-xl bg-[#002D5A] hover:bg-[#001f3f] text-white text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer active:scale-95">
+              <span class="material-symbols-outlined text-[18px]">verified</span>
+              Confirmar Cita
             </button>
           </div>
 
         </form>
       </div>
+    </div>
+  }
 
     </div>
-
   </main>
 
   <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN -->
