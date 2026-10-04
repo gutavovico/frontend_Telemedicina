@@ -98,6 +98,18 @@ export class AuthService {
   readonly isPaciente = computed(() => this.userRole() === 'paciente');
   readonly isRecepcion = computed(() => this.userRole() === 'recepcion');
 
+  /** Etiqueta legible del rol para el avatar/menús. Super Admin va primero. */
+  readonly userRoleLabel = computed(() => {
+    if (this.tenantService.isSuperAdmin()) return 'Super Admin';
+    switch (this.userRole()) {
+      case 'admin': return 'Administrador';
+      case 'doctor': return 'Médico';
+      case 'recepcion': return 'Recepción';
+      case 'paciente': return 'Paciente';
+      default: return 'Usuario';
+    }
+  });
+
   constructor() {
     // If authenticated on initial load, fetch the fresh user profile
     if (this.isBrowser && this.hasValidToken()) {

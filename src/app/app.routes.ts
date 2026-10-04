@@ -208,6 +208,13 @@ export const routes: Routes = [
         title: 'Hospital San Juan de Dios - Consultas y Citas',
       },
       {
+        path: 'inicio-medico',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/admin/medico-inicio/medico-inicio').then((m) => m.MedicoInicio),
+        title: 'Hospital San Juan de Dios - Inicio Médico',
+      },
+      {
         path: 'agenda',
         canActivate: [staffGuard],
         loadComponent: () =>

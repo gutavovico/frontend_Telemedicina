@@ -182,6 +182,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client,
   },
   {
+    path: 'admin/inicio-medico',
+    renderMode: RenderMode.Client,
+  },
+  {
     path: 'admin/agenda',
     renderMode: RenderMode.Client,
   },

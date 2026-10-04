@@ -250,6 +250,17 @@
 
           <!-- Puesto Médico (CU05/CU09/CU12/CU15/CU16/CU25/CU28) -->
           @if (authService.isDoctor()) {
+            <!-- Inicio (contenido DoctorDashboard adaptado) -->
+            <a
+              routerLink="/admin/inicio-medico"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">dashboard</span>
+              <span>Inicio</span>
+            </a>
+
             <!-- Agenda (CU05) -->
             <a
               routerLink="/admin/agenda"
@@ -405,7 +416,7 @@
                   {{ authService.userDisplayName() }}
                 </span>
                 <span class="text-[10px] font-medium text-primary leading-tight">
-                  Administrador
+                  {{ authService.userRoleLabel() }}
                 </span>
               </div>
 
