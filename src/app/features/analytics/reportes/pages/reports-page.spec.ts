@@ -1,10 +1,12 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../../../core/services/auth.service';
+import { Header } from '../../../../shared/components/header/header';
 import { ReportExportService } from '../../exportacion/services/report-export.service';
 import { ReportInterpretResponse, ReportQuery, ReportQueryResponse } from '../models/report.models';
 import { ReportsService } from '../services/reports.service';
@@ -36,6 +38,7 @@ describe('CU22/CU27 pantalla de reportes', () => {
     isAdmin: WritableSignal<boolean>;
     isDoctor: WritableSignal<boolean>;
     isPaciente: WritableSignal<boolean>;
+    isRecepcion: WritableSignal<boolean>;
     logout: ReturnType<typeof vi.fn>;
     userPhoto: WritableSignal<null>;
     userDisplayName: WritableSignal<string>;
@@ -85,7 +88,8 @@ describe('CU22/CU27 pantalla de reportes', () => {
     auth = {
       currentUser: signal({ rol: 'ADMIN', estado: 'ACTIVO', id_clinica: 12 }),
       isAuthenticated: signal(true), profileVerified: signal(true), userRole: signal('admin'),
-      isAdmin: signal(true), isDoctor: signal(false), isPaciente: signal(false), logout: vi.fn(),
+      isAdmin: signal(true), isDoctor: signal(false), isPaciente: signal(false),
+      isRecepcion: signal(false), logout: vi.fn(),
       userPhoto: signal(null), userDisplayName: signal('Administrador'), userInitials: signal('AD'),
     };
     await TestBed.configureTestingModule({
@@ -123,19 +127,19 @@ describe('CU22/CU27 pantalla de reportes', () => {
     expect(root.querySelector('app-footer')).not.toBeNull();
   });
 
-  it('muestra enlace Reportes solo con perfil ADMIN activo ya verificado', () => {
-    expect(root.querySelector('a[href="/analitica"]')).not.toBeNull();
+  it('habilita Reportes solo con perfil ADMIN activo ya verificado', () => {
+    const header = fixture.debugElement.query(By.directive(Header)).componentInstance as Header;
+    expect(header.canSeeReports()).toBe(true);
     auth.profileVerified.set(false);
     fixture.detectChanges();
-    expect(root.querySelector('a[href="/analitica"]')).toBeNull();
+    expect(header.canSeeReports()).toBe(false);
     auth.profileVerified.set(true);
-    auth.userRole.set('doctor');
+    auth.currentUser.set({ rol: 'MEDICO', estado: 'ACTIVO', id_clinica: 12 });
     fixture.detectChanges();
-    expect(root.querySelector('a[href="/analitica"]')).toBeNull();
-    auth.userRole.set('admin');
+    expect(header.canSeeReports()).toBe(false);
     auth.currentUser.set({ rol: 'ADMIN', estado: 'INACTIVO', id_clinica: 12 });
     fixture.detectChanges();
-    expect(root.querySelector('a[href="/analitica"]')).toBeNull();
+    expect(header.canSeeReports()).toBe(false);
     auth.isAuthenticated.set(false);
   });
 

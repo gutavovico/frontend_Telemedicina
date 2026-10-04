@@ -1,9 +1,11 @@
 import { A11yModule } from '@angular/cdk/a11y';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom, forkJoin, Observable } from 'rxjs';
 import { Header } from '../../../../shared/components/header/header';
+import { normalizeAppRole } from '../../../../core/models/auth.models';
 import { MedicoService } from '../../../../core/services/medico.service';
 import { MedicoResponse } from '../../../../core/models/medico.models';
 import { AgendaBlockForm } from '../block-form/block-form';
@@ -69,11 +71,12 @@ export class MedicalAgendaPage implements OnInit {
         this.limitation.set('Tu usuario no tiene una clínica asociada. Solicita a administración que revise tu cuenta.');
         return;
       }
-      const name = (session.rol ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
-      if (['ADMIN', 'ADMINISTRADOR', 'ADMINISTRACION'].includes(name)) this.rol.set('ADMIN');
-      else if (name === 'MEDICO' || name === 'RECEPCION') this.rol.set(name);
+      const role = normalizeAppRole(session.rol);
+      if (role === 'admin') this.rol.set('ADMIN');
+      else if (role === 'doctor') this.rol.set('MEDICO');
+      else if (role === 'recepcion') this.rol.set('RECEPCION');
       if (this.rol() === 'DESCONOCIDO') {
-        this.limitation.set('Tu sesi?n no tiene un rol autorizado para gestionar agendas.');
+        this.limitation.set('Tu sesión no tiene un rol autorizado para gestionar agendas.');
         return;
       }
       if (this.rol() === 'MEDICO') {
@@ -98,7 +101,14 @@ export class MedicalAgendaPage implements OnInit {
         this.scheduleForm.controls.id_servicio.setValue(first);
       }
       await this.refresh();
-    } catch (error) { if (!this.destroyed) this.error.set(errorAgenda(error)); }
+    } catch (error) {
+      if (!this.destroyed) {
+        if (error instanceof HttpErrorResponse && [403, 404].includes(error.status)) {
+          this.rol.set('DESCONOCIDO');
+          this.limitation.set('No se pudo confirmar el acceso a la agenda con tu sesión.');
+        } else this.error.set(errorAgenda(error));
+      }
+    }
     finally { if (!this.destroyed) this.loading.set(false); }
   }
 
@@ -121,7 +131,14 @@ export class MedicalAgendaPage implements OnInit {
         const bloques = await firstValueFrom(this.api.getBloqueos());
         if (current === this.generation && !this.destroyed) this.bloqueos.set(bloques);
       }
-    } catch (error) { if (current === this.generation && !this.destroyed) this.error.set(errorAgenda(error)); }
+    } catch (error) {
+      if (current === this.generation && !this.destroyed) {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.rol.set('DESCONOCIDO');
+          this.limitation.set('Tu sesión no tiene acceso a esta agenda.');
+        } else this.error.set(errorAgenda(error));
+      }
+    }
     finally { if (current === this.generation && !this.destroyed) this.loading.set(false); }
   }
   selectFilters(): void {

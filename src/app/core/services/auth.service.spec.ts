@@ -3,6 +3,7 @@ import {
   Injector,
   PLATFORM_ID,
   runInInjectionContext,
+  signal,
   type DestroyableInjector,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -10,6 +11,7 @@ import { Router } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { InactivityService } from './inactivity.service';
+import { TenantService } from './tenant.service';
 import { normalizeAppRole, type AppRole, type UsuarioResponse } from '../models/auth.models';
 import type { MedicoResponse } from '../models/medico.models';
 
@@ -85,6 +87,13 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
     stop: vi.fn(),
     expired$: new Subject<void>(),
   };
+  const tenantMock = {
+    currentTenant: signal(null),
+    isSuperAdmin: signal(false),
+    permisos: signal([] as string[]),
+    loadTenantContext: vi.fn(() => of(null)),
+    clearTenant: vi.fn(),
+  };
   let injector: DestroyableInjector;
   let service: AuthService;
 
@@ -97,6 +106,7 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
         { provide: Router, useValue: routerMock },
         { provide: PLATFORM_ID, useValue: 'browser' },
         { provide: InactivityService, useValue: inactivityMock },
+        { provide: TenantService, useValue: tenantMock },
       ],
     });
     service = runInInjectionContext(injector, () => new AuthService());
@@ -167,6 +177,23 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
     expect(service.isAdmin()).toBe(false);
   });
 
+  it('RECEPCION se reconoce sin conceder privilegios de gestión', () => {
+    setContext(
+      makeUser({
+        id_usuario: 14,
+        id_rol: 3,
+        correo: 'recep@clinica.bo',
+        nombres: 'Patricia',
+        rol: 'RECEPCION',
+      }),
+      null,
+    );
+    expect(service.userRole()).toBe('recepcion');
+    expect(service.isRecepcion()).toBe(true);
+    expect(service.isAdmin()).toBe(false);
+    expect(service.isDoctor()).toBe(false);
+  });
+
   it('usuario con ID 1 que no es ADMIN no recibe privilegios', () => {
     // id_rol == 1 sin nombre ADMIN real: ningún ID mágico concede privilegios.
     setContext(makeUser({ id_usuario: 1, id_rol: 1, rol: 'PACIENTE' }), null);
@@ -198,8 +225,7 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
     expect(service.userRole()).toBe('unknown');
   });
 
-  it('rol ausente o desconocido retorna unknown sin privilegios', () => {
-    // id_rol presente pero sin `rol` oficial: fail-closed, sin privilegios.
+  it('rol ausente o desconocido retorna unknown sin privilegios', () => {    // id_rol presente pero sin `rol` oficial: fail-closed, sin privilegios.
     setContext(makeUser({ id_rol: 73, rol: undefined }), null);
     expect(service.userRole()).toBe('unknown');
     setContext(makeUser({ id_rol: 73, rol: null }), null);
@@ -217,9 +243,10 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
     expect(service.isDoctor()).toBe(false);
   });
 
-  it('perfil médico confirmado acredita doctor solo con rol ausente o desconocido', () => {
+  it('perfil médico no concede permisos si el rol de la sesión falta', () => {
     setContext(makeUser({ id_rol: 52, rol: undefined }), makePerfilMedico(7));
-    expect(service.userRole()).toBe('doctor');
+    expect(service.userRole()).toBe('unknown');
+    expect(service.isDoctor()).toBe(false);
   });
 
   it('perfil médico no convierte un ADMIN real en doctor', () => {

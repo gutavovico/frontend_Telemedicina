@@ -4,12 +4,19 @@
   <div class="max-w-6xl mx-auto space-y-6">
     <!-- Navegación de migas de pan (Breadcrumb) -->
     <nav class="flex items-center gap-2 text-sm text-[#424750]">
-      <a routerLink="/pacientes" class="hover:text-[#003667] transition flex items-center gap-1">
-        <span class="material-symbols-outlined text-[18px]">group</span>
-        Pacientes
-      </a>
+      @if (authService.isPaciente()) {
+        <a routerLink="/" class="hover:text-[#003667] transition flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">home</span>
+          Mi salud
+        </a>
+      } @else {
+        <a [routerLink]="[adminBase + '/pacientes']" class="hover:text-[#003667] transition flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px]">group</span>
+          Pacientes
+        </a>
+      }
       <span>/</span>
-      <a [routerLink]="['/pacientes', idPaciente()]" class="hover:text-[#003667] transition">
+      <a [routerLink]="[adminBase + '/pacientes', idPaciente()]" class="hover:text-[#003667] transition">
         {{ patientService.selectedPatient()?.nombres }}
         {{ patientService.selectedPatient()?.apellidos }}
       </a>
@@ -43,7 +50,7 @@
         <p class="text-sm text-[#424750] mt-1">{{ hceService.errorMessage() }}</p>
       </div>
       <a
-        [routerLink]="['/pacientes', idPaciente()]"
+        [routerLink]="[adminBase + '/pacientes', idPaciente()]"
         class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-medium rounded-xl transition shadow-level-1"
       >
         <span class="material-symbols-outlined text-[18px]">arrow_back</span>
@@ -109,14 +116,14 @@
         <div class="flex flex-wrap items-center gap-3">
           <a
             *ngIf="authService.isDoctor()"
-            [routerLink]="['/pacientes', idPaciente(), 'consultas', 'nueva']"
+            [routerLink]="[adminBase + '/pacientes', idPaciente(), 'consultas', 'nueva']"
             class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-semibold rounded-xl shadow-level-1 hover:shadow-level-2 transition"
           >
             <span class="material-symbols-outlined text-[20px]">add_notes</span>
             Nueva Atención / Evolución
           </a>
           <a
-            [routerLink]="['/pacientes', idPaciente()]"
+            [routerLink]="[adminBase + '/pacientes', idPaciente()]"
             class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#f3f4f5] hover:bg-[#edeeef] text-[#191c1d] text-sm font-medium rounded-xl border border-[#c2c6d2] transition"
           >
             <span class="material-symbols-outlined text-[18px]">person</span>
@@ -231,7 +238,7 @@
         </p>
         <a
           *ngIf="authService.isDoctor()"
-          [routerLink]="['/pacientes', idPaciente(), 'consultas', 'nueva']"
+          [routerLink]="[adminBase + '/pacientes', idPaciente(), 'consultas', 'nueva']"
           class="inline-flex items-center gap-2 px-5 py-2 bg-[#003667] hover:bg-[#0a4d8c] text-white text-sm font-semibold rounded-xl transition mt-2"
         >
           <span class="material-symbols-outlined text-[18px]">add_notes</span>

@@ -1,0 +1,133 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#F0F5FB] pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center gap-2 text-sm">
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium"
+      >
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Mi salud
+      </a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <span class="text-primary font-medium">Mi turno</span>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold text-xl"
+        >
+          <span class="material-symbols-outlined text-[24px]">hourglass_top</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-[#293954]">Mi turno de hoy</h1>
+          <p class="text-sm text-gray-500">Posición y tiempo estimado en la fila virtual</p>
+        </div>
+      </div>
+    </div>
+
+    @if (queue.cargando() && !queue.miTurno()) {
+      <div class="bg-white p-12 rounded-2xl shadow-sm border border-[#E8EDF4] text-center space-y-3">
+        <div
+          class="inline-block w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"
+        ></div>
+        <p class="text-sm font-medium text-[#25627C]">Consultando tu turno...</p>
+      </div>
+    }
+
+    @if (queue.error()) {
+      <div
+        class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[20px] text-rose-600">error</span>
+        <span class="flex-grow">{{ queue.error() }}</span>
+        <button
+          type="button"
+          (click)="reintentar()"
+          class="shrink-0 text-xs font-semibold text-primary hover:underline cursor-pointer"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    @if (queue.miTurno(); as turno) {
+      @if (turno.estadoCola === 'SIN_TURNOS') {
+        <div class="bg-white p-10 rounded-2xl shadow-sm border border-[#E8EDF4] text-center space-y-4">
+          <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto">
+            <span class="material-symbols-outlined text-[32px]">event_available</span>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-[#293954]">No tienes turnos pendientes hoy</h3>
+            <p class="text-sm text-gray-500 mt-1">{{ turno.mensajeCola }}</p>
+          </div>
+          <a
+            routerLink="/mis-citas"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white text-sm font-medium rounded-xl transition shadow-sm"
+          >
+            Ver mis citas
+          </a>
+        </div>
+      } @else {
+        @if (turno.proximo) {
+          <div
+            class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined text-[20px] text-emerald-600">notifications_active</span>
+            <span class="font-semibold">Tu turno está próximo. Mantente atento al llamado.</span>
+          </div>
+        }
+        @if (turno.mensajeCola) {
+          <div
+            class="p-4 rounded-xl text-sm flex items-center gap-2"
+            [ngClass]="
+              turno.estadoCola === 'PAUSADA'
+                ? 'bg-amber-50 border border-amber-200 text-amber-800'
+                : 'bg-sky-50 border border-sky-200 text-sky-800'
+            "
+          >
+            <span class="material-symbols-outlined text-[20px]">info</span>
+            <span>{{ turno.mensajeCola }}</span>
+          </div>
+        }
+        <div class="bg-white rounded-2xl shadow-sm border border-[#E8EDF4] overflow-hidden">
+          <div class="bg-gradient-to-r from-[#003667] to-[#049CAB] px-6 py-8 text-white text-center">
+            <p class="text-xs uppercase tracking-widest text-white/70 font-semibold">Tu posición en la fila</p>
+            <p class="text-6xl font-bold my-2">{{ turno.posicion }}</p>
+            <p class="text-sm text-white/85">
+              @if (turno.etaMinutos === 0) {
+                Es tu turno ahora
+              } @else {
+                Tiempo estimado: {{ turno.etaMinutos }} min · {{ turno.delante }}
+                {{ turno.delante === 1 ? 'cita por delante' : 'citas por delante' }}
+              }
+            </p>
+          </div>
+          <div class="px-6 py-5 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p class="text-xs text-gray-400 uppercase font-semibold">Hora de tu cita</p>
+              <p class="font-bold text-[#293954] text-lg">{{ turno.hora }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400 uppercase font-semibold">Estado</p>
+              <p class="font-bold text-[#293954] text-lg">{{ turno.estado }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-xs text-gray-400 uppercase font-semibold">Médico</p>
+              <p class="font-semibold text-[#293954]">{{ turno.medicoNombre }}</p>
+            </div>
+            <div class="col-span-2">
+              <p class="text-xs text-gray-400 uppercase font-semibold">Estado de la atención</p>
+              <p class="font-semibold text-[#293954]">{{ etiquetaEstado(turno.estadoCola) }}</p>
+            </div>
+          </div>
+          <p class="px-6 pb-4 text-xs text-gray-400 text-center">
+            La fila se actualiza automáticamente cada 5 segundos.
+          </p>
+        </div>
+      }
+    }
+  </div>
+</main>

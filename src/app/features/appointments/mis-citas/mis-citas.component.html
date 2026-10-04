@@ -5,6 +5,16 @@
   <!-- CONTENEDOR PRINCIPAL DE "MIS CITAS" -->
   <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
 
+    <!-- Migas: volver al hub Mi salud -->
+    <div class="flex items-center gap-2 text-sm">
+      <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Mi salud
+      </a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <span class="text-primary font-medium">Mis citas</span>
+    </div>
+
     <!-- 1. ENCABEZADO Y ACCIONES GLOBALES -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -29,9 +39,10 @@
           </span>
         </div>
 
-        <!-- Botón Primario: Nueva Cita -->
+        <!-- Botón Primario: Nueva Cita (CU09: reservar turno vía ficha) -->
         <button
           type="button"
+          routerLink="/fichas/nueva"
           class="inline-flex items-center gap-2 bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold px-4 sm:px-5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
         >
           <span class="material-symbols-outlined text-[18px]">calendar_add_on</span>

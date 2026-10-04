@@ -3,14 +3,17 @@
 <main class="flex-grow pt-[88px] pb-16 min-h-screen">
   <div class="max-w-[860px] mx-auto px-margin-mobile md:px-margin-desktop">
 
-    <!-- Volver -->
-    <a
-      routerLink="/medicos"
-      class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md py-2 px-3 rounded-xl hover:bg-surface-container-high/60 mt-4 -ml-3"
-    >
-      <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-      <span class="font-medium">Volver al listado</span>
-    </a>
+    <!-- Volver: solo cuando se viene del listado (admin). En "mi perfil"
+         el médico no tiene listado al cual volver: su panel es /admin/agenda. -->
+    @if (!esMiPerfil()) {
+      <a
+        [routerLink]="[adminBase + '/medicos']"
+        class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all font-label-md text-label-md py-2 px-3 rounded-xl hover:bg-surface-container-high/60 mt-4 -ml-3"
+      >
+        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        <span class="font-medium">Volver al listado</span>
+      </a>
+    }
 
     <!-- Cargando -->
     @if (isLoading()) {
@@ -28,7 +31,9 @@
           <p class="font-semibold">Ocurrió un problema</p>
           <p class="text-red-700 text-xs mt-0.5">{{ errorMessage() }}</p>
         </div>
-        <a routerLink="/medicos" class="shrink-0 text-xs font-semibold text-primary hover:underline">Ir al listado</a>
+        @if (!esMiPerfil()) {
+          <a [routerLink]="[adminBase + '/medicos']" class="shrink-0 text-xs font-semibold text-primary hover:underline">Ir al listado</a>
+        }
       </div>
     }
 
@@ -45,7 +50,7 @@
           </p>
         </div>
         <a
-          routerLink="/medicos/nuevo"
+          [routerLink]="[adminBase + '/medicos/nuevo']"
           class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white bg-primary hover:bg-primary-container transition-all duration-200 hover:shadow-sm transform hover:-translate-y-0.5 cursor-pointer font-label-md text-label-md"
         >
           <span class="material-symbols-outlined text-[20px]">person_add</span>

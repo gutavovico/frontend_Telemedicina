@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FichaService } from '../../../../core/services/ficha.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { FichaClinica, FichaClinicaUpdateRequest } from '../../../../core/models/ficha.models';
 import { CIE10_CATALOGO } from '../../hce/data/cie10-catalog';
 import { Cie10Item } from '../../../../core/models/hce.models';
@@ -19,6 +20,17 @@ export class FichaDetalleComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly fichaService = inject(FichaService);
   private readonly fb = inject(FormBuilder);
+  readonly authService = inject(AuthService);
+
+  /** Actos clínicos (anamnesis, CIE-10, evolución, guardar/finalizar): solo médico. */
+  puedeEditarClinica(): boolean {
+    return this.authService.isDoctor();
+  }
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   readonly ficha = this.fichaService.selectedFicha;
   readonly isLoading = this.fichaService.isLoading;
@@ -159,6 +171,11 @@ export class FichaDetalleComponent implements OnInit {
   guardarClinica(finalizar: boolean = false): void {
     const currentFicha = this.ficha();
     if (!currentFicha) return;
+    // Fail-closed: aunque la UI oculte los botones, solo el médico persiste actos clínicos.
+    if (!this.puedeEditarClinica()) {
+      this.saveError.set('Solo el médico tratante puede registrar actos clínicos.');
+      return;
+    }
 
     this.isSaving.set(true);
     this.saveSuccess.set(null);

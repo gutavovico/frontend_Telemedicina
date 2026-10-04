@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TenantService } from '../../../core/services/tenant.service';
 import type { AppRole } from '../../../core/models/auth.models';
 import { Header } from './header';
 
@@ -15,20 +16,32 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
   const routerMock = { url: '/', navigate: vi.fn() };
   let isAuthenticated: WritableSignal<boolean>;
   let userRole: WritableSignal<AppRole>;
+  let roleName: WritableSignal<string | null>;
+  let profileVerified: WritableSignal<boolean>;
+  let isSuperAdmin: WritableSignal<boolean>;
   let injector: DestroyableInjector;
 
   function create(): Header {
     const authMock = {
-      currentUser: () => ({ rol: 'Recepción' }),
+      currentUser: () => ({ rol: roleName(), estado: 'ACTIVO', id_clinica: 1 }),
       isAuthenticated,
+      profileVerified,
       userRole,
       isAdmin: () => userRole() === 'admin',
       isDoctor: () => userRole() === 'doctor',
+      isPaciente: () => userRole() === 'paciente',
+      isRecepcion: () => userRole() === 'recepcion',
+    };
+    const tenantMock = {
+      isSuperAdmin,
+      currentTenant: signal(null),
+      clinicaNombre: signal('Telemedicina'),
     };
     injector = Injector.create({
       providers: [
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: authMock },
+        { provide: TenantService, useValue: tenantMock },
       ],
     });
     return runInInjectionContext(injector, () => new Header());
@@ -39,6 +52,9 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     routerMock.url = '/';
     isAuthenticated = signal(true);
     userRole = signal<AppRole>('doctor');
+    roleName = signal<string | null>('Recepción');
+    profileVerified = signal(true);
+    isSuperAdmin = signal(false);
   });
 
   it('muestra Agenda a Recepción autenticada y la oculta sin sesión', () => {
@@ -46,6 +62,19 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     expect(header.canSeeAgenda()).toBe(true);
     isAuthenticated.set(false);
     expect(header.canSeeAgenda()).toBe(false);
+    injector.destroy();
+  });
+
+  it('muestra Reportes solo a ADMIN con perfil verificado y clínica', () => {
+    roleName.set('ADMIN');
+    userRole.set('admin');
+    const header = create();
+    expect(header.canSeeReports()).toBe(true);
+    profileVerified.set(false);
+    expect(header.canSeeReports()).toBe(false);
+    profileVerified.set(true);
+    roleName.set('Recepción');
+    expect(header.canSeeReports()).toBe(false);
     injector.destroy();
   });
 
@@ -88,6 +117,67 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     expect(routerMock.navigate).toHaveBeenCalledWith(['/medicamentos']);
     expect(header.isDropdownOpen()).toBe(false);
     expect(header.isMobileMenuOpen()).toBe(false);
+    injector.destroy();
+  });
+
+  it('recepción va a su panel desde Perfil y no ve Panel admin', () => {
+    userRole.set('recepcion');
+    const header = create();
+    header.goToProfile();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/agenda']);
+    expect(header.canSeeAdminPanel()).toBe(false);
+    injector.destroy();
+  });
+
+  it('Panel Recepción navega a /admin/agenda y cierra menús', () => {
+    userRole.set('recepcion');
+    const header = create();
+    header.isDropdownOpen.set(true);
+    header.isMobileMenuOpen.set(true);
+    header.goToRecepcionPanel();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/agenda']);
+    expect(header.isDropdownOpen()).toBe(false);
+    expect(header.isMobileMenuOpen()).toBe(false);
+    injector.destroy();
+  });
+
+  it('Panel Médico navega a /admin/agenda y cierra menús', () => {
+    userRole.set('doctor');
+    const header = create();
+    header.isDropdownOpen.set(true);
+    header.isMobileMenuOpen.set(true);
+    header.goToMedicoPanel();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/agenda']);
+    expect(header.isDropdownOpen()).toBe(false);
+    expect(header.isMobileMenuOpen()).toBe(false);
+    injector.destroy();
+  });
+
+  it('gestión visible para admin, doctor y recepción; oculta para paciente y desconocido', () => {
+    for (const rol of ['admin', 'doctor', 'recepcion'] as AppRole[]) {
+      userRole.set(rol);
+      const header = create();
+      expect(header.canSeeGestion()).toBe(true);
+      injector.destroy();
+    }
+    for (const rol of ['paciente', 'unknown'] as AppRole[]) {
+      userRole.set(rol);
+      const header = create();
+      expect(header.canSeeGestion()).toBe(false);
+      injector.destroy();
+    }
+    userRole.set('recepcion');
+    isAuthenticated.set(false);
+    expect(create().canSeeGestion()).toBe(false);
+    injector.destroy();
+  });
+
+  it('oculta el header global dentro de /admin (manda el topbar del layout)', () => {
+    routerMock.url = '/admin/usuarios';
+    expect(create().isAdminRoute()).toBe(true);
+    injector.destroy();
+    routerMock.url = '/usuarios';
+    expect(create().isAdminRoute()).toBe(false);
     injector.destroy();
   });
 });

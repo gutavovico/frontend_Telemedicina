@@ -70,7 +70,7 @@ export interface UsuarioResponse {
  * `unknown` significa rol ausente o no reconocido: nunca concede privilegios.
  * Prohibido inferir el rol desde correo, nombre o IDs.
  */
-export type AppRole = 'admin' | 'doctor' | 'paciente' | 'unknown';
+export type AppRole = 'admin' | 'doctor' | 'paciente' | 'recepcion' | 'unknown';
 
 /**
  * Normaliza el rol textual del backend de forma segura:
@@ -78,6 +78,8 @@ export type AppRole = 'admin' | 'doctor' | 'paciente' | 'unknown';
  * - ADMIN, ADMINISTRADOR, ADMINISTRACION → 'admin'
  * - MEDICO, MÉDICO, DOCTOR → 'doctor'
  * - PACIENTE → 'paciente'
+ * - RECEPCION, RECEPCIÓN → 'recepcion' (sin privilegios implícitos:
+ *   solo identifica el rol; cada guard decide el acceso)
  * - Cualquier otro valor, nulo o vacío → 'unknown' (sin elevar privilegios).
  */
 export function normalizeAppRole(rol: string | null | undefined): AppRole {
@@ -100,6 +102,9 @@ export function normalizeAppRole(rol: string | null | undefined): AppRole {
   }
   if (limpio === 'PACIENTE') {
     return 'paciente';
+  }
+  if (limpio === 'RECEPCION') {
+    return 'recepcion';
   }
   return 'unknown';
 }

@@ -1,3 +1,4 @@
+@if (!isAdminRoute()) {
 <header
   class="fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-all"
 >
@@ -18,116 +19,55 @@
     </a>
 
     <nav class="hidden md:flex items-center gap-8">
-      @if (showAdminNavigation()) {
+      <!-- Header global minimalista: la gestión vive en /admin (sidebar + topbar).
+           No se repiten Usuarios/Roles/Médicos/Pacientes/Agenda/Citas/Fichas/etc. -->
+      @if (!authService.isAuthenticated()) {
+        @if (isLandingRoute()) {
+          <a
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+            href="#especialidades"
+          >
+            Especialidades
+          </a>
+          <a
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+            href="#como-funciona"
+          >
+            Cómo funciona
+          </a>
+          <a
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+            href="#seguridad"
+          >
+            Seguridad
+          </a>
+        } @else {
+          <a
+            routerLink="/"
+            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
+          >
+            Inicio
+          </a>
+        }
+      } @else if (authService.isPaciente()) {
         <a
           routerLink="/"
           class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
         >
-          Dashboard
+          Mi salud
         </a>
         <a
-          routerLink="/usuarios"
+          routerLink="/mis-citas"
           class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
-          [class.text-primary]="isUsersRoute()"
-          [class.border-primary]="isUsersRoute()"
-          [class.text-on-surface-variant]="!isUsersRoute()"
-          [class.border-transparent]="!isUsersRoute()"
+          [class.text-primary]="isMisCitasRoute()"
+          [class.border-primary]="isMisCitasRoute()"
+          [class.text-on-surface-variant]="!isMisCitasRoute()"
+          [class.border-transparent]="!isMisCitasRoute()"
         >
-          Usuarios
+          Mis citas
         </a>
-        <a
-          routerLink="/roles"
-          class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
-          [class.text-primary]="isRolesRoute()"
-          [class.border-primary]="isRolesRoute()"
-          [class.text-on-surface-variant]="!isRolesRoute()"
-          [class.border-transparent]="!isRolesRoute()"
-        >
-          Roles
-        </a>
-        @if (canSeeAgenda()) {
-          <a
-            routerLink="/appointments/agenda"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Agenda
-          </a>
-        }
-        @if (canSeeReports()) {
-          <a
-            routerLink="/analitica"
-            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1 focus-visible:outline-2 focus-visible:outline-primary"
-            [class.text-primary]="isReportsRoute()"
-            [class.border-primary]="isReportsRoute()"
-            [class.text-on-surface-variant]="!isReportsRoute()"
-            [class.border-transparent]="!isReportsRoute()"
-          >Reportes</a>
-        }
-        @if (authService.isAdmin() || authService.isDoctor()) {
-          <button
-            type="button"
-            (click)="goToMedicos()"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Médicos
-          </button>
-
-          <a
-            routerLink="/appointments/consultas"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Citas
-          </a>
-          <a
-            routerLink="/fichas"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Fichas
-          </a>
-          <a
-            routerLink="/documentos"
-            class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200 cursor-pointer"
-          >
-            Documentos
-          </a>
-        }
-        @if (canSeeRecetas()) {
-          <a
-            routerLink="/recetas"
-            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
-            [class.text-primary]="isRecetasRoute()"
-            [class.border-primary]="isRecetasRoute()"
-            [class.text-on-surface-variant]="!isRecetasRoute()"
-            [class.border-transparent]="!isRecetasRoute()"
-          >
-            Recetas
-          </a>
-        }
-        @if (canSeeCitasPaciente()) {
-          <a
-            routerLink="/mis-citas"
-            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
-            [class.text-primary]="isMisCitasRoute()"
-            [class.border-primary]="isMisCitasRoute()"
-            [class.text-on-surface-variant]="!isMisCitasRoute()"
-            [class.border-transparent]="!isMisCitasRoute()"
-          >
-            Citas
-          </a>
-        }
-        @if (canSeeTeleconsulta()) {
-          <a
-            routerLink="/teleconsulta"
-            class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
-            [class.text-primary]="isTeleconsultaRoute()"
-            [class.border-primary]="isTeleconsultaRoute()"
-            [class.text-on-surface-variant]="!isTeleconsultaRoute()"
-            [class.border-transparent]="!isTeleconsultaRoute()"
-          >
-            Teleconsulta
-          </a>
-        }
-      } @else {
+      } @else if (isLandingRoute()) {
+        <!-- Staff en la landing: mismos anchors públicos que el invitado -->
         <a
           class="text-on-surface-variant text-sm font-medium hover:text-primary transition-colors duration-200"
           href="#especialidades"
@@ -228,6 +168,17 @@
                   <p class="text-[11px] text-on-surface-variant truncate">
                     {{ authService.currentUser()?.correo || 'Paciente' }}
                   </p>
+                  @if (tenantService.currentTenant()) {
+                    <p
+                      class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-primary-fixed/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                    >
+                      <span class="material-symbols-outlined text-[12px]">domain</span>
+                      {{ tenantService.clinicaNombre() }}
+                      @if (tenantService.isSuperAdmin()) {
+                        <span>· Super Admin</span>
+                      }
+                    </p>
+                  }
                 </div>
               </div>
 
@@ -240,76 +191,41 @@
                   <span class="material-symbols-outlined text-[20px] text-primary">person</span>
                   <span>Perfil</span>
                 </button>
-                @if (canSeeRecetas()) {
-                  <a
-                    routerLink="/recetas"
-                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
-                  >
-                    <span class="material-symbols-outlined text-[20px] text-primary"
-                      >prescriptions</span
-                    >
-                    <span>Recetas</span>
-                  </a>
-                }
-                @if (authService.isAdmin()) {
+                @if (canSeeAdminPanel()) {
                   <button
                     type="button"
-                    (click)="goToProducts()"
+                    (click)="goToAdminPanel()"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
                     <span class="material-symbols-outlined text-[20px] text-primary"
-                      >medication</span
+                      >admin_panel_settings</span
                     >
-                    <span>Productos</span>
+                    <span class="font-semibold text-primary">Panel admin</span>
                   </button>
                 }
-        @if (canSeeAgenda()) {
-          <a
-              routerLink="/appointments/agenda"
+                @if (authService.isRecepcion()) {
+                  <button
+                    type="button"
+                    (click)="goToRecepcionPanel()"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
                     <span class="material-symbols-outlined text-[20px] text-primary"
-                      >calendar_month</span
+                      >admin_panel_settings</span
                     >
-                    <span>Agenda Médica</span>
-                  </a>
-        }
-        @if (authService.isAdmin() || authService.isDoctor()) {
-
-                  <a
-                    routerLink="/appointments/consultas"
-                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
-                  >
-                    <span class="material-symbols-outlined text-[20px] text-primary">event</span>
-                    <span>Gestionar Citas</span>
-                  </a>
-                  <a
-                    routerLink="/fichas"
+                    <span class="font-semibold text-primary">Panel Recepción</span>
+                  </button>
+                }
+                @if (authService.isDoctor()) {
+                  <button
+                    type="button"
+                    (click)="goToMedicoPanel()"
                     class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
                   >
                     <span class="material-symbols-outlined text-[20px] text-primary"
-                      >description</span
+                      >stethoscope</span
                     >
-                    <span>Fichas Médicas</span>
-                  </a>
-                  <a
-                    routerLink="/documentos"
-                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
-                  >
-                    <span class="material-symbols-outlined text-[20px] text-primary"
-                      >folder_shared</span
-                    >
-                    <span>Documentos Clínicos</span>
-                  </a>
-                  <a
-                    routerLink="/bitacora"
-                    class="w-full flex items-center gap-3 px-3 py-2 text-xs sm:text-sm font-medium text-on-surface hover:text-primary hover:bg-primary-fixed/30 rounded-xl transition-all duration-150 cursor-pointer text-left"
-                  >
-                    <span class="material-symbols-outlined text-[20px] text-primary"
-                      >history_toggle_off</span
-                    >
-                    <span>Bitácora de Auditoría</span>
-                  </a>
+                    <span class="font-semibold text-primary">Panel Médico</span>
+                  </button>
                 }
               </div>
 
@@ -382,53 +298,103 @@
             <span class="text-xs text-on-surface-variant truncate">{{
               authService.currentUser()?.correo
             }}</span>
+            @if (tenantService.currentTenant()) {
+              <span
+                class="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-primary-fixed/40 px-2 py-0.5 text-[10px] font-semibold text-primary"
+              >
+                <span class="material-symbols-outlined text-[12px]">domain</span>
+                {{ tenantService.clinicaNombre() }}
+                @if (tenantService.isSuperAdmin()) {
+                  <span>· Super Admin</span>
+                }
+              </span>
+            }
           </div>
         </div>
 
-        <nav class="flex flex-col gap-1 mb-3">
-          <a
-            routerLink="/usuarios"
-            (click)="closeMobileMenu()"
-            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
-            [ngClass]="
-              isUsersRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
-            "
-          >
-            <span class="material-symbols-outlined text-[20px]">group</span>
-            <span>Usuarios</span>
-          </a>
-          <a
-            routerLink="/roles"
-            (click)="closeMobileMenu()"
-            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
-            [ngClass]="
-              isRolesRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
-            "
-          >
-            <span class="material-symbols-outlined text-[20px]">shield_person</span>
-            <span>Roles</span>
-          </a>
-          @if (canSeeAgenda()) {
-          <a
-              routerLink="/appointments/agenda"
-              (click)="closeMobileMenu()"
-              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+        <!-- Móvil en landing: mínimo, la gestión vive en /admin -->
+        @if (isLandingRoute()) {
+          <nav class="flex flex-col gap-1 mb-3">
+            @if (authService.isPaciente()) {
+              <a
+                routerLink="/"
+                (click)="closeMobileMenu()"
+                class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+              >
+                <span class="material-symbols-outlined text-[20px] text-primary">home</span>
+                <span>Mi salud</span>
+              </a>
+              <a
+                routerLink="/mis-citas"
+                (click)="closeMobileMenu()"
+                class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+                [ngClass]="
+                  isMisCitasRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+                "
+              >
+                <span class="material-symbols-outlined text-[20px] text-primary">event</span>
+                <span>Mis citas</span>
+              </a>
+            } @else {
+              <!-- Staff en landing móvil: mismos anchors públicos (sin botón Panel, ya está en el avatar) -->
+              <a
+                (click)="closeMobileMenu()"
+                class="text-on-surface py-2 px-3 font-medium hover:text-primary transition-colors"
+                href="#especialidades"
+              >
+                Especialidades
+              </a>
+              <a
+                (click)="closeMobileMenu()"
+                class="text-on-surface py-2 px-3 font-medium hover:text-primary transition-colors"
+                href="#como-funciona"
+              >
+                Cómo funciona
+              </a>
+              <a
+                (click)="closeMobileMenu()"
+                class="text-on-surface py-2 px-3 font-medium hover:text-primary transition-colors"
+                href="#seguridad"
+              >
+                Seguridad
+              </a>
+            }
+            <button
+              type="button"
+              (click)="logout()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-error hover:bg-error-container/30 transition-colors w-full text-left"
             >
-              <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
-              <span>Agenda Médica</span>
+              <span class="material-symbols-outlined text-[20px] text-error">logout</span>
+              <span>Cerrar sesion</span>
+            </button>
+          </nav>
+        } @else {
+        <nav class="flex flex-col gap-1 mb-3">
+          @if (authService.isAdmin()) {
+            <a
+              routerLink="/usuarios"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isUsersRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px]">group</span>
+              <span>Usuarios</span>
             </a>
-        }
-        @if (canSeeReports()) {
-          <a
-            routerLink="/analitica"
-            (click)="closeMobileMenu()"
-            class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high focus-visible:outline-2 focus-visible:outline-primary"
-          >
-            <span class="material-symbols-outlined text-[20px] text-primary" aria-hidden="true">bar_chart</span>
-            <span>Reportes</span>
-          </a>
-        }
-        @if (authService.isAdmin() || authService.isDoctor()) {
+            <a
+              routerLink="/roles"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isRolesRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px]">shield_person</span>
+              <span>Roles</span>
+            </a>
+          }
+          @if (authService.isAdmin() || authService.isDoctor()) {
             <button
               type="button"
               (click)="goToMedicos()"
@@ -439,7 +405,24 @@
               >
               <span>Médicos</span>
             </button>
-
+          }
+          @if (canSeeGestion()) {
+            <a
+              routerLink="/pacientes"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">group</span>
+              <span>Pacientes</span>
+            </a>
+            <a
+              routerLink="/appointments/agenda"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">calendar_month</span>
+              <span>Agenda Médica</span>
+            </a>
             <a
               routerLink="/appointments/consultas"
               (click)="closeMobileMenu()"
@@ -464,6 +447,8 @@
               <span class="material-symbols-outlined text-[20px] text-primary">folder_shared</span>
               <span>Documentos Clínicos</span>
             </a>
+          }
+          @if (authService.isAdmin() || authService.isDoctor()) {
             <a
               routerLink="/bitacora"
               (click)="closeMobileMenu()"
@@ -473,6 +458,16 @@
                 >history_toggle_off</span
               >
               <span>Bitácora de Auditoría</span>
+            </a>
+          }
+          @if (canSeeReports()) {
+            <a
+              routerLink="/analitica"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">bar_chart</span>
+              <span>Reportes</span>
             </a>
           }
           @if (canSeeRecetas()) {
@@ -535,6 +530,40 @@
             <span class="material-symbols-outlined text-[20px] text-primary">person</span>
             <span>Perfil</span>
           </button>
+          @if (canSeeAdminPanel()) {
+            <button
+              type="button"
+              (click)="goToAdminPanel()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-semibold text-primary bg-primary-fixed/30 hover:bg-primary-fixed/50 transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary"
+                >admin_panel_settings</span
+              >
+              <span>Panel admin</span>
+            </button>
+          }
+          @if (authService.isRecepcion()) {
+            <button
+              type="button"
+              (click)="goToRecepcionPanel()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-semibold text-primary bg-primary-fixed/30 hover:bg-primary-fixed/50 transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary"
+                >admin_panel_settings</span
+              >
+              <span>Panel Recepción</span>
+            </button>
+          }
+          @if (authService.isDoctor()) {
+            <button
+              type="button"
+              (click)="goToMedicoPanel()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-semibold text-primary bg-primary-fixed/30 hover:bg-primary-fixed/50 transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">stethoscope</span>
+              <span>Panel Médico</span>
+            </button>
+          }
           <button
             type="button"
             (click)="logout()"
@@ -544,6 +573,7 @@
             <span>Cerrar sesion</span>
           </button>
         </nav>
+        }
       } @else {
         <nav class="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
           <a
@@ -572,3 +602,4 @@
     </div>
   }
 </header>
+}

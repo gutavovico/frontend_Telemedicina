@@ -25,6 +25,11 @@ export class MedicoDetail implements OnInit {
   private readonly medicoService = inject(MedicoService);
   readonly authService = inject(AuthService);
 
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   readonly accionMessage = signal<string | null>(null);

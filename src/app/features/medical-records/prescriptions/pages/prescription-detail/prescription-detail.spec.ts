@@ -66,7 +66,7 @@ describe('PrescriptionDetail (CU16)', () => {
     resolvePdfFilename: vi.fn(() => 'receta_REC-5.pdf'),
     saveBlob: vi.fn(),
   };
-  const routerMock = { navigate: vi.fn() };
+  const routerMock = { navigate: vi.fn(), url: '/recetas/1' };
   let authMock: {
     userRole: ReturnType<typeof vi.fn>;
     isLoggedIn: ReturnType<typeof vi.fn>;

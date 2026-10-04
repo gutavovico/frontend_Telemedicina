@@ -120,9 +120,134 @@ export const serverRoutes: ServerRoute[] = [
     path: 'audit-log',
     renderMode: RenderMode.Client,
   },
+  // Panel de administración multitenant (/admin): solo cliente (guards + signals).
+  {
+    path: 'admin',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/dashboard',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/clinicas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/usuarios',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/roles',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/medicos',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/medicos/nuevo',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/medicos/:id',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes/nuevo',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes/:id',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes/:id/editar',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes/:id/hce',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/pacientes/:id/consultas/nueva',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/consultas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/agenda',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/cola',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/fichas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/fichas/nueva',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/fichas/:id',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/recetas/emitir',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/recetas/:id',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/recetas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/teleconsulta',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/hce',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/documentos',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/documentos/:id',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'admin/bitacora',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'clinica-inactiva',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'sin-permisos',
+    renderMode: RenderMode.Client,
+  },
   // CU15: Teleconsulta y Chat de Cita Médica (rutas del cliente protegidas con sesión activa)
   {
     path: 'mis-citas',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'mi-cola',
     renderMode: RenderMode.Client,
   },
   {

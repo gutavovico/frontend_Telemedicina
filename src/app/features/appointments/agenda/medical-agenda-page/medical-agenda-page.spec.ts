@@ -1,18 +1,21 @@
 import { DestroyRef, Injector, PLATFORM_ID, runInInjectionContext } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { MedicoService } from '../../../../core/services/medico.service';
 import { MedicalAgendaService } from '../medical-agenda.service';
 import { MedicalAgendaPage } from './medical-agenda-page';
 
 describe('CU5 rol de sesión', () => {
-  async function initialize(rol: string | null, idRol = 3) {
+  async function initialize(rol: string | null, idRol = 3, denied = false) {
     const api = {
       getSesion: vi.fn(() => of({ id_usuario: 3, id_clinica: 1, id_rol: idRol, rol })),
       getServicios: vi.fn(() => of([{ id_servicio: 1, estado: 'activo' }])),
       getHorarios: vi.fn(() => of([])), getBloqueos: vi.fn(() => of([])),
-      getDisponibilidad: vi.fn(() => of({ slots: [], advertencias: [] })),
+      getDisponibilidad: vi.fn(() => denied
+        ? throwError(() => new HttpErrorResponse({ status: 403 }))
+        : of({ slots: [], advertencias: [] })),
     };
     const medicos = {
       listarMedicos: vi.fn(() => of({ total: 1, items: [{ id_medico: 20 }] })),
@@ -54,6 +57,13 @@ describe('CU5 rol de sesión', () => {
     expect(page.rol()).toBe('MEDICO');
     expect(medicos.obtenerMiPerfil).toHaveBeenCalled();
     expect(medicos.listarMedicos).not.toHaveBeenCalled();
+  });
+
+  it('un 403 al cargar disponibilidad retira las acciones de agenda', async () => {
+    const { page } = await initialize('Médico', 2, true);
+    expect(page.rol()).toBe('DESCONOCIDO');
+    expect(page.manage()).toBe(false);
+    expect(page.limitation()).toContain('no tiene acceso');
   });
 
   it('Administración sólo carga la revisión de bloqueos', async () => {

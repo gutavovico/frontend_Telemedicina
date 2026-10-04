@@ -76,9 +76,13 @@ function vigenciaValidator(control: AbstractControl): ValidationErrors | null {
 export class PrescriptionIssue implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  readonly authService = inject(AuthService);
+  private readonly router = inject(Router);  readonly authService = inject(AuthService);
   private readonly service = inject(PrescriptionsService);
+
+  /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
 
   readonly form = this.fb.group({
     id_consulta: this.fb.control<number>(0, {
@@ -246,12 +250,13 @@ export class PrescriptionIssue implements OnInit {
       next: (resp: HttpResponse<RecetaResponse>) => {
         this.isSubmitting.set(false);
         const receta = resp.body;
+        const base = this.router.url.startsWith('/admin') ? '/admin' : '';
         if (receta && (resp.status === 201 || resp.status === 200)) {
           this.lastFailedPayload = null;
-          void this.router.navigate(['/recetas', receta.id_receta]);
+          void this.router.navigate([base + '/recetas', receta.id_receta]);
         } else if (receta) {
           this.lastFailedPayload = null;
-          void this.router.navigate(['/recetas', receta.id_receta]);
+          void this.router.navigate([base + '/recetas', receta.id_receta]);
         } else {
           this.lastFailedPayload = payloadJson;
           this.submitError.set('Respuesta inesperada del servidor.');
