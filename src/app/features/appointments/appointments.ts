@@ -2,25 +2,23 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Header } from '../../../shared/components/header/header';
-import { AppointmentService } from '../../../core/services/appointment.service';
-import { PatientService } from '../../../core/services/patient.service';
-import { MedicoService } from '../../../core/services/medico.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Cita, CitaCreateRequest, CitaUpdateRequest } from '../../../core/models/appointment.models';
-import { Paciente } from '../../../core/models/patient.models';
-import { MedicoResponse } from '../../../core/models/medico.models';
-
-import { ChatFloatingWidgetComponent } from '../../teleconsulta/components/chat-floating-widget/chat-floating-widget.component';
+import { Header } from '../../shared/components/header/header';
+import { AppointmentService } from '../../core/services/appointment.service';
+import { PatientService } from '../../core/services/patient.service';
+import { MedicoService } from '../../core/services/medico.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Cita, CitaCreateRequest, CitaUpdateRequest } from '../../core/models/appointment.models';
+import { Paciente } from '../../core/models/patient.models';
+import { MedicoResponse } from '../../core/models/medico.models';
 
 @Component({
-  selector: 'app-consultas',
+  selector: 'app-appointments',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, Header, ChatFloatingWidgetComponent],
-  templateUrl: './consultas.html',
-  styleUrl: './consultas.css'
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, Header],
+  templateUrl: './appointments.html',
+  styleUrl: './appointments.css'
 })
-export class ConsultasComponent implements OnInit {
+export class Appointments implements OnInit {
   readonly appointmentService = inject(AppointmentService);
   readonly patientService = inject(PatientService);
   readonly medicoService = inject(MedicoService);
@@ -34,109 +32,21 @@ export class ConsultasComponent implements OnInit {
   readonly selectedStatusFilter = signal<string>('TODOS');
   readonly isEditing = signal<boolean>(false);
   readonly editingCitaId = signal<number | null>(null);
-  readonly isFormOpen = signal<boolean>(false);
+  readonly isFormOpen = signal<boolean>(true);
   readonly showDeleteModal = signal<boolean>(false);
   readonly citaToDelete = signal<Cita | null>(null);
   readonly alertMessage = signal<{ type: 'success' | 'error'; text: string } | null>(null);
   readonly isNewPatient = signal<boolean>(false);
-
-
-  readonly stats = computed(() => {
-    const citas = this.filteredCitas();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const hoy = citas.filter(c => c.fecha_cita.startsWith(todayStr)).length;
-    const confirmadas = citas.filter(c => c.estado === 'CONFIRMADA').length;
-    const pendientes = citas.filter(c => c.estado === 'PENDIENTE').length;
-    const canceladas = citas.filter(c => c.estado === 'CANCELADA').length;
-    return { hoy, confirmadas, pendientes, canceladas, total: citas.length };
-  });
-
-
-  // Paginación
-  readonly currentPage = signal<number>(1);
-  readonly pageSize = signal<number>(10);
-
-  readonly paginatedCitas = computed(() => {
-    const all = this.filteredCitas();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-  
-  readonly totalPages = computed(() => {
-    return Math.ceil(this.filteredCitas().length / this.pageSize()) || 1;
-  });
-
-  setPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-    }
-  }
-
-  // Widget flotante de chat CU15
-  readonly showChatWidget = signal<boolean>(false);
-  readonly chatCitaActiva = signal<Cita | null>(null);
 
   // Listas para los dropdowns
   readonly pacientesList = signal<Paciente[]>([]);
   readonly medicosList = signal<MedicoResponse[]>([]);
 
   // Horarios disponibles
-
-
-  readonly selectedFormDate = signal<string>(new Date().toISOString().split('T')[0]);
-  readonly selectedFormDoctor = signal<number>(1);
-
-  onFormChange(): void {
-    if (this.appointmentForm) {
-      const val = this.appointmentForm.value;
-      if (val.fecha_cita) this.selectedFormDate.set(val.fecha_cita);
-      if (val.id_medico) this.selectedFormDoctor.set(Number(val.id_medico));
-    }
-  }
-
-  readonly reservedSlots = computed(() => {
-    const date = this.selectedFormDate();
-    const doctorId = this.selectedFormDoctor();
-    // Exclude the current editing appointment from being marked as reserved!
-    const editingId = this.editingCitaId();
-    
-    return this.appointmentService.citas()
-      .filter(c => c.fecha_cita.startsWith(date) && 
-                   c.id_medico === doctorId && 
-                   c.estado !== 'CANCELADA' && 
-                   c.id_cita !== editingId)
-      .map(c => c.hora_inicio ? c.hora_inicio.substring(0, 5) : '');
-  });
-  // Modalidad de consulta
-  readonly tipoConsulta = signal<string>('PRESENCIAL');
-
-  readonly availableSlots = computed(() => {
-    const isPresencial = this.tipoConsulta() === 'PRESENCIAL';
-    if (isPresencial) {
-      // 45 min slots
-      return [
-        '09:00', '09:45', '10:30', '11:15',
-        '14:00', '14:45', '15:30', '16:15'
-      ];
-    } else {
-      // 30 min slots
-      return [
-        '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
-      ];
-    }
-  });
-
-  setTipoConsulta(tipo: string): void {
-    this.tipoConsulta.set(tipo);
-    this.appointmentForm.patchValue({ tipo_consulta: tipo });
-    this.onFormChange();
-    // Reset selected slot when modality changes to avoid invalid slots
-    this.selectedSlot.set('09:00');
-    this.appointmentForm.patchValue({ hora_inicio: '09:00' });
-    this.onFormChange();
-  }
-
+  readonly availableSlots = signal<string[]>([
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
+  ]);
   readonly selectedSlot = signal<string>('09:30');
 
   // Formulario reactivo
@@ -172,10 +82,6 @@ export class ConsultasComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.authService.isPaciente()) {
-      this.router.navigate(['/mis-citas']);
-      return;
-    }
     this.initForm();
     this.cargarDatosIniciales();
   }
@@ -189,7 +95,7 @@ export class ConsultasComponent implements OnInit {
       hora_inicio: ['09:30', [Validators.required]],
       motivo: ['Consulta General'],
       estado: ['CONFIRMADA'],
-      tipo_consulta: ['PRESENCIAL']
+      tipo_consulta: ['TELEMEDICINA']
     });
     this.newPatientForm = this.fb.group({
       nombres: ['', [Validators.required, Validators.minLength(2)]],
@@ -419,7 +325,6 @@ export class ConsultasComponent implements OnInit {
   selectSlot(slot: string): void {
     this.selectedSlot.set(slot);
     this.appointmentForm.patchValue({ hora_inicio: slot });
-    this.onFormChange();
   }
 
   onSearchChange(event: Event): void {
@@ -428,7 +333,6 @@ export class ConsultasComponent implements OnInit {
   }
 
   filtrarPorHoy(): void {
-    this.currentPage.set(1);
     const today = new Date().toISOString().split('T')[0];
     if (this.selectedFilterDate() === today) {
       this.selectedFilterDate.set('');
@@ -449,7 +353,6 @@ export class ConsultasComponent implements OnInit {
     this.editingCitaId.set(cita.id_cita);
     this.isFormOpen.set(true);
     this.selectedSlot.set(cita.hora_inicio);
-      this.tipoConsulta.set(cita.tipo_consulta || 'PRESENCIAL');
 
     // Asegurar que el paciente de la cita esté en la lista para que el <select> lo muestre
     const pId = Number(cita.id_paciente);
@@ -513,21 +416,8 @@ export class ConsultasComponent implements OnInit {
       estado: cita.estado,
       tipo_consulta: cita.tipo_consulta || 'TELEMEDICINA'
     });
-    this.onFormChange();
 
     this.mostrarAlerta('success', `Datos de la cita de ${cita.paciente_nombre} cargados en el formulario.`);
-  }
-
-
-  toggleNewPatient(): void {
-    this.isNewPatient.set(!this.isNewPatient());
-    if (this.isNewPatient()) {
-      this.appointmentForm.get('id_paciente')?.clearValidators();
-      this.appointmentForm.get('id_paciente')?.updateValueAndValidity();
-    } else {
-      this.appointmentForm.get('id_paciente')?.setValidators(Validators.required);
-      this.appointmentForm.get('id_paciente')?.updateValueAndValidity();
-    }
   }
 
   cancelarEdicion(): void {
@@ -719,22 +609,6 @@ export class ConsultasComponent implements OnInit {
     });
   }
 
-  // GESTIÓN DEL CHAT FLOTANTE CU15
-  abrirChat(cita: Cita): void {
-    this.abrirChatCita(cita);
-  }
-
-  abrirChatCita(cita: Cita): void {
-    if (!cita) return;
-    this.chatCitaActiva.set(cita);
-    this.showChatWidget.set(true);
-  }
-
-  cerrarChatCita(): void {
-    this.showChatWidget.set(false);
-    this.chatCitaActiva.set(null);
-  }
-
   mostrarAlerta(type: 'success' | 'error', text: string): void {
     this.alertMessage.set({ type, text });
     setTimeout(() => {
@@ -774,5 +648,3 @@ export class ConsultasComponent implements OnInit {
     }
   }
 }
-
-export { ConsultasComponent as Appointments };

@@ -471,6 +471,14 @@ export const routes: Routes = [
         title: 'Hospital San Juan de Dios - Lista de Pacientes',
       },
       {
+        path: 'triage',
+        loadComponent: () =>
+          import('./features/medical-records/triage/triage.component').then(
+            (m) => m.TriageComponent,
+          ),
+        title: 'Hospital San Juan de Dios - Triaje y Evaluación de Urgencias',
+      },
+      {
         path: 'nuevo',
         loadComponent: () =>
           import('./features/medical-records/patient-profile/patient-form/patient-form').then(
