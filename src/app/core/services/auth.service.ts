@@ -98,6 +98,10 @@ export class AuthService {
   readonly isPaciente = computed(() => this.userRole() === 'paciente');
   readonly isRecepcion = computed(() => this.userRole() === 'recepcion');
 
+  getUserRole(): AppRole {
+    return this.userRole();
+  }
+
   /** Etiqueta legible del rol para el avatar/menús. Super Admin va primero. */
   readonly userRoleLabel = computed(() => {
     if (this.tenantService.isSuperAdmin()) return 'Super Admin';
@@ -303,6 +307,15 @@ export class AuthService {
         }),
       )
       .subscribe();
+  }
+
+  logoutRemoto(): void {
+    this.logout();
+  }
+
+  onSessionClosedByInactivity(): void {
+    this.clearTokens();
+    this.router.navigate(['/login'], { queryParams: { inactive: 'true' } });
   }
 
   clearTokens(): void {
