@@ -200,7 +200,7 @@ export class Header {
   goToMedicoPanel(): void {
     this.closeDropdown();
     this.closeMobileMenu();
-    this.router.navigate(['/admin/agenda']);
+    this.router.navigate(['/admin/inicio-medico']);
   }
 
   logout(): void {

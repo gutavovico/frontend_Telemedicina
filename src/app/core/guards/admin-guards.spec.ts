@@ -17,7 +17,7 @@ import type { TenantContext } from '../models/tenant.models';
 import { superAdminGuard } from './super-admin.guard';
 import { clinicAdminGuard } from './clinic-admin.guard';
 import { clinicaGuard } from './clinica.guard';
-import { panelGuard, adminOnlyGuard, staffGuard } from './panel-access.guard';
+import { panelGuard, adminOnlyGuard, staffGuard, clinicalReadGuard, clinicalWriteGuard } from './panel-access.guard';
 
 function makeTenant(overrides: Partial<TenantContext> = {}): TenantContext {
   return {
@@ -124,6 +124,7 @@ describe('Guards del panel condicionado', () => {
             isAdmin: () => authRole() === 'admin',
             isRecepcion: () => authRole() === 'recepcion',
             isDoctor: () => authRole() === 'doctor',
+            isPaciente: () => authRole() === 'paciente',
           },
         },
       ],
@@ -171,6 +172,20 @@ describe('Guards del panel condicionado', () => {
       commands: unknown[];
     };
     expect(deniedMedico.commands).toEqual(['/']);
+  });
+
+  it('CU28 permite leer HCE a admin, médico y paciente; registrar solo a médico', () => {
+    expect(runPanelGuard(() => clinicalReadGuard(null as never, null as never))).toBe(true);
+    authRole.set('doctor');
+    expect(runPanelGuard(() => clinicalReadGuard(null as never, null as never))).toBe(true);
+    expect(runPanelGuard(() => clinicalWriteGuard(null as never, null as never))).toBe(true);
+    authRole.set('paciente');
+    expect(runPanelGuard(() => clinicalReadGuard(null as never, null as never))).toBe(true);
+    const pacienteWrite = runPanelGuard(() => clinicalWriteGuard(null as never, null as never)) as { commands: unknown[] };
+    expect(pacienteWrite.commands).toEqual(['/']);
+    authRole.set('recepcion');
+    const recepcionRead = runPanelGuard(() => clinicalReadGuard(null as never, null as never)) as { commands: unknown[] };
+    expect(recepcionRead.commands).toEqual(['/']);
   });
 });
 

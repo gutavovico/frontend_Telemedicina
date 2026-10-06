@@ -21,6 +21,26 @@
     </div>
   </div>
 
+  <!-- El recorrido clínico usa pacientes y consultas persistidas. -->
+  <nav aria-label="Atención clínica" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <a
+      routerLink="/admin/pacientes"
+      class="group flex items-center gap-3 rounded-2xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-[#0B4D59] hover:bg-teal-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB] transition-colors"
+    >
+      <span class="material-symbols-outlined text-[22px]" aria-hidden="true">clinical_notes</span>
+      <span class="flex-1"><strong class="block text-sm">Historias clínicas</strong><small class="text-xs">Abrir una consulta y registrar la atención</small></span>
+      <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform" aria-hidden="true">arrow_forward</span>
+    </a>
+    <a
+      routerLink="/admin/recetas"
+      class="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[#293954] hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB] transition-colors"
+    >
+      <span class="material-symbols-outlined text-[22px]" aria-hidden="true">prescriptions</span>
+      <span class="flex-1"><strong class="block text-sm">Recetas digitales</strong><small class="text-xs">Consultar recetas o elegir una consulta para emitir</small></span>
+      <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform" aria-hidden="true">arrow_forward</span>
+    </a>
+  </nav>
+
   <!-- KPIs -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
     <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center gap-4">
@@ -79,7 +99,9 @@
           </button>
         </div>
       } @else if (agendaFiltrada().length === 0) {
-        <div class="px-6 py-10 text-center text-sm text-slate-500">No hay citas asignadas para hoy.</div>
+        <div class="px-6 py-10 text-center text-sm text-slate-500">
+          No hay citas asignadas para hoy. Puedes revisar otras fechas en Citas o abrir la historia de un paciente.
+        </div>
       } @else {
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">

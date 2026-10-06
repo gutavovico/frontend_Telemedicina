@@ -167,6 +167,26 @@
               <span>Historias Clínicas</span>
             </a>
 
+            <!-- CU16: lectura de recetas y administración del catálogo. -->
+            <a
+              routerLink="/admin/recetas"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">prescriptions</span>
+              <span>Recetas</span>
+            </a>
+            <a
+              routerLink="/admin/medicamentos"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">medication</span>
+              <span>Medicamentos</span>
+            </a>
+
             <!-- Documentos (CU12) -->
             <a
               routerLink="/admin/documentos"
@@ -314,6 +334,17 @@
             >
               <span class="material-symbols-outlined text-[20px]">personal_injury</span>
               <span>Pacientes</span>
+            </a>
+
+            <!-- HCE (CU28): elegir paciente para consultar su historia. -->
+            <a
+              routerLink="/admin/hce"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">clinical_notes</span>
+              <span>Historias Clínicas</span>
             </a>
 
             <!-- Recetas (CU16) -->

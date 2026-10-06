@@ -352,7 +352,7 @@ export class Appointments implements OnInit {
     this.isEditing.set(true);
     this.editingCitaId.set(cita.id_cita);
     this.isFormOpen.set(true);
-    this.selectedSlot.set(cita.hora_inicio);
+    this.selectedSlot.set(cita.hora_inicio ?? '');
 
     // Asegurar que el paciente de la cita esté en la lista para que el <select> lo muestre
     const pId = Number(cita.id_paciente);
@@ -616,7 +616,7 @@ export class Appointments implements OnInit {
     }, 4000);
   }
 
-  formatearFechaDisplay(fechaStr: string): string {
+  formatearFechaDisplay(fechaStr: string | null): string {
     if (!fechaStr) return '';
     try {
       const parts = fechaStr.split('-');
@@ -633,7 +633,7 @@ export class Appointments implements OnInit {
     }
   }
 
-  formatearHoraDisplay(hora: string): string {
+  formatearHoraDisplay(hora: string | null): string {
     if (!hora) return '';
     try {
       const [hStr, mStr] = hora.split(':');

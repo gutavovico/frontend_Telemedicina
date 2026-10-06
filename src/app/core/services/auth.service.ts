@@ -195,18 +195,19 @@ export class AuthService {
   redirectByRole(tenantContext?: TenantContext | null): void {
     // Prefer the freshly fetched context passed directly; fall back to the signal
     const tenant = tenantContext ?? this.tenantService.currentTenant();
-    const role = (tenant?.rol || this.currentUser()?.rol || '').toUpperCase();
+    const rawRole = tenant?.rol || this.currentUser()?.rol || '';
+    const role = normalizeAppRole(rawRole);
 
-    if (tenant?.es_super_admin || role.includes('SUPER')) {
+    if (tenant?.es_super_admin || rawRole.toUpperCase().includes('SUPER')) {
       this.router.navigate(['/admin/clinicas']);
       return;
     }
-    if (role.includes('ADMIN')) {
+    if (role === 'admin') {
       this.router.navigate(['/admin/dashboard']);
-    } else if (role.includes('RECEP')) {
+    } else if (role === 'recepcion') {
       this.router.navigate(['/admin/agenda']);
-    } else if (role.includes('MEDIC') || role.includes('DOCTOR')) {
-      this.router.navigate(['/admin/agenda']);
+    } else if (role === 'doctor') {
+      this.router.navigate(['/admin/inicio-medico']);
     } else {
       this.router.navigate(['/']);
     }

@@ -232,6 +232,15 @@
                   </svg>
                 </a>
                 <a
+                  *ngIf="authService.isDoctor() || authService.isAdmin()"
+                  [routerLink]="[adminBase + '/pacientes', patient.id_paciente, 'hce']"
+                  [attr.aria-label]="'Ver historia clínica de ' + patient.nombres + ' ' + patient.apellidos"
+                  title="Ver historia clínica"
+                  class="inline-flex p-2 text-[#25627C] hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+                >
+                  <span class="material-symbols-outlined text-[20px]" aria-hidden="true">clinical_notes</span>
+                </a>
+                <a
                   [routerLink]="[adminBase + '/pacientes', patient.id_paciente, 'editar']"
                   title="Editar Paciente"
                   class="inline-flex p-2 text-gray-500 hover:text-[#25627C] hover:bg-sky-50 rounded-lg transition"

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { panelGuard, adminOnlyGuard, staffGuard } from './core/guards/panel-access.guard';
+import { panelGuard, adminOnlyGuard, staffGuard, clinicalReadGuard, clinicalWriteGuard } from './core/guards/panel-access.guard';
 import { tenantGuard } from './core/guards/tenant.guard';
 import { clinicaGuard } from './core/guards/clinica.guard';
 import { superAdminGuard } from './core/guards/super-admin.guard';
@@ -184,7 +184,7 @@ export const routes: Routes = [
       },
       {
         path: 'pacientes/:id/hce',
-        canActivate: [staffGuard],
+        canActivate: [clinicalReadGuard],
         loadComponent: () =>
           import('./features/medical-records/hce/hce-timeline/hce-timeline').then(
             (m) => m.HceTimeline,
@@ -193,7 +193,7 @@ export const routes: Routes = [
       },
       {
         path: 'pacientes/:id/consultas/nueva',
-        canActivate: [staffGuard],
+        canActivate: [clinicalWriteGuard],
         loadComponent: () =>
           import('./features/medical-records/hce/consulta-editor/consulta-editor').then(
             (m) => m.ConsultaEditor,
@@ -272,6 +272,7 @@ export const routes: Routes = [
       {
         path: 'recetas/:id',
         canActivate: [staffGuard, prescriptionAccessGuard],
+        data: { roles: ['admin', 'doctor'] },
         loadComponent: () =>
           import(
             './features/medical-records/prescriptions/pages/prescription-detail/prescription-detail'
@@ -281,11 +282,22 @@ export const routes: Routes = [
       {
         path: 'recetas',
         canActivate: [staffGuard, prescriptionAccessGuard],
+        data: { roles: ['admin', 'doctor'] },
         loadComponent: () =>
           import(
             './features/medical-records/prescriptions/pages/prescription-list/prescription-list'
           ).then((m) => m.PrescriptionList),
         title: 'Hospital San Juan de Dios - Recetas Médicas',
+      },
+      {
+        path: 'medicamentos',
+        canActivate: [adminOnlyGuard, prescriptionAccessGuard],
+        data: { roles: ['admin'] },
+        loadComponent: () =>
+          import('./features/medical-records/prescriptions/pages/medicine-products/medicine-products').then(
+            (m) => m.MedicineProducts,
+          ),
+        title: 'Hospital San Juan de Dios - Productos farmacológicos',
       },
       {
         path: 'teleconsulta',
@@ -504,6 +516,7 @@ export const routes: Routes = [
       },
       {
         path: ':id/hce',
+        canActivate: [clinicalReadGuard],
         loadComponent: () =>
           import('./features/medical-records/hce/hce-timeline/hce-timeline').then(
             (m) => m.HceTimeline,
@@ -512,6 +525,7 @@ export const routes: Routes = [
       },
       {
         path: ':id/consultas/nueva',
+        canActivate: [clinicalWriteGuard],
         loadComponent: () =>
           import('./features/medical-records/hce/consulta-editor/consulta-editor').then(
             (m) => m.ConsultaEditor,

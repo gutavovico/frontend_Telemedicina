@@ -7,11 +7,19 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { PatientService } from '../../../core/services/patient.service';
 import { MedicoService } from '../../../core/services/medico.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
 import { Cita, CitaCreateRequest, CitaUpdateRequest } from '../../../core/models/appointment.models';
 import { Paciente } from '../../../core/models/patient.models';
 import { MedicoResponse } from '../../../core/models/medico.models';
 
 import { ChatFloatingWidgetComponent } from '../../teleconsulta/components/chat-floating-widget/chat-floating-widget.component';
+
+function fechaLocalIso(fecha: Date = new Date()): string {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, '0');
+  const day = String(fecha.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 @Component({
   selector: 'app-consultas',
@@ -43,8 +51,8 @@ export class ConsultasComponent implements OnInit {
 
   readonly stats = computed(() => {
     const citas = this.filteredCitas();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const hoy = citas.filter(c => c.fecha_cita.startsWith(todayStr)).length;
+    const todayStr = fechaLocalIso();
+    const hoy = citas.filter(c => c.fecha_cita?.startsWith(todayStr)).length;
     const confirmadas = citas.filter(c => c.estado === 'CONFIRMADA').length;
     const pendientes = citas.filter(c => c.estado === 'PENDIENTE').length;
     const canceladas = citas.filter(c => c.estado === 'CANCELADA').length;
@@ -83,8 +91,8 @@ export class ConsultasComponent implements OnInit {
   // Horarios disponibles
 
 
-  readonly selectedFormDate = signal<string>(new Date().toISOString().split('T')[0]);
-  readonly selectedFormDoctor = signal<number>(1);
+  readonly selectedFormDate = signal<string>(fechaLocalIso());
+  readonly selectedFormDoctor = signal<number>(0);
 
   onFormChange(): void {
     if (this.appointmentForm) {
@@ -101,7 +109,7 @@ export class ConsultasComponent implements OnInit {
     const editingId = this.editingCitaId();
     
     return this.appointmentService.citas()
-      .filter(c => c.fecha_cita.startsWith(date) && 
+      .filter(c => c.fecha_cita?.startsWith(date) &&
                    c.id_medico === doctorId && 
                    c.estado !== 'CANCELADA' && 
                    c.id_cita !== editingId)
@@ -181,10 +189,10 @@ export class ConsultasComponent implements OnInit {
   }
 
   initForm(): void {
-    const today = new Date().toISOString().split('T')[0];
+    const today = fechaLocalIso();
     this.appointmentForm = this.fb.group({
       id_paciente: ['', [Validators.required]],
-      id_medico: [1, [Validators.required]],
+      id_medico: [0, [Validators.required, Validators.min(1)]],
       fecha_cita: [today, [Validators.required]],
       hora_inicio: ['09:30', [Validators.required]],
       motivo: ['Consulta General'],
@@ -215,205 +223,71 @@ export class ConsultasComponent implements OnInit {
 
   cargarDatosIniciales(): void {
     // 1. Cargar citas desde el backend
-    this.appointmentService.listarCitas().subscribe({
-      next: (res) => {
-        if (!res.items || res.items.length === 0) {
-          this.crearCitasDemoSiVacio();
-        }
-      },
-      error: () => {
-        this.crearCitasDemoSiVacio();
-      }
-    });
+    if (this.authService.isDoctor()) {
+      this.medicoService.obtenerMiPerfil().subscribe({
+        next: (perfil) => {
+          this.medicosList.set([perfil]);
+          this.selectedFormDoctor.set(perfil.id_medico);
+          this.appointmentForm.patchValue({ id_medico: perfil.id_medico });
+          void this.cargarCitas(perfil.id_medico);
+        },
+        error: () => this.alertMessage.set({
+          type: 'error', text: 'No se pudo cargar tu perfil médico.'
+        })
+      });
+    } else {
+      void this.cargarCitas();
+      this.medicoService.listarMedicos({ limit: 100 }).subscribe({
+        next: (res) => this.medicosList.set(res.items ?? []),
+        error: () => this.alertMessage.set({
+          type: 'error', text: 'No se pudo cargar la lista de médicos.'
+        })
+      });
+    }
 
     // 2. Cargar lista de pacientes para el dropdown
     this.patientService.getPatients(1, 100).subscribe({
       next: (res) => {
-        if (res.items && res.items.length > 0) {
-          this.pacientesList.set(res.items);
-        } else {
-          this.cargarPacientesDemo();
-        }
+        this.pacientesList.set(res.items ?? []);
       },
-      error: () => this.cargarPacientesDemo()
-    });
-
-    // 3. Cargar lista de médicos para el dropdown
-    this.medicoService.listarMedicos({ limit: 100 }).subscribe({
-      next: (res) => {
-        if (res.items && res.items.length > 0) {
-          this.medicosList.set(res.items);
-        } else {
-          this.cargarMedicosDemo();
-        }
-      },
-      error: () => this.cargarMedicosDemo()
+      error: () => this.alertMessage.set({
+        type: 'error', text: 'No se pudo cargar la lista de pacientes.'
+      })
     });
   }
 
-  private cargarPacientesDemo(): void {
-    this.pacientesList.set([
-      {
-        id_paciente: 1,
-        nombres: 'Maria',
-        apellidos: 'Rodriguez',
-        ci: '982-11-2',
-        complemento: '',
-        fecha_nacimiento: '1990-05-12',
-        genero: 'F',
-        telefono: '+591 71234567',
-        correo: 'maria.rodriguez@example.com',
-        estado: 'ACTIVO',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id_paciente: 2,
-        nombres: 'Juan',
-        apellidos: 'Gómez',
-        ci: '451-88-9',
-        complemento: '',
-        fecha_nacimiento: '1985-08-20',
-        genero: 'M',
-        telefono: '+591 79876543',
-        correo: 'juan.gomez@example.com',
-        estado: 'ACTIVO',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id_paciente: 3,
-        nombres: 'Carlos',
-        apellidos: 'Méndez',
-        ci: '672-33-4',
-        complemento: '',
-        fecha_nacimiento: '1992-11-15',
-        genero: 'M',
-        telefono: '+591 78912345',
-        correo: 'carlos.mendez@example.com',
-        estado: 'ACTIVO',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+  private async cargarCitas(idMedico?: number): Promise<void> {
+    const citas: Cita[] = [];
+    let page = 1;
+    try {
+      while (true) {
+        const response = await firstValueFrom(
+          this.appointmentService.listarCitas(undefined, undefined, undefined, idMedico, undefined, page, 100)
+        );
+        citas.push(...response.items);
+        if (response.items.length === 0 || citas.length >= response.total) break;
+        page += 1;
       }
-    ]);
+      this.appointmentService.citas.set(citas);
+    } catch {
+      this.appointmentService.citas.set([]);
+      this.alertMessage.set({
+        type: 'error', text: 'No se pudieron cargar las citas. Reintenta la consulta.'
+      });
+    }
   }
 
-  private cargarMedicosDemo(): void {
-    this.medicosList.set([
-      {
-        id_medico: 1,
-        id_usuario: 1,
-        matricula_profesional: 'MAT-00001',
-        descripcion_profesional: 'Especialista en cardiología clínica',
-        experiencia: '10 años en cardiología',
-        estado: 'activo',
-        fecha_registro: new Date().toISOString(),
-        usuario: {
-          id_usuario: 1,
-          nombres: 'Carlos',
-          apellidos: 'Mendoza',
-          correo: 'doctor@telemedicina.com',
-          telefono: '+591 71111111'
-        },
-        especialidades: [
-          {
-            id_especialidad: 1,
-            nombre: 'Cardiología',
-            es_principal: true
-          }
-        ]
-      },
-      {
-        id_medico: 2,
-        id_usuario: 2,
-        matricula_profesional: 'MAT-00002',
-        descripcion_profesional: 'Médico general y atención primaria',
-        experiencia: '8 años en medicina general',
-        estado: 'activo',
-        fecha_registro: new Date().toISOString(),
-        usuario: {
-          id_usuario: 2,
-          nombres: 'Ana',
-          apellidos: 'Silva',
-          correo: 'ana.silva@telemedicina.com',
-          telefono: '+591 72222222'
-        },
-        especialidades: [
-          {
-            id_especialidad: 2,
-            nombre: 'Medicina General',
-            es_principal: true
-          }
-        ]
-      },
-      {
-        id_medico: 3,
-        id_usuario: 3,
-        matricula_profesional: 'MAT-00003',
-        descripcion_profesional: 'Pediatra especialista',
-        experiencia: '6 años en pediatría',
-        estado: 'activo',
-        fecha_registro: new Date().toISOString(),
-        usuario: {
-          id_usuario: 3,
-          nombres: 'Roberto',
-          apellidos: 'Paz',
-          correo: 'roberto.paz@telemedicina.com',
-          telefono: '+591 73333333'
-        },
-        especialidades: [
-          {
-            id_especialidad: 3,
-            nombre: 'Pediatría',
-            es_principal: true
-          }
-        ]
-      }
-    ]);
+  verHistoria(cita: Cita): void {
+    void this.router.navigate(['/admin/pacientes', cita.id_paciente, 'hce']);
   }
 
-  private crearCitasDemoSiVacio(): void {
-    const demoCitas: Cita[] = [
-      {
-        id_cita: 1,
-        id_paciente: 1,
-        id_medico: 1,
-        id_especialidad: 1,
-        fecha_cita: '2024-10-15',
-        hora_inicio: '09:30',
-        hora_fin: '10:00',
-        motivo: 'Control cardiológico anual',
-        estado: 'CONFIRMADA',
-        tipo_consulta: 'TELEMEDICINA',
-        paciente_nombre: 'Maria Rodriguez',
-        paciente_ci: 'ID: 982-11-2',
-        paciente_iniciales: 'MR',
-        medico_nombre: 'Dr. Carlos Mendoza',
-        especialidad_nombre: 'Cardiología',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id_cita: 2,
-        id_paciente: 2,
-        id_medico: 2,
-        id_especialidad: 2,
-        fecha_cita: '2024-10-15',
-        hora_inicio: '11:00',
-        hora_fin: '11:30',
-        motivo: 'Evaluación de síntomas gripales',
-        estado: 'PENDIENTE',
-        tipo_consulta: 'TELEMEDICINA',
-        paciente_nombre: 'Juan Gómez',
-        paciente_ci: 'ID: 451-88-9',
-        paciente_iniciales: 'JG',
-        medico_nombre: 'Dra. Ana Silva',
-        especialidad_nombre: 'Medicina General',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
-    this.appointmentService.citas.set(demoCitas);
+  registrarAtencion(cita: Cita): void {
+    if (!this.authService.isDoctor() || ['CANCELADA', 'COMPLETADA', 'FINALIZADA'].includes(cita.estado)) {
+      return;
+    }
+    void this.router.navigate(['/admin/pacientes', cita.id_paciente, 'consultas', 'nueva'], {
+      queryParams: { id_cita: cita.id_cita }
+    });
   }
 
   selectSlot(slot: string): void {
@@ -429,7 +303,7 @@ export class ConsultasComponent implements OnInit {
 
   filtrarPorHoy(): void {
     this.currentPage.set(1);
-    const today = new Date().toISOString().split('T')[0];
+    const today = fechaLocalIso();
     if (this.selectedFilterDate() === today) {
       this.selectedFilterDate.set('');
     } else {
@@ -448,7 +322,7 @@ export class ConsultasComponent implements OnInit {
     this.isEditing.set(true);
     this.editingCitaId.set(cita.id_cita);
     this.isFormOpen.set(true);
-    this.selectedSlot.set(cita.hora_inicio);
+    this.selectedSlot.set(cita.hora_inicio ?? '');
       this.tipoConsulta.set(cita.tipo_consulta || 'PRESENCIAL');
 
     // Asegurar que el paciente de la cita esté en la lista para que el <select> lo muestre
@@ -456,51 +330,20 @@ export class ConsultasComponent implements OnInit {
     const mId = Number(cita.id_medico);
 
     const existePaciente = this.pacientesList().some(p => p.id_paciente === pId);
-    if (!existePaciente && cita.paciente_nombre) {
-      const parts = cita.paciente_nombre.split(' ');
-      const demoP: Paciente = {
-        id_paciente: pId,
-        nombres: parts[0] || 'Paciente',
-        apellidos: parts.slice(1).join(' ') || '',
-        ci: cita.paciente_ci?.replace('ID: ', '') || 'S/N',
-        complemento: '',
-        fecha_nacimiento: '1990-01-01',
-        genero: 'M',
-        telefono: '+591 70000000',
-        estado: 'ACTIVO',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      this.pacientesList.update(prev => [demoP, ...prev]);
+    if (!existePaciente) {
+      this.patientService.getPatientById(pId).subscribe({
+        next: (paciente) => this.pacientesList.update(prev => [paciente, ...prev]),
+        error: () => this.mostrarAlerta('error', 'No se pudo cargar el paciente de esta cita.')
+      });
     }
 
     // Asegurar que el médico esté en la lista
     const existeMedico = this.medicosList().some(m => m.id_medico === mId);
-    if (!existeMedico && cita.medico_nombre) {
-      const mParts = cita.medico_nombre.replace('Dr(a). ', '').replace('Dr. ', '').replace('Dra. ', '').split(' ');
-      const demoM: any = {
-        id_medico: mId,
-        id_usuario: mId,
-        matricula_profesional: `MAT-00${mId}`,
-        estado: 'activo',
-        fecha_registro: new Date().toISOString(),
-        usuario: {
-          id_usuario: mId,
-          nombres: mParts[0] || 'Doctor',
-          apellidos: mParts.slice(1).join(' ') || 'Especialista',
-          correo: 'doctor@telemedicina.com',
-          telefono: '',
-          estado: 'activo'
-        },
-        especialidades: [
-          {
-            id_especialidad: cita.id_especialidad || 1,
-            nombre: cita.especialidad_nombre || 'Medicina General',
-            es_principal: true
-          }
-        ]
-      };
-      this.medicosList.update(prev => [demoM, ...prev]);
+    if (!existeMedico) {
+      this.medicoService.obtenerMedico(mId).subscribe({
+        next: (medico) => this.medicosList.update(prev => [medico, ...prev]),
+        error: () => this.mostrarAlerta('error', 'No se pudo cargar el médico de esta cita.')
+      });
     }
 
     // Setear valores en el formulario
@@ -562,23 +405,7 @@ export class ConsultasComponent implements OnInit {
           this.guardarCitaParaPaciente(newPatient.id_paciente);
         },
         error: () => {
-          // Fallback: crear paciente en memoria si el backend está offline
-          const idLocal = Date.now();
-          const pacienteLocal: Paciente = {
-            id_paciente: idLocal,
-            nombres: npData.nombres,
-            apellidos: npData.apellidos,
-            ci: npData.ci,
-            complemento: '',
-            fecha_nacimiento: npData.fecha_nacimiento,
-            genero: npData.genero,
-            telefono: npData.telefono,
-            estado: 'ACTIVO',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          this.pacientesList.update(prev => [pacienteLocal, ...prev]);
-          this.guardarCitaParaPaciente(idLocal);
+          this.mostrarAlerta('error', 'No se pudo registrar el paciente. La cita no se creó.');
         }
       });
       return;
@@ -590,26 +417,6 @@ export class ConsultasComponent implements OnInit {
   private guardarCitaParaPaciente(pId: number): void {
     const formValues = this.appointmentForm.value;
     const mId = Number(formValues.id_medico);
-
-    const pacienteSeleccionado = this.pacientesList().find(p => p.id_paciente === pId);
-    const medicoSeleccionado = this.medicosList().find(m => m.id_medico === mId);
-
-    // Si es nuevo paciente, usar datos del formulario de nuevo paciente
-    const npData = this.newPatientForm.value;
-    const nombrePaciente = pacienteSeleccionado
-      ? `${pacienteSeleccionado.nombres} ${pacienteSeleccionado.apellidos}`.trim()
-      : (this.isNewPatient() ? `${npData.nombres} ${npData.apellidos}`.trim() : 'Paciente');
-    const ciPaciente = pacienteSeleccionado
-      ? `ID: ${pacienteSeleccionado.ci}`
-      : (this.isNewPatient() ? `ID: ${npData.ci}` : 'ID: S/N');
-    const nombreMedico = medicoSeleccionado?.usuario
-      ? `Dr(a). ${medicoSeleccionado.usuario.nombres} ${medicoSeleccionado.usuario.apellidos}`.trim()
-      : (medicoSeleccionado ? `Médico #${mId}` : 'Dr. Médico Especialista');
-    const espMedico = medicoSeleccionado?.especialidades?.[0]?.nombre || 'Medicina General';
-    
-    // Iniciales
-    const pParts = nombrePaciente.split(' ');
-    const ini = ((pParts[0]?.[0] || '') + (pParts[1]?.[0] || '')).toUpperCase() || 'PA';
 
     if (this.isEditing() && this.editingCitaId()) {
       const citaId = this.editingCitaId()!;
@@ -629,20 +436,7 @@ export class ConsultasComponent implements OnInit {
           this.cancelarEdicion();
         },
         error: () => {
-          // Fallback en memoria
-          this.appointmentService.citas.update(prev =>
-            prev.map(c => c.id_cita === citaId ? {
-              ...c,
-              ...updateData,
-              paciente_nombre: nombrePaciente,
-              paciente_ci: ciPaciente,
-              paciente_iniciales: ini,
-              medico_nombre: nombreMedico,
-              especialidad_nombre: espMedico
-            } as Cita : c)
-          );
-          this.mostrarAlerta('success', '¡Cita actualizada exitosamente!');
-          this.cancelarEdicion();
+          this.mostrarAlerta('error', 'No se pudo actualizar la cita. Los cambios no se guardaron.');
         }
       });
     } else {
@@ -663,28 +457,7 @@ export class ConsultasComponent implements OnInit {
           this.cancelarEdicion();
         },
         error: () => {
-          // Fallback en memoria si el backend está offline
-          const idSimulado = Date.now();
-          const demoNueva: Cita = {
-            id_cita: idSimulado,
-            id_paciente: createData.id_paciente,
-            id_medico: createData.id_medico,
-            fecha_cita: createData.fecha_cita,
-            hora_inicio: createData.hora_inicio,
-            motivo: createData.motivo,
-            estado: createData.estado || 'CONFIRMADA',
-            tipo_consulta: createData.tipo_consulta || 'TELEMEDICINA',
-            paciente_nombre: nombrePaciente,
-            paciente_ci: ciPaciente,
-            paciente_iniciales: ini,
-            medico_nombre: nombreMedico,
-            especialidad_nombre: espMedico,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          this.appointmentService.citas.update(prev => [demoNueva, ...prev]);
-          this.mostrarAlerta('success', '¡Cita agendada y añadida automáticamente a la tabla!');
-          this.cancelarEdicion();
+          this.mostrarAlerta('error', 'No se pudo crear la cita. No se registró en la base de datos.');
         }
       });
     }
@@ -711,10 +484,7 @@ export class ConsultasComponent implements OnInit {
         this.cerrarModalEliminar();
       },
       error: () => {
-        // Fallback en memoria si la BD está offline
-        this.appointmentService.citas.update(prev => prev.filter(c => c.id_cita !== cita.id_cita));
-        this.mostrarAlerta('success', `La cita de ${cita.paciente_nombre} ha sido eliminada dinámicamente.`);
-        this.cerrarModalEliminar();
+        this.mostrarAlerta('error', 'No se pudo eliminar la cita. Sigue registrada.');
       }
     });
   }
@@ -742,8 +512,8 @@ export class ConsultasComponent implements OnInit {
     }, 4000);
   }
 
-  formatearFechaDisplay(fechaStr: string): string {
-    if (!fechaStr) return '';
+  formatearFechaDisplay(fechaStr: string | null): string {
+    if (!fechaStr) return 'Sin fecha';
     try {
       const parts = fechaStr.split('-');
       if (parts.length === 3) {
@@ -759,8 +529,8 @@ export class ConsultasComponent implements OnInit {
     }
   }
 
-  formatearHoraDisplay(hora: string): string {
-    if (!hora) return '';
+  formatearHoraDisplay(hora: string | null): string {
+    if (!hora) return 'Sin hora';
     try {
       const [hStr, mStr] = hora.split(':');
       let h = parseInt(hStr, 10);

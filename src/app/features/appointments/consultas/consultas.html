@@ -203,6 +203,28 @@
                   <!-- Acciones: Chatear (CU15) + Editar en Tiempo Real + Eliminar Dinámico -->
                   <td class="py-4 px-4 text-center">
                     <div class="flex items-center justify-center gap-1.5">
+                      @if (authService.isDoctor()) {
+                        <button
+                          type="button"
+                          (click)="verHistoria(cita)"
+                          class="p-1.5 text-[#25627C] hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+                          [attr.aria-label]="'Ver historia clínica del paciente de la cita ' + cita.id_cita"
+                          title="Ver historia clínica"
+                        >
+                          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">clinical_notes</span>
+                        </button>
+                        @if (!['CANCELADA', 'COMPLETADA', 'FINALIZADA'].includes(cita.estado)) {
+                          <button
+                            type="button"
+                            (click)="registrarAtencion(cita)"
+                            class="p-1.5 text-[#0B4D59] hover:text-[#049CAB] hover:bg-teal-50 rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049CAB]"
+                            [attr.aria-label]="'Registrar atención de la cita ' + cita.id_cita"
+                            title="Registrar atención"
+                          >
+                            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">stethoscope</span>
+                          </button>
+                        }
+                      }
                       <button
                         type="button"
                         (click)="abrirChatCita(cita)"

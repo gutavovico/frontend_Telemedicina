@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PatientService } from '../../../../core/services/patient.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { Paciente } from '../../../../core/models/patient.models';
 import { Header } from '../../../../shared/components/header/header';
 import { Footer } from '../../../../shared/components/footer/footer';
@@ -16,6 +17,7 @@ import { Footer } from '../../../../shared/components/footer/footer';
 })
 export class PatientList implements OnInit {
   readonly patientService = inject(PatientService);
+  readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   /** Prefijo '' o '/admin' según dónde esté montada esta vista. */

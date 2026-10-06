@@ -112,7 +112,8 @@ export class PrescriptionList implements OnInit {
 
   goToIssue(): void {
     const base = this.router.url.startsWith('/admin') ? '/admin' : '';
-    void this.router.navigate([base + '/recetas/emitir']);
+    // La emision requiere una consulta registrada para fijar sus IDs reales.
+    void this.router.navigate([base + '/pacientes']);
   }
 
   badgeClass(receta: RecetaResponse): string {

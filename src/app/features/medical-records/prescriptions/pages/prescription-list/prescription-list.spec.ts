@@ -44,7 +44,7 @@ describe('PrescriptionList (CU16)', () => {
       of({ items: [] as RecetaResponse[], total: 0 }),
     ),
   };
-  const routerMock = { navigate: vi.fn() };
+  const routerMock = { navigate: vi.fn(), url: '/admin/recetas' };
   let authMock: { userRole: ReturnType<typeof vi.fn>; isDoctor: ReturnType<typeof vi.fn> };
   let injector: DestroyableInjector;
 
@@ -155,6 +155,13 @@ describe('PrescriptionList (CU16)', () => {
     expect(args.skip).toBe(20);
     expect(args.limit).toBe(10);
     expect(comp.page()).toBe(3);
+    injector.destroy();
+  });
+
+  it('inicia la emisión eligiendo un paciente con consulta registrada', () => {
+    const comp = create('doctor');
+    comp.goToIssue();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/admin/pacientes']);
     injector.destroy();
   });
 });

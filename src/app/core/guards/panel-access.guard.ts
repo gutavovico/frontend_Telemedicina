@@ -54,3 +54,18 @@ export const staffGuard: CanActivateFn = () => {
 
   return router.createUrlTree(['/']);
 };
+
+/** La HCE admite lectura de médico, admin y paciente (solo su historia en API). */
+export const clinicalReadGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  return authService.isDoctor() || authService.isAdmin() || authService.isPaciente()
+    ? true : router.createUrlTree(['/']);
+};
+
+/** El registro de una consulta clínica corresponde exclusivamente al médico. */
+export const clinicalWriteGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  return authService.isDoctor() ? true : router.createUrlTree(['/']);
+};

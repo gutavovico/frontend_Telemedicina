@@ -3,8 +3,8 @@ export interface Cita {
   id_paciente: number;
   id_medico: number;
   id_especialidad?: number | null;
-  fecha_cita: string;
-  hora_inicio: string;
+  fecha_cita: string | null;
+  hora_inicio: string | null;
   hora_fin?: string | null;
   motivo?: string | null;
   estado: 'PENDIENTE' | 'CONFIRMADA' | 'COMPLETADA' | 'CANCELADA' | string;
