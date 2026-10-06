@@ -39,8 +39,12 @@ export class HceService {
           },
           error: (err) => {
             this.isLoading.set(false);
+            this.historiaActual.set(null);
+            const detail = typeof err?.error?.detail === 'string' ? err.error.detail : '';
             const msg =
-              err.status === 404
+              err.status === 404 && detail === 'Not Found'
+                ? 'El backend actual no ofrece la ruta de historia clínica. Se requiere publicar CU28 en ese servidor.'
+                : err.status === 404
                 ? 'El expediente clínico no existe o no pertenece a su centro médico.'
                 : err.status === 403
                 ? 'No tiene permisos para acceder al expediente de este paciente.'

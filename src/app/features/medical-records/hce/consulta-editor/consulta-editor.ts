@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   NonNullableFormBuilder,
@@ -43,6 +44,13 @@ export class ConsultaEditor implements OnInit {
 
   readonly idPaciente = signal<number>(0);
   readonly idCita = signal<number>(0);
+  readonly patientLoadError = signal<string | null>(null);
+  readonly expedienteDisponible = computed(() => {
+    const paciente = this.patientService.selectedPatient();
+    const historia = this.hceService.historiaActual();
+    return !!paciente && !!historia && paciente.id_paciente === this.idPaciente()
+      && historia.id_paciente === this.idPaciente() && this.idCita() > 0;
+  });
   // Lista dinámica de diagnósticos CIE-10 asignados a esta consulta
   readonly diagnosticos = signal<DiagnosticoCreate[]>([]);
 
@@ -150,12 +158,24 @@ export class ConsultaEditor implements OnInit {
       return;
     }
 
+    this.patientService.selectedPatient.set(null);
+    this.hceService.limpiarEstado();
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
+    if (idParam && Number.isInteger(Number(idParam)) && Number(idParam) > 0) {
       const id = Number(idParam);
       this.idPaciente.set(id);
-      this.patientService.getPatientById(id).subscribe();
-      this.hceService.getHistoriaClinica(id).subscribe();
+      this.patientService.getPatientById(id).subscribe({
+        error: (error: unknown) => {
+          const missingRoute = error instanceof HttpErrorResponse
+            && error.status === 404 && error.error?.detail === 'Not Found';
+          this.patientLoadError.set(missingRoute
+            ? 'El backend actual no ofrece la ruta de pacientes. Se requiere publicar CU03 en ese servidor.'
+            : 'No se pudo cargar el paciente de esta clínica.');
+        }
+      });
+      this.hceService.getHistoriaClinica(id).subscribe({ error: () => undefined });
+    } else {
+      this.patientLoadError.set('El identificador del paciente no es válido.');
     }
 
     // Tomar id_cita si viene por query param (ej: ?id_cita=1)
@@ -201,6 +221,7 @@ export class ConsultaEditor implements OnInit {
   }
 
   guardarConsulta(): void {
+    if (!this.expedienteDisponible()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
