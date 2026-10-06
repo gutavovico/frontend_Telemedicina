@@ -401,9 +401,9 @@
         </button>
 
         <div class="hidden sm:flex items-center gap-2 text-xs text-on-surface-variant">
-          <span class="font-semibold text-primary">Panel Admin</span>
+          <span class="font-semibold text-primary">{{ authService.isDoctor() ? 'Panel Médico' : 'Panel Admin' }}</span>
           <span>/</span>
-          <span class="text-on-surface">Administración del Sistema</span>
+          <span class="text-on-surface">{{ authService.isDoctor() ? 'Atención Clínica' : 'Administración del Sistema' }}</span>
         </div>
       </div>
 
