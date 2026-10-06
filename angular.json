@@ -66,6 +66,16 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "render": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
@@ -82,6 +92,9 @@
             },
             "development": {
               "buildTarget": "frontend_Telemedicina:build:development"
+            },
+            "render": {
+              "buildTarget": "frontend_Telemedicina:build:render"
             }
           },
           "defaultConfiguration": "development"
