@@ -1,4 +1,4 @@
-<app-header></app-header>
+@if (!adminBase) { <app-header></app-header> }
 
 <main class="min-h-screen bg-[#F0F5FB] pt-24 pb-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto space-y-6">
@@ -21,6 +21,7 @@
 
       <div class="flex items-center gap-3">
         <a
+          *ngIf="!authService.isDoctor()"
           [routerLink]="[adminBase + '/pacientes/nuevo']"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#049CAB] hover:bg-[#1FA7AE] text-white font-medium rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
         >
@@ -138,6 +139,7 @@
           <p class="text-sm text-gray-500 mt-1">Intente ajustar los términos de búsqueda o registre un nuevo paciente.</p>
         </div>
         <a
+          *ngIf="!authService.isDoctor()"
           [routerLink]="[adminBase + '/pacientes/nuevo']"
           class="inline-flex items-center gap-2 px-4 py-2 bg-[#049CAB] text-white text-sm font-medium rounded-xl hover:bg-[#1FA7AE] transition"
         >
@@ -241,6 +243,7 @@
                   <span class="material-symbols-outlined text-[20px]" aria-hidden="true">clinical_notes</span>
                 </a>
                 <a
+                  *ngIf="!authService.isDoctor()"
                   [routerLink]="[adminBase + '/pacientes', patient.id_paciente, 'editar']"
                   title="Editar Paciente"
                   class="inline-flex p-2 text-gray-500 hover:text-[#25627C] hover:bg-sky-50 rounded-lg transition"
@@ -250,7 +253,7 @@
                   </svg>
                 </a>
                 <button
-                  *ngIf="patient.estado === 'ACTIVO'"
+                  *ngIf="patient.estado === 'ACTIVO' && !authService.isDoctor()"
                   (click)="onDelete(patient)"
                   title="Desactivar Paciente"
                   class="inline-flex p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
@@ -292,4 +295,4 @@
   </div>
 </main>
 
-<app-footer></app-footer>
+@if (!adminBase) { <app-footer></app-footer> }

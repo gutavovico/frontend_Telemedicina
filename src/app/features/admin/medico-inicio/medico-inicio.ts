@@ -17,6 +17,7 @@ import { Cita } from '../../../core/models/appointment.models';
 export interface CitaAgendaInicio {
   id_cita: number;
   id_paciente: number;
+  fecha: string | null;
   hora: string;
   paciente: string;
   iniciales: string;
@@ -49,7 +50,8 @@ export class MedicoInicio implements OnInit {
 
   readonly miPerfil = signal<MedicoResponse | null>(null);
   readonly searchQuery = signal('');
-  readonly agendaDelDia = signal<CitaAgendaInicio[]>([]);
+  readonly citasAsignadas = signal<CitaAgendaInicio[]>([]);
+  readonly agendaDelDia = computed(() => this.citasAsignadas().filter(c => c.fecha === this.obtenerFechaHoyIso()));
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
 
@@ -101,13 +103,14 @@ export class MedicoInicio implements OnInit {
 
   readonly agendaFiltrada = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    const agenda = this.agendaDelDia();
+    const agenda = this.citasAsignadas();
     if (!q) return agenda;
     return agenda.filter(
       (c) =>
         c.paciente.toLowerCase().includes(q) ||
         c.motivo.toLowerCase().includes(q) ||
         c.hora.toLowerCase().includes(q) ||
+        (c.fecha || '').includes(q) ||
         c.estado.toLowerCase().includes(q) ||
         String(c.id_cita).includes(q) ||
         String(c.id_paciente).includes(q)
@@ -139,6 +142,7 @@ export class MedicoInicio implements OnInit {
     return {
       id_cita: cita.id_cita,
       id_paciente: cita.id_paciente,
+      fecha: cita.fecha_cita,
       hora: this.formatearHora(cita.hora_inicio),
       paciente: nombre,
       iniciales,
@@ -155,7 +159,7 @@ export class MedicoInicio implements OnInit {
     this.medicoService.obtenerMiPerfil().subscribe({
       next: (perfil) => {
         this.miPerfil.set(perfil);
-        this.cargarAgendaDelDia(perfil.id_medico);
+        this.cargarCitasAsignadas(perfil.id_medico);
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -163,19 +167,18 @@ export class MedicoInicio implements OnInit {
         this.errorMessage.set(
           (typeof detail === 'string' && detail) || 'No se pudo cargar el perfil del médico autenticado.'
         );
-        this.agendaDelDia.set([]);
+        this.citasAsignadas.set([]);
       },
     });
   }
 
-  cargarAgendaDelDia(idMedico: number): void {
+  cargarCitasAsignadas(idMedico: number): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    const fecha = this.obtenerFechaHoyIso();
-    this.appointmentService.listarCitas(undefined, fecha, undefined, idMedico, undefined, 1, 50).subscribe({
+    this.appointmentService.listarCitas(undefined, undefined, undefined, idMedico, undefined, 1, 100).subscribe({
       next: (res) => {
         const items = Array.isArray(res?.items) ? res.items : [];
-        this.agendaDelDia.set(items.map((c) => this.mapearCitaACitaAgenda(c)));
+        this.citasAsignadas.set(items.filter(c => c.id_medico === idMedico).map((c) => this.mapearCitaACitaAgenda(c)));
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -184,14 +187,14 @@ export class MedicoInicio implements OnInit {
         this.errorMessage.set(
           (typeof detail === 'string' && detail) || 'No se pudo cargar la agenda del día.'
         );
-        this.agendaDelDia.set([]);
+        this.citasAsignadas.set([]);
       },
     });
   }
 
   reintentar(): void {
     const perfil = this.miPerfil();
-    if (perfil) this.cargarAgendaDelDia(perfil.id_medico);
+    if (perfil) this.cargarCitasAsignadas(perfil.id_medico);
     else this.cargarDatosDoctor();
   }
 

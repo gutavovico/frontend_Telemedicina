@@ -27,7 +27,7 @@
               {{ tenantService.clinicaNombre() }}
             </span>
             <span class="text-[11px] font-semibold text-secondary-fixed tracking-wider uppercase">
-              {{ tenantService.isSuperAdmin() ? 'Super Admin' : 'Panel Admin' }}
+              {{ tenantService.isSuperAdmin() ? 'Super Admin' : authService.isDoctor() ? 'Panel Médico' : 'Panel Admin' }}
             </span>
           </div>
         </a>

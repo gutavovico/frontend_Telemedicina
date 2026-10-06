@@ -21,6 +21,10 @@ export class PrescriptionList implements OnInit {
   readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  get adminBase(): string {
+    return this.router.url.startsWith('/admin') ? '/admin' : '';
+  }
+
   readonly recetas = signal<RecetaResponse[]>([]);
   readonly total = signal<number>(0);
   readonly isLoading = signal<boolean>(false);
