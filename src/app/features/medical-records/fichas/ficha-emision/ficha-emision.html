@@ -94,6 +94,9 @@
                 {{ p.nombre }} (CI: {{ p.ci }})
               </option>
             </select>
+            @if (pacientesError()) {
+              <p class="mt-1 text-xs font-medium text-rose-600">{{ pacientesError() }}</p>
+            }
           </div>
 
           <!-- Especialista / Médico -->
