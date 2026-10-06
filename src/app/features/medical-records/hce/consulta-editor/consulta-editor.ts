@@ -11,6 +11,7 @@ import {
 } from '@angular/forms';
 import { HceService } from '../../../../core/services/hce.service';
 import { PatientService } from '../../../../core/services/patient.service';
+import { AppointmentService } from '../../../../core/services/appointment.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Header } from '../../../../shared/components/header/header';
 import { Footer } from '../../../../shared/components/footer/footer';
@@ -35,6 +36,7 @@ export class ConsultaEditor implements OnInit {
   private readonly router = inject(Router);
   readonly hceService = inject(HceService);
   readonly patientService = inject(PatientService);
+  private readonly appointmentService = inject(AppointmentService);
   readonly authService = inject(AuthService);
 
   /** Prefijo '' o '/admin' según dónde esté montada esta vista. */
@@ -45,11 +47,14 @@ export class ConsultaEditor implements OnInit {
   readonly idPaciente = signal<number>(0);
   readonly idCita = signal<number>(0);
   readonly patientLoadError = signal<string | null>(null);
+  readonly citaLoadError = signal<string | null>(null);
+  readonly citaValidada = signal(false);
+  readonly citaIsLoading = signal(false);
   readonly expedienteDisponible = computed(() => {
     const paciente = this.patientService.selectedPatient();
     const historia = this.hceService.historiaActual();
     return !!paciente && !!historia && paciente.id_paciente === this.idPaciente()
-      && historia.id_paciente === this.idPaciente() && this.idCita() > 0;
+      && historia.id_paciente === this.idPaciente() && this.citaValidada();
   });
   // Lista dinámica de diagnósticos CIE-10 asignados a esta consulta
   readonly diagnosticos = signal<DiagnosticoCreate[]>([]);
@@ -180,13 +185,34 @@ export class ConsultaEditor implements OnInit {
 
     // Tomar id_cita si viene por query param (ej: ?id_cita=1)
     const citaQuery = this.route.snapshot.queryParamMap.get('id_cita');
-    if (citaQuery) {
+    if (citaQuery && Number.isInteger(Number(citaQuery)) && Number(citaQuery) > 0) {
       const citaId = Number(citaQuery);
       this.idCita.set(citaId);
       this.form.controls.id_cita.setValue(citaId);
       // La atención iniciada desde una cita conserva su vínculo de origen.
       // getRawValue() mantiene este valor en el payload aunque el control esté bloqueado.
       this.form.controls.id_cita.disable();
+      this.citaIsLoading.set(true);
+      this.appointmentService.obtenerCita(citaId).subscribe({
+        next: (cita) => {
+          this.citaIsLoading.set(false);
+          if (cita.id_paciente !== this.idPaciente()) {
+            this.citaLoadError.set('La cita seleccionada no corresponde a este paciente.');
+            return;
+          }
+          if (['CANCELADA', 'COMPLETADA', 'FINALIZADA'].includes(cita.estado?.trim().toUpperCase())) {
+            this.citaLoadError.set('La cita ya fue finalizada o no puede ser atendida.');
+            return;
+          }
+          this.citaValidada.set(true);
+        },
+        error: () => {
+          this.citaIsLoading.set(false);
+          this.citaLoadError.set('No se pudo verificar la cita asignada.');
+        }
+      });
+    } else {
+      this.citaLoadError.set('Abra la atención desde una cita válida de su agenda.');
     }
   }
 

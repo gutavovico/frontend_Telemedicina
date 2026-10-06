@@ -53,8 +53,11 @@
     <div *ngIf="patientLoadError()" class="p-4 bg-[#ffdad6] border border-[#ba1a1a] rounded-2xl text-sm font-medium text-[#93000a]" role="alert">
       {{ patientLoadError() }}
     </div>
-    <p *ngIf="!expedienteDisponible() && !patientLoadError() && !hceService.errorMessage()" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600" role="status">
-      {{ patientService.isLoading() || hceService.isLoading() ? 'Cargando expediente clínico…' : 'No se puede iniciar la atención sin una cita y un expediente clínico válidos.' }}
+    <div *ngIf="citaLoadError()" class="p-4 bg-[#ffdad6] border border-[#ba1a1a] rounded-2xl text-sm font-medium text-[#93000a]" role="alert">
+      {{ citaLoadError() }}
+    </div>
+    <p *ngIf="!expedienteDisponible() && !patientLoadError() && !citaLoadError() && !hceService.errorMessage()" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600" role="status">
+      {{ patientService.isLoading() || hceService.isLoading() || citaIsLoading() ? 'Cargando expediente clínico…' : 'No se puede iniciar la atención sin una cita y un expediente clínico válidos.' }}
     </p>
 
     <!-- Formulario Clínico Estructurado -->

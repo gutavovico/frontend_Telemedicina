@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-backend-en-produccion.com',
+  apiUrl: 'https://backend-telemedicina.onrender.com',
   inactivityTimeoutMinutes: 15,
   inactivityWarningSeconds: 60
 };
