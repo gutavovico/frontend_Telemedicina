@@ -217,7 +217,7 @@
               </div>
             </div>
             
-            <div *ngIf="resultado()!.posibles_causas?.length" class="mb-4 text-sm text-slate-300">
+            <div *ngIf="resultado()!.posibles_causas.length" class="mb-4 text-sm text-slate-300">
               <strong class="text-white">Análisis detallado de posibles causas:</strong>
               <ul class="list-none pl-1 mt-2 space-y-2">
                 <li *ngFor="let c of resultado()!.posibles_causas" class="flex items-start gap-2 bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">

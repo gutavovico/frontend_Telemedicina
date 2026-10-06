@@ -58,7 +58,7 @@ export class InactivityService {
     this.timeoutMs = (rememberMe
       ? environment.inactivityTimeoutMinutes * 2
       : environment.inactivityTimeoutMinutes) * 60 * 1000;
-    this.warningMs = environment.inactivityWarningSeconds * 1000;
+    this.warningMs = ((environment as any).inactivityWarningSeconds ?? 60) * 1000;
 
     this.windowMs = this.timeoutMs;
     this.setupListeners();
