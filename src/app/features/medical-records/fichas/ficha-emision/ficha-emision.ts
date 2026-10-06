@@ -56,10 +56,11 @@ export class FichaEmisionComponent implements OnInit {
   conflictError = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
-  // Pacientes y Médicos (médicos siempre desde la API del tenant, nunca mock)
+  // Pacientes y Médicos (siempre API real del tenant, nunca mocks)
   pacientes = signal<PatientOption[]>([]);
   medicos = signal<DoctorOption[]>([]);
   medicosError = signal<string | null>(null);
+  pacientesError = signal<string | null>(null);
 
   // Horarios / Slots
   slotsDisponibles = signal<SlotFicha[]>([]);
@@ -114,7 +115,35 @@ export class FichaEmisionComponent implements OnInit {
     });
   }
 
-  cargarPacientes(): void {    this.patientService.getPatients().subscribe({
+  cargarPacientes(): void {
+    this.pacientesError.set(null);
+    // CU09: el paciente solo emite para sí mismo. GET /pacientes (lista)
+    // exige ADMIN/RECEPCION/MEDICO → al paciente le da 403; se usa /me.
+    if (this.authService.isPaciente()) {
+      this.patientService.getMyProfile().subscribe({
+        next: (p) => {
+          if (p) {
+            this.pacientes.set([
+              {
+                id_paciente: p.id_paciente,
+                nombre: `${p.nombres} ${p.apellidos}`.trim(),
+                ci: p.ci,
+              },
+            ]);
+            this.form.patchValue({ id_paciente: p.id_paciente });
+          } else {
+            this.pacientes.set([]);
+            this.pacientesError.set('No se encontró tu expediente. Contacta a recepción.');
+          }
+        },
+        error: (err) => {
+          this.pacientes.set([]);
+          this.pacientesError.set(err?.error?.detail ?? 'No se pudo cargar tu expediente.');
+        },
+      });
+      return;
+    }
+    this.patientService.getPatients().subscribe({
       next: (res) => {
         if (res && res.items) {
           this.pacientes.set(
@@ -124,15 +153,18 @@ export class FichaEmisionComponent implements OnInit {
               ci: p.ci,
             }))
           );
+          const actual = Number(this.form.get('id_paciente')?.value);
+          const vigente = res.items.some((p) => p.id_paciente === actual);
+          if (!vigente && res.items.length > 0) {
+            this.form.patchValue({ id_paciente: res.items[0].id_paciente });
+          }
         }
       },
-      error: () => {
-        // Fallback predeterminado
-        this.pacientes.set([
-          { id_paciente: 1, nombre: 'María Rodríguez', ci: '1234567' },
-          { id_paciente: 2, nombre: 'Juan Carlos Gómez', ci: '2345678' },
-          { id_paciente: 3, nombre: 'Ana López', ci: '3456789' },
-        ]);
+      error: (err) => {
+        this.pacientes.set([]);
+        this.pacientesError.set(
+          err?.error?.detail ?? 'No se pudo cargar la lista de pacientes de tu clínica.'
+        );
       },
     });
   }
