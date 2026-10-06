@@ -83,14 +83,30 @@
             }
           </div>
 
-<!-- Canal de entrega (CU23) - Solo email -->
+<!-- Canal de entrega (CU23) - Email o SMS -->
           <div class="flex flex-col gap-1.5">
-            <span class="font-label-md text-sm font-semibold text-on-surface">
-              Código por correo electrónico
-            </span>
-            <div class="flex items-center gap-2 px-3.5 py-3 rounded-xl border cursor-default bg-primary/5 border-primary">
-              <span class="material-symbols-outlined text-[20px]">mail</span>
-              <span class="text-sm font-medium">Correo electrónico</span>
+            <label class="font-label-md text-sm font-semibold text-on-surface">Canal de envío</label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 px-3.5 py-3 rounded-xl border cursor-pointer bg-primary/5 border-primary hover:bg-primary/10 transition-colors">
+                <input
+                  type="radio"
+                  formControlName="canal"
+                  value="email"
+                  class="w-4 h-4 text-primary border-primary focus:ring-primary/20"
+                >
+                <span class="material-symbols-outlined text-[20px]">mail</span>
+                <span class="text-sm font-medium">Correo electrónico</span>
+              </label>
+              <label class="flex items-center gap-2 px-3.5 py-3 rounded-xl border cursor-pointer border-outline-variant/60 hover:bg-surface-container-high hover:border-primary/30 transition-colors">
+                <input
+                  type="radio"
+                  formControlName="canal"
+                  value="sms"
+                  class="w-4 h-4 text-primary border-primary focus:ring-primary/20"
+                >
+                <span class="material-symbols-outlined text-[20px]">sms</span>
+                <span class="text-sm font-medium">SMS</span>
+              </label>
             </div>
           </div>
 

@@ -25,6 +25,9 @@ export class LaboratoryOrderDetail implements OnInit {
 
   readonly previewSource = computed(() => this.previewUrl() || this.downloadInfo()?.url_firmada || null);
 
+  readonly isLoadingFirmar = signal(false);
+  readonly firmarSuccess = signal(false);
+
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) {
@@ -123,5 +126,32 @@ export class LaboratoryOrderDetail implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/ordenes-laboratorio']);
+  }
+
+  async firmarOrden(): Promise<void> {
+    const order = this.service.selectedOrder();
+    if (!order || order.estado !== 'BORRADOR') return;
+
+    this.isLoadingFirmar.set(true);
+    this.firmarSuccess.set(false);
+    this.errorMessage.set(null);
+
+    this.service.firmarOrden(order.id_orden).subscribe({
+      next: () => {
+        this.isLoadingFirmar.set(false);
+        this.firmarSuccess.set(true);
+        this.service.getOrderById(order.id_orden).subscribe({
+          next: () => {
+            if (this.service.selectedOrder()?.estado === 'FIRMADA') {
+              this.autoLoadPreview();
+            }
+          }
+        });
+      },
+      error: (err) => {
+        this.isLoadingFirmar.set(false);
+        this.errorMessage.set(err.error?.detail || 'Error al firmar la orden.');
+      }
+    });
   }
 }

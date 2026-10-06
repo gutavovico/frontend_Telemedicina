@@ -215,7 +215,7 @@
                     <span class="font-semibold text-primary">Panel Recepción</span>
                   </button>
                 }
-                @if (authService.isDoctor()) {
+@if (authService.isDoctor()) {
                   <button
                     type="button"
                     (click)="goToMedicoPanel()"
@@ -227,9 +227,9 @@
                     <span class="font-semibold text-primary">Panel Médico</span>
                   </button>
                 }
-              </div>
+                </div>
 
-              <div class="my-1 border-t border-outline-variant/20 mx-2"></div>
+                <div class="my-1 border-t border-outline-variant/20 mx-2"></div>
 
               <div class="px-1.5 pb-0.5">
                 <button
@@ -563,6 +563,14 @@
               <span class="material-symbols-outlined text-[20px] text-primary">stethoscope</span>
               <span>Panel Médico</span>
             </button>
+            <a
+              routerLink="/ordenes-laboratorio"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors w-full text-left"
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">science</span>
+              <span>Órdenes de Laboratorio</span>
+            </a>
           }
           <button
             type="button"

@@ -259,6 +259,65 @@ export const routes: Routes = [
           ),
         title: 'Hospital San Juan de Dios - Expediente Ficha Médica',
       },
+
+      // CU10: Órdenes de Laboratorio (bajo /admin para mantener sidebar izquierdo)
+      {
+        path: 'ordenes-laboratorio',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/laboratory-orders/components/laboratory-order-list/laboratory-order-list').then(
+            (m) => m.LaboratoryOrderList,
+          ),
+        title: 'Hospital San Juan de Dios - Órdenes de Laboratorio',
+      },
+      {
+        path: 'ordenes-laboratorio/nueva',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/laboratory-orders/components/laboratory-order-form/laboratory-order-form').then(
+            (m) => m.LaboratoryOrderForm,
+          ),
+        title: 'Hospital San Juan de Dios - Nueva Orden de Laboratorio',
+      },
+      {
+        path: 'ordenes-laboratorio/:id',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/laboratory-orders/components/laboratory-order-detail/laboratory-order-detail').then(
+            (m) => m.LaboratoryOrderDetail,
+          ),
+        title: 'Hospital San Juan de Dios - Detalle Orden de Laboratorio',
+      },
+      {
+        path: 'ordenes-laboratorio/:id/editar',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/laboratory-orders/components/laboratory-order-form/laboratory-order-form').then(
+            (m) => m.LaboratoryOrderForm,
+          ),
+        title: 'Hospital San Juan de Dios - Editar Orden de Laboratorio',
+      },
+
+      // CU12: Documentos Clínicos (bajo /admin para mantener sidebar izquierdo)
+      {
+        path: 'documentos',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/documentos/components/document-list/document-list').then(
+            (m) => m.DocumentList,
+          ),
+        title: 'Hospital San Juan de Dios - Documentos Clínicos',
+      },
+      {
+        path: 'documentos/:id',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/medical-records/documentos/components/document-detail/document-detail').then(
+            (m) => m.DocumentDetail,
+          ),
+        title: 'Hospital San Juan de Dios - Detalle de Documento',
+      },
+
       {
         path: 'recetas/emitir',
         canActivate: [staffGuard, prescriptionAccessGuard],
@@ -574,6 +633,64 @@ export const routes: Routes = [
       ),
     title: 'Hospital San Juan de Dios - Documento del Paciente',
   },
+  {
+    path: 'mis-documentos',
+    canActivate: [authGuard],
+    data: { modo: 'me' },
+    loadComponent: () =>
+      import('./features/medical-records/documentos/components/document-list/document-list').then(
+        (m) => m.DocumentList,
+      ),
+    title: 'Hospital San Juan de Dios - Mis Documentos Clínicos',
+  },
+  {
+    path: 'mis-documentos/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/documentos/components/document-detail/document-detail').then(
+        (m) => m.DocumentDetail,
+      ),
+    title: 'Hospital San Juan de Dios - Mi Documento',
+  },
+
+  // CU10: Órdenes de Laboratorio
+  {
+    path: 'ordenes-laboratorio',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/laboratory-orders/components/laboratory-order-list/laboratory-order-list').then(
+        (m) => m.LaboratoryOrderList,
+      ),
+    title: 'Hospital San Juan de Dios - Órdenes de Laboratorio',
+  },
+  {
+    path: 'ordenes-laboratorio/nueva',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/laboratory-orders/components/laboratory-order-form/laboratory-order-form').then(
+        (m) => m.LaboratoryOrderForm,
+      ),
+    title: 'Hospital San Juan de Dios - Nueva Orden de Laboratorio',
+  },
+  {
+    path: 'ordenes-laboratorio/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/laboratory-orders/components/laboratory-order-detail/laboratory-order-detail').then(
+        (m) => m.LaboratoryOrderDetail,
+      ),
+    title: 'Hospital San Juan de Dios - Detalle Orden de Laboratorio',
+  },
+  {
+    path: 'ordenes-laboratorio/:id/editar',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/medical-records/laboratory-orders/components/laboratory-order-form/laboratory-order-form').then(
+        (m) => m.LaboratoryOrderForm,
+      ),
+    title: 'Hospital San Juan de Dios - Editar Orden de Laboratorio',
+  },
+
   {
     path: 'mis-documentos',
     canActivate: [authGuard],

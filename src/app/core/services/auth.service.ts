@@ -216,8 +216,8 @@ export class AuthService {
     return this.http.post<UsuarioResponse>(`${this.apiUrl}/auth/register`, datos);
   }
 
-  requestPasswordReset(correo: string): Observable<ForgotPasswordResponse> {
-    const payload: ForgotPasswordRequest = { correo };
+  requestPasswordReset(correo: string, canal: 'email' | 'sms' = 'email'): Observable<ForgotPasswordResponse> {
+    const payload: ForgotPasswordRequest = { correo, canal };
     return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/auth/forgot-password`, payload);
   }
 
