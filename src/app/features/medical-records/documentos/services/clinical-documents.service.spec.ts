@@ -238,5 +238,28 @@ describe('ClinicalDocumentsService (CU12)', () => {
         vi.unstubAllGlobals();
       }
     });
+
+    it('usa el ID autorizado para reintentar tras un fallo de red', async () => {
+      const blob = new Blob(['pdf'], { type: 'application/pdf' });
+      http.get.mockReturnValueOnce(of(blob));
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+      try {
+        const result = await service.loadDocumentBlob('https://r2.example/bucket/otro-prefijo?token=1', 7);
+        expect(http.get).toHaveBeenCalledWith(`${DEFAULT_BASE}/7/file`, { responseType: 'blob' });
+        expect(result).toBe(blob);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it('no reintenta por backend una URL firmada que responde 403', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 403 }));
+      try {
+        await expect(service.loadDocumentBlob('https://r2.example/bucket/doc', 7)).rejects.toThrow('403');
+        expect(http.get).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
   });
 });

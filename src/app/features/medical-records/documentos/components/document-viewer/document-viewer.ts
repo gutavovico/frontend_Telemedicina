@@ -33,7 +33,7 @@ export class DocumentViewer implements OnChanges {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     try {
-      const blob = await this.documentsService.loadDocumentBlob(this.downloadUrl);
+      const blob = await this.documentsService.loadDocumentBlob(this.downloadUrl, this.idDocumento);
       const url = URL.createObjectURL(blob);
       this.rawPdfUrl.set(url);
       this.safePdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));

@@ -82,7 +82,7 @@ export class DocumentDetail implements OnInit {
     const info = this.downloadInfo();
     if (!info) return;
     try {
-      const blob = await this.documentsService.loadDocumentBlob(info.url_firmada);
+      const blob = await this.documentsService.loadDocumentBlob(info.url_firmada, info.id_documento);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -141,7 +141,7 @@ export class ClinicalDocumentsService {
   }
 
   /** Descarga el contenido binario del PDF usando la URL firmada. */
-  async loadDocumentBlob(urlFirmada: string): Promise<Blob> {
+  async loadDocumentBlob(urlFirmada: string, idDocumento?: number): Promise<Blob> {
     // URL del propio backend aunque venga con otro host (localhost vs 127.0.0.1):
     // el path /api/v1/documentos/file/ lo identifica. Va por HttpClient para
     // que el interceptor adjunte el Bearer (fetch directo daría 401).
@@ -158,8 +158,17 @@ export class ClinicalDocumentsService {
       // Vía HttpClient: el interceptor adjunta el Bearer token.
       return this.http.get(resolved, { responseType: 'blob' }).toPromise() as Promise<Blob>;
     }
-    // URL presigned MinIO/S3: fetch directo (no interpone token).
-    const resp = await fetch(resolved);
+    // URL presigned MinIO/S3/R2: fetch directo (no interpone token).
+    let resp: Response;
+    try {
+      resp = await fetch(resolved);
+    } catch (err) {
+      // Un fallo de red o CORS permite reintentar por el backend autenticado.
+      if (idDocumento && Number.isSafeInteger(idDocumento) && idDocumento > 0) {
+        return this.http.get(`${environment.apiUrl}/api/v1/documentos/${idDocumento}/file`, { responseType: 'blob' }).toPromise() as Promise<Blob>;
+      }
+      throw err;
+    }
     if (!resp.ok) {
       throw new Error(`No se pudo descargar el archivo (${resp.status})`);
     }

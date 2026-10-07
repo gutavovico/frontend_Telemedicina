@@ -56,7 +56,7 @@ export class DocumentViewer implements OnChanges, OnDestroy {
     this.errorMessage.set(null);
 
     try {
-      const blob = await this.documentsService.loadDocumentBlob(this.downloadUrl);
+      const blob = await this.documentsService.loadDocumentBlob(this.downloadUrl, this.idDocumento);
 
       if (!blob || blob.size === 0) {
         throw new Error('El archivo PDF está vacío o no se pudo descargar.');
