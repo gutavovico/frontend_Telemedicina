@@ -141,7 +141,7 @@ export class ClinicalDocumentsService {
   }
 
   /** Descarga el contenido binario del PDF usando la URL firmada. */
-  async loadDocumentBlob(urlFirmada: string): Promise<Blob> {
+  async loadDocumentBlob(urlFirmada: string, idDocumento?: number): Promise<Blob> {
     const isLocal = urlFirmada.includes(environment.apiUrl) || urlFirmada.startsWith('/');
     const resolved = isLocal
       ? urlFirmada.startsWith('http') ? urlFirmada : `${environment.apiUrl}${urlFirmada}`
@@ -151,8 +151,17 @@ export class ClinicalDocumentsService {
       // Vía HttpClient: el interceptor adjunta el Bearer token.
       return firstValueFrom(this.http.get(resolved, { responseType: 'blob' }));
     }
-    // URL presigned MinIO/S3: fetch directo (no interpone token).
-    const resp = await fetch(resolved);
+    // URL presigned MinIO/S3/R2: fetch directo (no interpone token).
+    let resp: Response;
+    try {
+      resp = await fetch(resolved);
+    } catch (err) {
+      // Un fallo de red o CORS permite reintentar por el backend autenticado.
+      if (idDocumento && Number.isSafeInteger(idDocumento) && idDocumento > 0) {
+        return firstValueFrom(this.http.get(`${this.baseUrl}/${idDocumento}/file`, { responseType: 'blob' }));
+      }
+      throw err;
+    }
     if (!resp.ok) {
       throw new Error(`No se pudo descargar el archivo (${resp.status})`);
     }
