@@ -224,6 +224,15 @@ export const routes: Routes = [
         title: 'Hospital San Juan de Dios - Agenda Médica',
       },
       {
+        path: 'consulta-virtual',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/admin/consulta-virtual/consulta-virtual').then(
+            (m) => m.ConsultaVirtualComponent,
+          ),
+        title: 'Hospital San Juan de Dios - Consulta Virtual',
+      },
+      {
         path: 'cola',
         canActivate: [staffGuard],
         loadComponent: () =>
@@ -350,7 +359,14 @@ export const routes: Routes = [
         path: 'teleconsulta',
         canActivate: [staffGuard],
         loadComponent: () =>
-          import('./features/teleconsulta/teleconsulta-page').then((m) => m.TeleconsultaPage),
+          import('./features/admin/consulta-virtual/consulta-virtual').then((m) => m.ConsultaVirtualComponent),
+        title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
+      },
+      {
+        path: 'teleconsulta/:id',
+        canActivate: [staffGuard],
+        loadComponent: () =>
+          import('./features/admin/consulta-virtual/consulta-virtual').then((m) => m.ConsultaVirtualComponent),
         title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
       },
       {
@@ -790,14 +806,14 @@ export const routes: Routes = [
     path: 'teleconsulta',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/teleconsulta/teleconsulta-page').then((m) => m.TeleconsultaPage),
+      import('./features/teleconsulta-paciente/teleconsulta-paciente').then((m) => m.TeleconsultaPacienteComponent),
     title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
   },
   {
     path: 'citas/:id/teleconsulta',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/teleconsulta/teleconsulta-page').then((m) => m.TeleconsultaPage),
+      import('./features/teleconsulta-paciente/teleconsulta-paciente').then((m) => m.TeleconsultaPacienteComponent),
     title: 'Hospital San Juan de Dios - Teleconsulta y Chat',
   },
 

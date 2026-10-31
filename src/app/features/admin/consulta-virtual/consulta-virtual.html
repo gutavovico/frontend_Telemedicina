@@ -1,0 +1,1280 @@
+<div class="consulta-virtual-container min-h-screen bg-[#f3f6f9] p-4 lg:p-7 font-sans">
+
+  <!-- ========================================================================= -->
+  <!-- VISTA 1: LISTADO Y SELECCIÓN DE TELECONSULTAS DEL DOCTOR                 -->
+  <!-- ========================================================================= -->
+  @if (vistaActual() === 'lista') {
+    <div class="max-w-7xl mx-auto space-y-6">
+
+      <!-- ENCABEZADO PRINCIPAL DE TELECONSULTAS -->
+      <header class="bg-white rounded-3xl p-6 shadow-xs border border-slate-200/90 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-[#002d62] text-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-[30px]">video_camera_front</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Teleconsultas Médicas Asignadas
+              </h1>
+              <span class="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+                Doctor
+              </span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium mt-1">
+              Selecciona una consulta asignada para ingresar a la sala virtual con el paciente.
+            </p>
+          </div>
+        </div>
+
+        <!-- Badges informativos de médico y fecha -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold">
+            <span class="material-symbols-outlined text-[18px] text-blue-600">stethoscope</span>
+            <span>{{ authService.userDisplayName() || 'Dr. Roberto Gómez Flores' }}</span>
+          </div>
+          <div class="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-blue-50/70 border border-blue-200/70 text-blue-800 text-xs sm:text-sm font-semibold">
+            <span class="material-symbols-outlined text-[18px] text-blue-700">today</span>
+            <span>Hoy, 31 de Octubre</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- TARJETAS DE MÉTRICAS RÁPIDAS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Hoy -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Teleconsultas Hoy</p>
+            <h3 class="text-2xl font-black text-slate-900 mt-1">{{ totalHoy() }}</h3>
+            <p class="text-[11px] text-slate-400 font-medium mt-0.5">En agenda del día</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]">calendar_month</span>
+          </div>
+        </div>
+
+        <!-- En Sala de Espera -->
+        <div class="bg-white rounded-3xl p-5 border border-emerald-200 shadow-2xs flex items-center justify-between bg-gradient-to-br from-white to-emerald-50/30">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <p class="text-xs font-bold text-emerald-800 uppercase tracking-wider">En sala de espera</p>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-900 mt-1">{{ totalEspera() }}</h3>
+            <p class="text-[11px] text-emerald-700 font-semibold mt-0.5">¡Listos para atender!</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]">hourglass_top</span>
+          </div>
+        </div>
+
+        <!-- Programadas -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Próximas horas</p>
+            <h3 class="text-2xl font-black text-slate-900 mt-1">{{ totalProgramadas() }}</h3>
+            <p class="text-[11px] text-slate-400 font-medium mt-0.5">Horarios asignados</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]">schedule</span>
+          </div>
+        </div>
+
+        <!-- Finalizadas -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-2xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Atendidas</p>
+            <h3 class="text-2xl font-black text-slate-900 mt-1">{{ totalFinalizadas() }}</h3>
+            <p class="text-[11px] text-slate-400 font-medium mt-0.5">Fichas guardadas</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]">check_circle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BARRA DE BÚSQUEDA Y PESTAÑAS DE FILTRO -->
+      <div class="bg-white rounded-3xl p-4 shadow-xs border border-slate-200/90 flex flex-wrap items-center justify-between gap-4">
+        <!-- Pestañas de Estado -->
+        <div class="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl">
+          <button
+            type="button"
+            (click)="cambiarFiltroEstado('TODAS')"
+            [class.bg-white]="filtroEstado() === 'TODAS'"
+            [class.shadow-2xs]="filtroEstado() === 'TODAS'"
+            [class.text-slate-900]="filtroEstado() === 'TODAS'"
+            [class.text-slate-600]="filtroEstado() !== 'TODAS'"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer"
+          >
+            Todas ({{ totalHoy() }})
+          </button>
+
+          <button
+            type="button"
+            (click)="cambiarFiltroEstado('ESPERA')"
+            [class.bg-white]="filtroEstado() === 'ESPERA'"
+            [class.shadow-2xs]="filtroEstado() === 'ESPERA'"
+            [class.text-emerald-700]="filtroEstado() === 'ESPERA'"
+            [class.text-slate-600]="filtroEstado() !== 'ESPERA'"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>En espera ({{ totalEspera() }})</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="cambiarFiltroEstado('PROGRAMADAS')"
+            [class.bg-white]="filtroEstado() === 'PROGRAMADAS'"
+            [class.shadow-2xs]="filtroEstado() === 'PROGRAMADAS'"
+            [class.text-blue-700]="filtroEstado() === 'PROGRAMADAS'"
+            [class.text-slate-600]="filtroEstado() !== 'PROGRAMADAS'"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer"
+          >
+            Programadas ({{ totalProgramadas() }})
+          </button>
+
+          <button
+            type="button"
+            (click)="cambiarFiltroEstado('FINALIZADAS')"
+            [class.bg-white]="filtroEstado() === 'FINALIZADAS'"
+            [class.shadow-2xs]="filtroEstado() === 'FINALIZADAS'"
+            [class.text-slate-900]="filtroEstado() === 'FINALIZADAS'"
+            [class.text-slate-600]="filtroEstado() !== 'FINALIZADAS'"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer"
+          >
+            Finalizadas ({{ totalFinalizadas() }})
+          </button>
+        </div>
+
+        <!-- Buscador -->
+        <div class="relative flex-1 min-w-[260px] max-w-md">
+          <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">
+            search
+          </span>
+          <input
+            type="text"
+            [(ngModel)]="terminoBusqueda"
+            placeholder="Buscar por paciente, CI, ficha o diagnóstico..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+          />
+        </div>
+      </div>
+
+      <!-- LISTADO DE TARJETAS DE TELECONSULTA -->
+      <div class="space-y-4">
+        @for (item of teleconsultasFiltradas(); track item.idCita) {
+          <div class="bg-white rounded-3xl p-5 lg:p-6 border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            
+            <!-- Columna Izquierda: Datos del Paciente e Información Clínica -->
+            <div class="flex items-start gap-4 flex-1">
+              <!-- Avatar con Iniciales -->
+              <div
+                class="w-14 h-14 rounded-2xl font-black text-lg flex items-center justify-center shrink-0 shadow-2xs"
+                [ngClass]="item.pacienteEnEspera || item.estado === 'EN_ESPERA' ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-300' : 'bg-blue-100 text-blue-800 ring-2 ring-blue-200'"
+              >
+                {{ item.inicialesPaciente }}
+              </div>
+
+              <!-- Detalles del Paciente -->
+              <div class="space-y-2 flex-1">
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">
+                    {{ item.nombrePaciente }}
+                  </h2>
+
+                  <!-- Badge de Estado -->
+                  @if (item.pacienteEnEspera || item.estado === 'EN_ESPERA') {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-extrabold shadow-2xs">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                      <span>En sala de espera</span>
+                    </span>
+                  } @else if (item.estado === 'COMPLETADA') {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold">
+                      <span class="material-symbols-outlined text-[14px]">check</span>
+                      <span>Atendida</span>
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
+                      <span class="material-symbols-outlined text-[14px]">schedule</span>
+                      <span>Programada</span>
+                    </span>
+                  }
+
+                  <!-- Ficha Código -->
+                  <span class="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-mono font-bold">
+                    {{ item.fichaCodigo }}
+                  </span>
+                </div>
+
+                <!-- Subtítulo con datos demográficos -->
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-slate-500 font-medium">
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                    <span>{{ item.edad }} años · {{ item.genero }}</span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400">badge</span>
+                    <span>CI: {{ item.ci }}</span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px] text-slate-400">folder_shared</span>
+                    <span>{{ item.hce }}</span>
+                  </span>
+                  @if (item.correoPaciente) {
+                    <span class="flex items-center gap-1 text-blue-600 font-mono text-xs">
+                      <span class="material-symbols-outlined text-[15px]">mail</span>
+                      <span>{{ item.correoPaciente }}</span>
+                    </span>
+                  }
+                </div>
+
+                <!-- Motivo y Especialidad -->
+                <p class="text-sm font-semibold text-slate-800">
+                  <span class="text-blue-700 font-bold">{{ item.especialidad }}:</span> {{ item.motivo }}
+                </p>
+
+                <!-- Tira de Signos Vitales y Alergias -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                  <div class="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-rose-500">favorite</span>
+                    <span>PA: {{ item.signosVitales.presion }} {{ item.signosVitales.presionUnidad }}</span>
+                  </div>
+
+                  <div class="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-emerald-600">monitor_heart</span>
+                    <span>FC: {{ item.signosVitales.frecuenciaCardiaca }} {{ item.signosVitales.frecuenciaUnidad }}</span>
+                  </div>
+
+                  <div class="px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[15px] text-indigo-500">scale</span>
+                    <span>Peso: {{ item.signosVitales.peso }} {{ item.signosVitales.pesoUnidad }}</span>
+                  </div>
+
+                  @if (item.alergia && item.alergia !== 'Ninguna conocida') {
+                    <div class="px-2.5 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[15px]">warning</span>
+                      <span>Alergia: {{ item.alergia }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Derecha: Horario y Botón de Acción -->
+            <div class="flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-4 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+              <!-- Horario -->
+              <div class="text-left lg:text-right">
+                <div class="flex items-center gap-1.5 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                  <span class="material-symbols-outlined text-[16px]">schedule</span>
+                  <span>Horario</span>
+                </div>
+                <div class="text-base sm:text-lg font-black text-slate-900 mt-0.5">
+                  {{ item.horario }}
+                </div>
+                <div class="text-xs text-slate-500 font-semibold">
+                  {{ item.fecha }}
+                </div>
+              </div>
+
+              <!-- Botón Atender Teleconsulta -->
+              <button
+                type="button"
+                (click)="seleccionarTeleconsulta(item)"
+                class="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold shadow-md hover:shadow-lg transition-all duration-150 cursor-pointer active:scale-95"
+                [ngClass]="item.pacienteEnEspera || item.estado === 'EN_ESPERA' ? 'bg-[#002d62] hover:bg-[#001f44] text-white ring-4 ring-blue-100' : 'bg-slate-900 hover:bg-slate-800 text-white'"
+              >
+                <span class="material-symbols-outlined text-[20px]">videocam</span>
+                <span>Atender teleconsulta</span>
+              </button>
+            </div>
+
+          </div>
+        } @empty {
+          <!-- Estado Vacío -->
+          <div class="bg-white rounded-3xl p-12 text-center border border-slate-200/90 shadow-2xs">
+            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+              <span class="material-symbols-outlined text-[32px]">videocam_off</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">No se encontraron teleconsultas</h3>
+            <p class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+              No hay consultas médicas virtuales que coincidan con el filtro seleccionado.
+            </p>
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- VISTA 2: SALA DE VIDEOLLAMADA Y EXPEDIENTE CLÍNICO DE LA CONSULTA        -->
+  <!-- ========================================================================= -->
+  @if (vistaActual() === 'sala') {
+    <div>
+
+      <!-- BARRA SUPERIOR CON BOTÓN DE REGRESO Y DATOS DEL PACIENTE -->
+      <header class="bg-white rounded-3xl p-4 lg:p-5 mb-5 shadow-xs border border-slate-200/90 flex flex-wrap items-center justify-between gap-4">
+        
+        <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+          <!-- Botón Volver a la Lista de Teleconsultas -->
+          <button
+            type="button"
+            (click)="volverAListaTeleconsultas()"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer active:scale-95 shadow-2xs"
+            title="Volver a la lista de teleconsultas"
+          >
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span>Volver a teleconsultas</span>
+          </button>
+
+          <!-- Avatar Paciente Seleccionado -->
+          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#fde8d7] text-[#c05621] font-black text-base flex items-center justify-center ring-2 ring-[#feebc8] shadow-2xs">
+            {{ paciente().iniciales }}
+          </div>
+
+          <!-- Datos Principales del Paciente -->
+          <div>
+            <h1 class="text-base sm:text-xl font-extrabold text-slate-900 leading-tight tracking-tight">
+              {{ paciente().nombre }} · {{ paciente().edad }} años · {{ paciente().hce }}
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
+              {{ paciente().subtitulo }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Badges de Estado y Presencia del Paciente -->
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <!-- Presencia del Paciente -->
+          @if (pacienteEnLinea()) {
+            <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-bold shadow-2xs">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Paciente en sala</span>
+            </div>
+          } @else {
+            <button
+              type="button"
+              (click)="conectarPacienteManual()"
+              class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-slate-600 hover:text-emerald-700 text-xs sm:text-sm font-semibold shadow-2xs cursor-pointer transition"
+              title="Haz clic para conectar de inmediato al paciente"
+            >
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+              <span>Esperando al paciente (clic para conectar)</span>
+            </button>
+          }
+
+          <!-- Alerta de Alergia -->
+          <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fff5f5] border border-[#feb2b2] text-[#c53030] text-xs sm:text-sm font-bold shadow-2xs">
+            <span class="material-symbols-outlined text-[17px]">warning</span>
+            <span>Alergia: {{ paciente().alergia }}</span>
+          </div>
+
+          <!-- Estado Consulta En Curso -->
+          <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ebf8ff] border border-[#bee3f8] text-[#2b6cb0] text-xs sm:text-sm font-bold shadow-2xs">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
+            <span>En curso · {{ formatearTiempo(segundosTranscurridos()) }}</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- GRID PRINCIPAL DE LA SALA -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- COLUMNA IZQUIERDA: VIDEOLLAMADA Y SIGNOS VITALES (col-span-7) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+          
+          <!-- CONTENEDOR DE LA VIDEOLLAMADA -->
+          <div class="relative w-full aspect-[16/10] bg-[#0c1322] rounded-3xl overflow-hidden shadow-xl border border-slate-800 flex flex-col justify-between p-5">
+            
+            <!-- Overlays Superiores -->
+            <div class="flex items-center justify-between z-10">
+              <div class="flex items-center gap-2.5">
+                <!-- Duración -->
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs sm:text-sm font-semibold border border-white/15">
+                  <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                  <span>{{ formatearTiempo(segundosTranscurridos()) }}</span>
+                </div>
+
+                <!-- Calidad de Red -->
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/95 text-xs sm:text-sm font-medium border border-white/15">
+                  <span class="material-symbols-outlined text-[16px] text-emerald-400">wifi</span>
+                  <span>{{ estadoRed() }}</span>
+                </div>
+
+                <!-- Cifrado -->
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/95 text-xs sm:text-sm font-medium border border-white/15">
+                  <span class="material-symbols-outlined text-[16px] text-blue-400">lock</span>
+                  <span>Cifrado médico</span>
+                </div>
+              </div>
+
+              <!-- Video Local (Picture in Picture del Doctor) -->
+              <div class="relative w-36 h-26 sm:w-40 sm:h-28 rounded-2xl bg-slate-800 border-2 border-white/30 overflow-hidden shadow-lg">
+                @if (camaraActiva()) {
+                  <video
+                    #videoDoctorLocal
+                    [srcObject]="webrtcService.streamLocal()"
+                    (loadedmetadata)="$any($event.target).muted = true; $any($event.target).play()"
+                    autoplay
+                    muted
+                    playsinline
+                    class="w-full h-full object-cover"
+                  ></video>
+                } @else {
+                  <div class="w-full h-full flex flex-col items-center justify-center bg-slate-900 text-white">
+                    <span class="material-symbols-outlined text-2xl text-slate-400 mb-0.5">videocam_off</span>
+                    <span class="text-xs font-bold text-slate-300">Dr.</span>
+                  </div>
+                }
+                <div class="absolute bottom-1.5 right-2 text-[11px] font-bold text-white bg-black/70 px-2 py-0.5 rounded-md">
+                  Tú (Dr.)
+                </div>
+              </div>
+            </div>
+
+            <!-- Centro: Pantalla compartida o Avatar del Paciente Remoto -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              @if (compartiendoPantalla()) {
+                <video #videoPantallaDoctor autoplay muted playsinline class="w-full h-full object-contain pointer-events-auto bg-black"></video>
+                <div class="absolute top-6 left-6 bg-red-600/90 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md">
+                  Compartiendo pantalla
+                </div>
+              } @else {
+                <!-- Video y Audio Remoto del Paciente en Vivo (WebRTC) -->
+                @if (pacienteEnLinea() && webrtcService.frameRemotoUrl() && webrtcService.hayVideoRemoto()) {
+                  <img
+                    [src]="webrtcService.frameRemotoUrl()"
+                    alt="Video del paciente en vivo"
+                    class="absolute inset-0 w-full h-full object-contain pointer-events-auto bg-black z-0"
+                  />
+                }
+
+                <video
+                  #videoPacienteRemoto
+                  [srcObject]="webrtcService.streamRemoto()"
+                  [muted]="true"
+                  (loadedmetadata)="$any($event.target).muted = true; $any($event.target).play()"
+                  (loadeddata)="webrtcService.marcarVideoNativoListo($event)"
+                  (playing)="webrtcService.marcarVideoNativoListo($event)"
+                  autoplay
+                  muted
+                  playsinline
+                  class="relative z-10 w-full h-full object-contain pointer-events-auto bg-black"
+                  [class.hidden]="!pacienteEnLinea() || !webrtcService.hayVideoRemoto()"
+                  [class.opacity-0]="!webrtcService.videoNativoDecodificando() && !!webrtcService.frameRemotoUrl()"
+                ></video>
+
+                @if (pacienteEnLinea() && webrtcService.pantallaRemotaActiva()) {
+                  <div class="absolute top-6 left-6 bg-blue-600/90 text-white text-xs px-3 py-1 rounded-full font-bold shadow-md">
+                    Pantalla del paciente en vivo
+                  </div>
+                }
+
+                <!-- Si el paciente aún no transmite video o está apagado, mostrar avatar central -->
+                @if (!pacienteEnLinea() || !webrtcService.hayVideoRemoto()) {
+                  <div class="flex flex-col items-center pointer-events-auto">
+                    <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-slate-800 text-white font-extrabold text-3xl sm:text-4xl flex items-center justify-center border-4 border-slate-700 shadow-2xl mb-3">
+                      {{ paciente().iniciales }}
+                    </div>
+                    <h3 class="text-white text-lg sm:text-xl font-bold tracking-tight">
+                      {{ paciente().nombre }}
+                    </h3>
+                    <p class="text-slate-400 text-xs sm:text-sm font-semibold mt-1">
+                      {{ pacienteEnLinea() ? 'Conectado · Audio y Video sincronizados' : 'En espera de conexión...' }}
+                    </p>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Barra Inferior de Controles Multimedia -->
+            <div class="flex items-center justify-center gap-3 sm:gap-4 z-10 pt-4">
+              <!-- Micrófono -->
+              <button
+                type="button"
+                (click)="alternarMicrofono()"
+                class="w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg cursor-pointer"
+                [ngClass]="microfonoActivo() ? 'bg-slate-800/80 hover:bg-slate-700 text-white border border-white/20' : 'bg-red-500 text-white'"
+                [title]="microfonoActivo() ? 'Silenciar micrófono' : 'Activar micrófono'"
+              >
+                <span class="material-symbols-outlined text-[22px]">
+                  {{ microfonoActivo() ? 'mic' : 'mic_off' }}
+                </span>
+              </button>
+
+              <!-- Cámara -->
+              <button
+                type="button"
+                (click)="alternarCamara()"
+                class="w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg cursor-pointer"
+                [ngClass]="camaraActiva() ? 'bg-slate-800/80 hover:bg-slate-700 text-white border border-white/20' : 'bg-red-500 text-white'"
+                [title]="camaraActiva() ? 'Apagar cámara' : 'Encender cámara'"
+              >
+                <span class="material-symbols-outlined text-[22px]">
+                  {{ camaraActiva() ? 'videocam' : 'videocam_off' }}
+                </span>
+              </button>
+
+              <!-- Compartir Pantalla -->
+              <button
+                type="button"
+                (click)="alternarCompartirPantalla()"
+                class="w-12 h-12 rounded-full flex items-center justify-center transition shadow-lg cursor-pointer"
+                [ngClass]="compartiendoPantalla() ? 'bg-blue-600 text-white' : 'bg-slate-800/80 hover:bg-slate-700 text-white border border-white/20'"
+                [title]="compartiendoPantalla() ? 'Detener compartir pantalla' : 'Compartir pantalla'"
+              >
+                <span class="material-symbols-outlined text-[22px]">screen_share</span>
+              </button>
+
+              <!-- Acceso Rápido al Chat -->
+              <button
+                type="button"
+                (click)="seleccionarPestana('chat')"
+                class="relative w-12 h-12 rounded-full flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-white border border-white/20 transition shadow-lg cursor-pointer"
+                title="Abrir chat de la consulta"
+              >
+                <span class="material-symbols-outlined text-[22px]">chat</span>
+                @if (notificacionesChat() > 0) {
+                  <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                    {{ notificacionesChat() }}
+                  </span>
+                }
+              </button>
+
+              <!-- Botón Colgar / Salir de la Llamada -->
+              <button
+                type="button"
+                (click)="volverAListaTeleconsultas()"
+                class="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition shadow-lg cursor-pointer active:scale-95"
+                title="Salir al listado de teleconsultas"
+              >
+                <span class="material-symbols-outlined text-[22px]">call_end</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- TARJETAS DE SIGNOS VITALES -->
+          <div class="bg-white rounded-3xl p-6 shadow-xs border border-slate-200/90">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-rose-500 text-[22px]">vital_signs</span>
+                <span>Signos Vitales y Triaje Previo</span>
+              </h2>
+              <span class="text-xs text-slate-500 font-semibold">
+                Actualizado en sala de espera
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <!-- Presión Arterial -->
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-500 uppercase">Presión Arterial</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold"
+                        [ngClass]="signosVitales().presionNivel === 'Alto' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'">
+                    {{ signosVitales().presionNivel }}
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <span class="text-2xl font-black text-slate-900">{{ signosVitales().presion }}</span>
+                  <span class="text-xs font-bold text-slate-500 ml-1">{{ signosVitales().presionUnidad }}</span>
+                </div>
+              </div>
+
+              <!-- Frecuencia Cardíaca -->
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-500 uppercase">Frecuencia Cardíaca</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">
+                    {{ signosVitales().frecuenciaNivel }}
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <span class="text-2xl font-black text-slate-900">{{ signosVitales().frecuenciaCardiaca }}</span>
+                  <span class="text-xs font-bold text-slate-500 ml-1">{{ signosVitales().frecuenciaUnidad }}</span>
+                </div>
+              </div>
+
+              <!-- Peso Corporal -->
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-500 uppercase">Peso Corporal</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">
+                    {{ signosVitales().pesoNivel }}
+                  </span>
+                </div>
+                <div class="mt-2">
+                  <span class="text-2xl font-black text-slate-900">{{ signosVitales().peso }}</span>
+                  <span class="text-xs font-bold text-slate-500 ml-1">{{ signosVitales().pesoUnidad }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA: NOTAS CLÍNICAS, RECETA Y CHAT (col-span-5) -->
+        <div class="lg:col-span-5 bg-white rounded-3xl p-6 shadow-xs border border-slate-200/90 flex flex-col justify-between min-h-[640px]">
+          
+          <!-- PESTAÑAS SUPERIORES -->
+          <div>
+            <div class="flex items-center gap-1 border-b border-slate-200 pb-3 mb-5 overflow-x-auto">
+              <button
+                type="button"
+                (click)="seleccionarPestana('notas')"
+                [class.text-blue-700]="pestanaActiva() === 'notas'"
+                [class.border-blue-600]="pestanaActiva() === 'notas'"
+                [class.font-black]="pestanaActiva() === 'notas'"
+                class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span class="material-symbols-outlined text-[18px]">notes</span>
+                <span>Notas</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="seleccionarPestana('diagnostico')"
+                [class.text-blue-700]="pestanaActiva() === 'diagnostico'"
+                [class.border-blue-600]="pestanaActiva() === 'diagnostico'"
+                [class.font-black]="pestanaActiva() === 'diagnostico'"
+                class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span class="material-symbols-outlined text-[18px]">medical_services</span>
+                <span>Diagnósticos ({{ diagnosticos().length }})</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="seleccionarPestana('receta')"
+                [class.text-blue-700]="pestanaActiva() === 'receta'"
+                [class.border-blue-600]="pestanaActiva() === 'receta'"
+                [class.font-black]="pestanaActiva() === 'receta'"
+                class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span class="material-symbols-outlined text-[18px]">prescriptions</span>
+                <span>Receta ({{ medicamentosReceta().length }})</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="seleccionarPestana('chat')"
+                [class.text-blue-700]="pestanaActiva() === 'chat'"
+                [class.border-blue-600]="pestanaActiva() === 'chat'"
+                [class.font-black]="pestanaActiva() === 'chat'"
+                class="px-4 py-2 text-xs sm:text-sm font-bold border-b-2 border-transparent transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span class="material-symbols-outlined text-[18px]">chat</span>
+                <span>Chat</span>
+              </button>
+            </div>
+
+            <!-- CONTENIDO DE LAS PESTAÑAS -->
+            @if (pestanaActiva() === 'notas') {
+              <div class="space-y-4">
+                <!-- Motivo y Evolución -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                    Motivo de consulta y evolución médica
+                  </label>
+                  <textarea
+                    rows="3"
+                    [(ngModel)]="motivoYEvolucion"
+                    (input)="guardarNotas()"
+                    class="w-full text-xs sm:text-sm rounded-2xl bg-slate-50 p-3.5 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                    placeholder="Detalla los síntomas y evolución..."
+                  ></textarea>
+                </div>
+
+                <!-- Examen Físico / Evaluación Telemédica -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                    Evaluación telemédica e inspección
+                  </label>
+                  <textarea
+                    rows="2"
+                    [(ngModel)]="examenFisico"
+                    (input)="guardarNotas()"
+                    class="w-full text-xs sm:text-sm rounded-2xl bg-slate-50 p-3.5 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                    placeholder="Observaciones de la llamada..."
+                  ></textarea>
+                </div>
+
+                <!-- Plan de Tratamiento -->
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                    Plan de tratamiento e indicaciones
+                  </label>
+                  <textarea
+                    rows="3"
+                    [(ngModel)]="planTratamiento"
+                    (input)="guardarNotas()"
+                    class="w-full text-xs sm:text-sm rounded-2xl bg-slate-50 p-3.5 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                    placeholder="Conducta a seguir..."
+                  ></textarea>
+                </div>
+              </div>
+            }
+
+            @if (pestanaActiva() === 'diagnostico') {
+              <div class="space-y-4">
+                <!-- Formulario para escribir y agregar nuevos diagnósticos según lo que indique el paciente -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[17px] text-blue-600">add_notes</span>
+                      <span>Agregar diagnóstico clínico</span>
+                    </span>
+                    <label class="flex items-center gap-1.5 text-xs font-semibold text-slate-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [ngModel]="nuevoDiagnosticoPrincipal()"
+                        (ngModelChange)="nuevoDiagnosticoPrincipal.set($event)"
+                        class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Marcar como principal</span>
+                    </label>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-4">
+                      <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Código CIE-10</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoDiagnosticoCodigo()"
+                        (ngModelChange)="nuevoDiagnosticoCodigo.set($event)"
+                        placeholder="Ej: I10, R51 (opcional)"
+                        class="w-full text-xs sm:text-sm rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none font-mono uppercase"
+                      />
+                    </div>
+                    <div class="sm:col-span-8">
+                      <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Descripción / Hallazgo del paciente</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoDiagnosticoDescripcion()"
+                        (ngModelChange)="nuevoDiagnosticoDescripcion.set($event)"
+                        (keyup.enter)="agregarDiagnosticoFormulario()"
+                        placeholder="Escribe el diagnóstico según lo que refiera el paciente..."
+                        class="w-full text-xs sm:text-sm rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Sugerencias rápidas CIE-10 -->
+                  <div>
+                    <p class="text-[11px] font-semibold text-slate-400 mb-1.5">Sugerencias rápidas CIE-10 (clic para autocompletar):</p>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (sug of sugerenciasCie10; track sug.codigo) {
+                        <button
+                          type="button"
+                          (click)="seleccionarSugerenciaCie10(sug)"
+                          class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-[11px] font-semibold text-slate-700 hover:text-blue-700 transition cursor-pointer"
+                        >
+                          <strong class="font-mono text-blue-700">{{ sug.codigo }}</strong> · {{ sug.descripcion }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="agregarDiagnosticoFormulario()"
+                    class="w-full py-2.5 px-4 rounded-xl bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-2xs transition cursor-pointer active:scale-98"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                    <span>Agregar diagnóstico a la consulta</span>
+                  </button>
+                </div>
+
+                <!-- Lista de Diagnósticos Registrados -->
+                <div class="flex items-center justify-between pt-1">
+                  <span class="text-xs font-bold text-slate-700 uppercase">Diagnósticos Registrados ({{ diagnosticos().length }})</span>
+                </div>
+
+                <div class="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                  @for (diag of diagnosticos(); track diag.codigo + diag.descripcion) {
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-mono font-bold shrink-0">
+                          {{ diag.codigo }}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+                            {{ diag.descripcion }}
+                          </p>
+                          @if (diag.principal) {
+                            <span class="text-[11px] text-blue-600 font-semibold">Diagnóstico principal</span>
+                          } @else {
+                            <button
+                              type="button"
+                              (click)="marcarDiagnosticoPrincipal(diag.codigo)"
+                              class="text-[11px] text-slate-400 hover:text-blue-600 font-semibold underline cursor-pointer"
+                            >
+                              Hacer principal
+                            </button>
+                          }
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="eliminarDiagnostico(diag.codigo)"
+                        class="text-slate-400 hover:text-red-500 transition cursor-pointer p-1 shrink-0"
+                        title="Eliminar diagnóstico"
+                      >
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+                  } @empty {
+                    <div class="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500 font-medium">
+                      No hay diagnósticos registrados. Escribe el diagnóstico arriba para agregarlo.
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (pestanaActiva() === 'receta') {
+              <div class="space-y-4">
+                <!-- Formulario para recetar y acumular medicamentos durante la videollamada -->
+                <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200/80 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-[#002d62] uppercase tracking-wide flex items-center gap-1.5">
+                      <span class="material-symbols-outlined text-[18px] text-blue-700">medication</span>
+                      <span>Recetar medicamento en consulta</span>
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold">
+                      Se genera al finalizar
+                    </span>
+                  </div>
+
+                  <!-- Botones rápidos de medicamentos frecuentes -->
+                  <div>
+                    <p class="text-[11px] font-semibold text-slate-500 mb-1.5">Selección rápida o escribe cualquier medicamento abajo:</p>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (medRap of catalogoMedicamentosRapidos; track medRap.nombre) {
+                        <button
+                          type="button"
+                          (click)="seleccionarMedicamentoRapido(medRap)"
+                          class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-[11px] font-semibold text-slate-700 hover:text-blue-900 transition cursor-pointer"
+                        >
+                          {{ medRap.nombre }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-8">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Medicamento y concentración *</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoMedNombre()"
+                        (ngModelChange)="nuevoMedNombre.set($event)"
+                        placeholder="Ej: Losartán 50 mg, Paracetamol 500 mg..."
+                        class="w-full text-xs sm:text-sm rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                    <div class="sm:col-span-4">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Dosis *</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoMedDosis()"
+                        (ngModelChange)="nuevoMedDosis.set($event)"
+                        placeholder="Ej: 1 tableta / 50 mg"
+                        class="w-full text-xs sm:text-sm rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-12 gap-2.5">
+                    <div class="col-span-1 sm:col-span-4">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Frecuencia</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoMedFrecuencia()"
+                        (ngModelChange)="nuevoMedFrecuencia.set($event)"
+                        placeholder="Cada 8 horas"
+                        class="w-full text-xs rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                    <div class="col-span-1 sm:col-span-3">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Duración</label>
+                      <input
+                        type="text"
+                        [ngModel]="nuevoMedDuracion()"
+                        (ngModelChange)="nuevoMedDuracion.set($event)"
+                        placeholder="7 días"
+                        class="w-full text-xs rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                    <div class="col-span-1 sm:col-span-3">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Vía</label>
+                      <select
+                        [ngModel]="nuevoMedVia()"
+                        (ngModelChange)="nuevoMedVia.set($event)"
+                        class="w-full text-xs rounded-xl bg-white px-2.5 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                      >
+                        @for (via of viasAdministracion; track via) {
+                          <option [value]="via">{{ via }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="col-span-1 sm:col-span-2">
+                      <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Cant.</label>
+                      <input
+                        type="number"
+                        min="1"
+                        [ngModel]="nuevoMedCantidad()"
+                        (ngModelChange)="nuevoMedCantidad.set($event)"
+                        class="w-full text-xs rounded-xl bg-white px-2.5 py-2 border border-slate-200 focus:border-blue-500 outline-none text-center font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Indicaciones para el paciente</label>
+                    <input
+                      type="text"
+                      [ngModel]="nuevoMedIndicaciones()"
+                      (ngModelChange)="nuevoMedIndicaciones.set($event)"
+                      (keyup.enter)="agregarMedicamentoReceta()"
+                      placeholder="Ej: Tomar después de los alimentos con abundante agua..."
+                      class="w-full text-xs rounded-xl bg-white px-3 py-2 border border-slate-200 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="agregarMedicamentoReceta()"
+                    class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-2xs transition cursor-pointer active:scale-98"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                    <span>Acumular medicamento en la receta</span>
+                  </button>
+                </div>
+
+                <!-- Lista de medicamentos acumulados en la consulta -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 uppercase">
+                      Medicamentos Acumulados ({{ medicamentosReceta().length }})
+                    </span>
+                    @if (medicamentosReceta().length > 0) {
+                      <span class="text-[11px] font-semibold text-emerald-700">
+                        Listos para generar receta al finalizar
+                      </span>
+                    }
+                  </div>
+
+                  <div class="space-y-2 max-h-[190px] overflow-y-auto pr-1">
+                    @for (med of medicamentosReceta(); track med.id; let idx = $index) {
+                      <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2.5">
+                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                          <span class="w-6 h-6 rounded-lg bg-[#002d62] text-white text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5">
+                            {{ idx + 1 }}
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <p class="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                              {{ med.nombre }}
+                            </p>
+                            <p class="text-[11px] font-semibold text-blue-700 mt-0.5">
+                              {{ med.dosis }} · {{ med.frecuencia }} · {{ med.duracion }} ({{ med.viaAdministracion }} · Cant: {{ med.cantidad }})
+                            </p>
+                            @if (med.indicaciones) {
+                              <p class="text-[11px] text-slate-500 mt-0.5">{{ med.indicaciones }}</p>
+                            }
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          (click)="eliminarMedicamentoReceta(med.id)"
+                          class="text-slate-400 hover:text-red-500 transition cursor-pointer p-1 shrink-0"
+                          title="Quitar medicamento"
+                        >
+                          <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                      </div>
+                    } @empty {
+                      <div class="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500 font-medium">
+                        Aún no has agregado medicamentos. Ve agregándolos durante la consulta y al finalizar la llamada se generará la receta automáticamente.
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (pestanaActiva() === 'chat') {
+              <div class="flex flex-col h-[420px] rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden">
+                <!-- Historial de Mensajes -->
+                <div class="flex-1 p-4 overflow-y-auto space-y-3">
+                  @for (msg of mensajesChat(); track msg.id) {
+                    @if (msg.esSistema) {
+                      <div class="text-center my-2">
+                        <span class="px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold">
+                          {{ msg.texto }}
+                        </span>
+                      </div>
+                    } @else {
+                      <div class="flex flex-col" [ngClass]="msg.esDoctor ? 'items-end' : 'items-start'">
+                        <div
+                          class="max-w-[85%] rounded-2xl px-4 py-2.5 shadow-2xs text-xs sm:text-sm font-medium"
+                          [ngClass]="msg.esDoctor ? 'bg-[#002d62] text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'"
+                        >
+                          <div class="flex items-center justify-between gap-3 text-[10px] opacity-75 mb-1 font-bold">
+                            <span>{{ msg.remitente }}</span>
+                            <span>{{ msg.hora }}</span>
+                          </div>
+                          <p>{{ msg.texto }}</p>
+                          @if (msg.archivoNombre) {
+                            <div class="mt-2 p-2.5 rounded-xl bg-white/95 text-slate-800 border border-slate-200 shadow-2xs space-y-2">
+                              @if (chatService.esImagenAdjunta(msg) && msg.archivoUrl) {
+                                <img
+                                  [src]="msg.archivoUrl"
+                                  [alt]="msg.archivoNombre"
+                                  (click)="chatService.verArchivo(msg)"
+                                  class="max-h-40 w-full object-contain rounded-lg border border-slate-200 cursor-pointer bg-slate-50"
+                                />
+                              }
+                              <div class="flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-[10px] shrink-0">
+                                    {{ msg.archivoTipo || 'DOC' }}
+                                  </div>
+                                  <div class="min-w-0 flex-1">
+                                    <p class="truncate text-xs font-bold text-slate-800">{{ msg.archivoNombre }}</p>
+                                    <p class="text-[10px] text-slate-500">{{ msg.archivoTamano || 'Archivo adjunto' }}</p>
+                                  </div>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    (click)="chatService.verArchivo(msg)"
+                                    class="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                                    title="Ver documento o imagen"
+                                  >
+                                    <span class="material-symbols-outlined text-[15px]">visibility</span>
+                                    <span>Ver</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    (click)="chatService.descargarArchivo(msg)"
+                                    class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                                    title="Descargar archivo"
+                                  >
+                                    <span class="material-symbols-outlined text-[15px]">download</span>
+                                    <span>Descargar</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+
+                <!-- Input de Envío -->
+                <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="adjuntarArchivoDoctor()"
+                    class="w-10 h-10 rounded-xl border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer"
+                    title="Adjuntar orden o documento"
+                  >
+                    <span class="material-symbols-outlined text-[20px]">attach_file</span>
+                  </button>
+
+                  <input
+                    type="text"
+                    [(ngModel)]="textoNuevoMensaje"
+                    (keyup.enter)="enviarMensajeChat()"
+                    placeholder="Indica al paciente lo que requieres..."
+                    class="flex-1 text-xs sm:text-sm rounded-xl bg-slate-50 px-3.5 py-2.5 border border-slate-200 focus:bg-white focus:border-blue-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    (click)="enviarMensajeChat()"
+                    class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition cursor-pointer shadow-sm active:scale-95"
+                    title="Enviar mensaje"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">send</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- PIE DEL PANEL: BOTONES DE ACCIÓN -->
+          <div class="pt-5 border-t border-slate-200 mt-5">
+            <div class="text-xs text-slate-400 font-semibold mb-3.5 flex items-center justify-between">
+              <span>{{ mensajeGuardado() }}</span>
+              <span class="text-slate-500 font-mono text-[11px]">{{ paciente().hce }}</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                (click)="emitirReceta()"
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl border-2 border-slate-300 text-slate-700 text-xs sm:text-sm font-bold hover:bg-slate-50 transition cursor-pointer shadow-2xs active:scale-95"
+              >
+                <span class="material-symbols-outlined text-[20px] text-slate-500">link</span>
+                <span>Emitir receta</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="finalizarConsulta()"
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold shadow-md transition cursor-pointer active:scale-95"
+              >
+                <span class="material-symbols-outlined text-[20px]">check</span>
+                <span>Finalizar consulta</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- MODAL DE RECETA MÉDICA DIGITAL GENERADA AL FINALIZAR LA CONSULTA          -->
+  <!-- ========================================================================= -->
+  @if (recetaEmitidaModal(); as receta) {
+    <div class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 my-8">
+        <!-- Encabezado de Receta -->
+        <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-[#002d62] text-white flex items-center justify-center shadow-sm">
+              <span class="material-symbols-outlined text-[26px]">prescriptions</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg sm:text-xl font-black text-slate-900">Receta Médica Digital Generada</h2>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                  EMITIDA
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
+                {{ receta.medicoNombre }} · {{ receta.especialidad }}
+              </p>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <div class="text-sm font-mono font-black text-[#002d62]">{{ receta.folio }}</div>
+            <div class="text-xs text-slate-500 font-medium">
+              Emisión: {{ receta.fechaEmision }} · Vence: {{ receta.fechaVencimiento }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos del Paciente y Diagnósticos -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Paciente</span>
+            <p class="text-sm font-extrabold text-slate-900">{{ receta.pacienteNombre }}</p>
+            <p class="text-xs text-slate-600 font-medium">
+              CI: {{ receta.pacienteCi }} · {{ receta.pacienteHce }} · {{ receta.fichaCodigo }}
+            </p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Diagnósticos CIE-10</span>
+            <div class="space-y-1">
+              @for (d of receta.diagnosticos; track d.codigo + d.descripcion) {
+                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-mono text-[10px]">{{ d.codigo }}</span>
+                  <span class="truncate">{{ d.descripcion }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Medicamentos Prescritos -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+            Medicamentos Recetados ({{ receta.medicamentos.length }})
+          </h3>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 font-extrabold uppercase text-[11px]">
+                  <th class="p-3 border-b border-slate-200">#</th>
+                  <th class="p-3 border-b border-slate-200">Medicamento</th>
+                  <th class="p-3 border-b border-slate-200">Dosis</th>
+                  <th class="p-3 border-b border-slate-200">Frecuencia</th>
+                  <th class="p-3 border-b border-slate-200">Duración</th>
+                  <th class="p-3 border-b border-slate-200 text-center">Cant.</th>
+                  <th class="p-3 border-b border-slate-200">Indicaciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                @for (m of receta.medicamentos; track m.id; let i = $index) {
+                  <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-500">{{ i + 1 }}</td>
+                    <td class="p-3">
+                      <div class="font-extrabold text-slate-900">{{ m.nombre }}</div>
+                      <div class="text-[10px] text-blue-700 font-bold">Vía: {{ m.viaAdministracion }}</div>
+                    </td>
+                    <td class="p-3 font-semibold text-slate-800">{{ m.dosis }}</td>
+                    <td class="p-3 text-slate-700">{{ m.frecuencia }}</td>
+                    <td class="p-3 text-slate-700">{{ m.duracion }}</td>
+                    <td class="p-3 text-center font-bold text-slate-900">{{ m.cantidad }}</td>
+                    <td class="p-3 text-slate-600">{{ m.indicaciones }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Firma Digital y Botones de Descarga / Impresión -->
+        <div class="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex flex-wrap items-center justify-between gap-2 text-xs text-blue-900">
+          <div class="flex items-center gap-2 font-semibold">
+            <span class="material-symbols-outlined text-[18px] text-blue-700">verified</span>
+            <span>Firma Criptográfica ED25519 · SHA-256: <span class="font-mono">{{ receta.hashFirma.substring(0, 16) }}...</span></span>
+          </div>
+          <span class="text-[11px] font-bold text-blue-700">Consulta finalizada y sala reiniciada</span>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="descargarRecetaEmitida(receta)"
+            class="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">download</span>
+            <span>Descargar Receta</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="imprimirRecetaEmitida(receta)"
+            class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">print</span>
+            <span>Imprimir / Guardar PDF</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="cerrarModalReceta()"
+            class="px-5 py-2.5 rounded-xl bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold transition cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

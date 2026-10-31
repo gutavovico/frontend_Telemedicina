@@ -219,6 +219,10 @@ export class MisCitasComponent implements OnInit {
     this.chatCitaActiva.set(null);
   }
 
+  verComoLlegar(cita: PacienteCitaCard): void {
+    alert(`Indicaciones de llegada a ${cita.clinicaNombre}: Av. Principal #123. Estacionamiento disponible.`);
+  }
+
   ejecutarAccionSecundaria(cita: PacienteCitaCard): void {
     if (cita.accionSecundaria === 'PAGAR_AHORA') {
       alert(`Iniciando pasarela de pago para la cita con ${cita.medicoNombre}...`);
