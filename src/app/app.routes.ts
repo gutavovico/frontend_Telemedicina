@@ -506,6 +506,36 @@ export const routes: Routes = [
       ),
     title: 'Hospital San Juan de Dios - Mis Citas',
   },
+  // =========================================================================
+  // CU19: Pagos de citas y teleconsultas + comprobantes digitales
+  // =========================================================================
+  {
+    path: 'pagos/resultado',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/payments/payment-result/payment-result.component').then(
+        (m) => m.PaymentResultComponent
+      ),
+    title: 'Hospital San Juan de Dios - Resultado del Pago',
+  },
+  {
+    path: 'pagos/checkout/:idCita',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/payments/payment-checkout/payment-checkout.component').then(
+        (m) => m.PaymentCheckoutComponent
+      ),
+    title: 'Hospital San Juan de Dios - Pago en Línea',
+  },
+  {
+    path: 'pagos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/payments/payment-history/payment-history.component').then(
+        (m) => m.PaymentHistoryComponent
+      ),
+    title: 'Hospital San Juan de Dios - Mis Pagos',
+  },
   {
     path: 'mi-cola',
     canActivate: [authGuard],

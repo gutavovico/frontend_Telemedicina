@@ -64,6 +64,11 @@ export class Header {
     return this.router.url.startsWith('/mis-citas') || (this.authService.isPaciente() && this.router.url.startsWith('/citas'));
   }
 
+  // CU19: pagos y comprobantes del paciente.
+  isPagosRoute(): boolean {
+    return this.router.url.startsWith('/pagos');
+  }
+
   // Entrada "Teleconsulta" (CU15): Solo visible para ADMIN. 
   // Oculto para MÉDICO (se gestiona desde Gestión de Consultas) y PACIENTE (reemplazado por Citas).
   canSeeTeleconsulta(): boolean {

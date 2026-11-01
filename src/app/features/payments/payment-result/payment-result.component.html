@@ -1,0 +1,70 @@
+<div class="min-h-screen bg-[#F8FAFC]">
+  <app-header></app-header>
+
+  <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      @if (cargando()) {
+        <div class="p-12 text-center text-slate-600">
+          <span class="material-symbols-outlined animate-spin text-primary text-[32px]">progress_activity</span>
+          <p class="mt-3 text-sm">Verificando el estado de tu pago...</p>
+        </div>
+      } @else if (error()) {
+        <div class="p-8 sm:p-12 text-center">
+          <div class="mx-auto h-16 w-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[36px]">error</span>
+          </div>
+          <h1 class="mt-4 text-xl font-extrabold text-slate-800">No se pudo verificar el pago</h1>
+          <p class="mt-2 text-sm text-slate-500">{{ error() }}</p>
+          <div class="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+            <button type="button" (click)="verificar()" class="px-5 py-3 rounded-xl bg-[#002d62] text-white text-sm font-bold">Reintentar</button>
+            <a routerLink="/mis-citas" class="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold">Volver a mis citas</a>
+          </div>
+        </div>
+      } @else {
+        @if (pago(); as p) {
+          @if (esPagado()) {
+            <div class="p-8 sm:p-12 text-center">
+              <div class="mx-auto h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[36px]">check_circle</span>
+              </div>
+              <h1 class="mt-4 text-2xl font-extrabold text-emerald-700">¡Pago completado!</h1>
+              <p class="mt-2 text-sm text-slate-600">
+                Tu pago de <strong>Bs. {{ formatoMonto(p.monto) }} {{ p.moneda }}</strong> fue registrado correctamente.
+              </p>
+              @if (p.comprobante) {
+                <p class="mt-2 text-sm text-slate-600">
+                  Comprobante N° <strong>{{ p.comprobante.numero_comprobante }}</strong>
+                </p>
+              }
+              <div class="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+                <button type="button" (click)="descargarComprobante()" [disabled]="descargando()"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#002d62] text-white text-sm font-bold disabled:opacity-60">
+                  <span class="material-symbols-outlined text-[18px]">download</span>
+                  {{ descargando() ? 'Generando...' : 'Descargar comprobante PDF' }}
+                </button>
+                <a routerLink="/pagos" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold">
+                  <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                  Mis pagos
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div class="p-8 sm:p-12 text-center">
+              <div class="mx-auto h-16 w-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[36px]">schedule</span>
+              </div>
+              <h1 class="mt-4 text-xl font-extrabold text-slate-800">Pago pendiente de confirmación</h1>
+              <p class="mt-2 text-sm text-slate-500">
+                Stripe todavía no ha confirmado el pago. Si ya pagaste, espera unos segundos y verifica nuevamente.
+              </p>
+              <div class="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
+                <button type="button" (click)="verificar()" class="px-5 py-3 rounded-xl bg-[#002d62] text-white text-sm font-bold">Verificar nuevamente</button>
+                <a routerLink="/mis-citas" class="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold">Volver a mis citas</a>
+              </div>
+            </div>
+          }
+        }
+      }
+    </div>
+  </main>
+</div>

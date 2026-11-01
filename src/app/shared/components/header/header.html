@@ -66,6 +66,16 @@
         >
           Mis citas
         </a>
+        <a
+          routerLink="/pagos"
+          class="text-sm font-semibold transition-colors duration-200 border-b-2 pb-1"
+          [class.text-primary]="isPagosRoute()"
+          [class.border-primary]="isPagosRoute()"
+          [class.text-on-surface-variant]="!isPagosRoute()"
+          [class.border-transparent]="!isPagosRoute()"
+        >
+          Mis pagos
+        </a>
       } @else if (isLandingRoute()) {
         <!-- Staff en la landing: mismos anchors públicos que el invitado -->
         <a
@@ -335,6 +345,17 @@
                 <span class="material-symbols-outlined text-[20px] text-primary">event</span>
                 <span>Mis citas</span>
               </a>
+              <a
+                routerLink="/pagos"
+                (click)="closeMobileMenu()"
+                class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+                [ngClass]="
+                  isPagosRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+                "
+              >
+                <span class="material-symbols-outlined text-[20px] text-primary">receipt_long</span>
+                <span>Mis pagos</span>
+              </a>
             } @else {
               <!-- Staff en landing móvil: mismos anchors públicos (sin botón Panel, ya está en el avatar) -->
               <a
@@ -494,6 +515,17 @@
             >
               <span class="material-symbols-outlined text-[20px] text-primary">event</span>
               <span>Citas</span>
+            </a>
+            <a
+              routerLink="/pagos"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isPagosRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">receipt_long</span>
+              <span>Mis pagos</span>
             </a>
           }
           @if (canSeeTeleconsulta()) {

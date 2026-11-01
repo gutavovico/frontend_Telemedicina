@@ -1,0 +1,193 @@
+<div class="min-h-screen bg-[#F8FAFC]">
+  <app-header></app-header>
+
+  <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+    <!-- Migas -->
+    <div class="flex items-center gap-2 text-sm flex-wrap">
+      <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Mi salud
+      </a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <a routerLink="/mis-citas" class="text-slate-600 font-medium hover:text-primary">Mis citas</a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <span class="text-primary font-medium">Pago en línea</span>
+    </div>
+
+    <!-- Encabezado -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#002d62] tracking-tight">Pago de servicios médicos</h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Paga tu cita o teleconsulta con tarjeta mediante Stripe o escaneando el código QR.
+        </p>
+      </div>
+      <a routerLink="/pagos" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:border-[#002d62] hover:text-[#002d62] transition-colors">
+        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+        Mis pagos
+      </a>
+    </div>
+
+    <!-- Cargando -->
+    @if (cargando()) {
+      <div class="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
+        <div class="inline-flex items-center gap-3 text-slate-600">
+          <span class="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+          Preparando la pasarela de pago...
+        </div>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (!cargando() && error()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-5 flex items-start gap-3">
+        <span class="material-symbols-outlined">error</span>
+        <div class="flex-1">
+          <p class="font-semibold">No se pudo iniciar el pago</p>
+          <p class="text-sm mt-1">{{ error() }}</p>
+        </div>
+        <button type="button" (click)="iniciarCheckout()" class="text-sm font-bold underline">Reintentar</button>
+      </div>
+    }
+
+    @if (!cargando() && pago(); as p) {
+      <!-- Resumen de la cita -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-[#002d62] px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2 text-white">
+            <span class="material-symbols-outlined">medical_services</span>
+            <span class="font-bold">Resumen de la cita</span>
+          </div>
+          <span class="text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full"
+                [ngClass]="modoSimulado() ? 'bg-amber-300 text-amber-900' : 'bg-emerald-400/20 text-emerald-100 border border-emerald-300/40'">
+            {{ modoSimulado() ? 'Modo demostración' : 'Stripe Sandbox' }}
+          </span>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="space-y-3">
+            <div>
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Médico</p>
+              <p class="text-slate-800 font-semibold">{{ p.medico_nombre || 'Especialista' }}</p>
+            </div>
+            <div>
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Especialidad</p>
+              <p class="text-slate-800">{{ p.especialidad_nombre || 'Medicina General' }}</p>
+            </div>
+            <div>
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Modalidad</p>
+              <p class="text-slate-800">{{ p.tipo_consulta || 'TELEMEDICINA' }}</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Fecha y hora</p>
+              <p class="text-slate-800">{{ p.cita_fecha || '—' }} {{ p.cita_hora || '' }}</p>
+            </div>
+            <div>
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Cita</p>
+              <p class="text-slate-800">#{{ p.id_cita }}</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100">
+              <p class="text-[11px] uppercase tracking-wide text-slate-400 font-bold">Total a pagar</p>
+              <p class="text-2xl font-extrabold text-[#002d62]">Bs. {{ formatoMonto(p.monto) }} <span class="text-sm font-semibold text-slate-500">{{ p.moneda }}</span></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pago confirmado -->
+      @if (esPagado()) {
+        <section class="bg-white rounded-2xl border border-emerald-200 shadow-sm p-6 sm:p-8">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div class="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[32px]">check_circle</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-xl font-extrabold text-emerald-700">¡Pago registrado correctamente!</h2>
+              <p class="text-sm text-slate-600 mt-1">
+                Tu comprobante digital fue emitido automáticamente.
+                @if (p.comprobante) {
+                  <span class="block mt-1">N° <strong>{{ p.comprobante.numero_comprobante }}</strong></span>
+                }
+              </p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <button type="button" (click)="descargarComprobante()" [disabled]="descargando()"
+                      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#002d62] text-white text-sm font-bold hover:bg-[#001f45] disabled:opacity-60 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">download</span>
+                {{ descargando() ? 'Generando...' : 'Descargar comprobante PDF' }}
+              </button>
+              <button type="button" (click)="irAHistorial()"
+                      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold hover:border-[#002d62] hover:text-[#002d62] transition-colors">
+                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                Mis pagos
+              </button>
+            </div>
+          </div>
+        </section>
+      } @else {
+        <!-- Métodos de pago -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <section class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h2 class="text-lg font-bold text-[#002d62] flex items-center gap-2">
+              <span class="material-symbols-outlined">credit_card</span>
+              Pago con tarjeta
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Serás redirigido a la pasarela segura de Stripe para completar el pago con tarjeta de crédito o débito.
+            </p>
+
+            <button type="button" (click)="pagar()" [disabled]="procesando()"
+                    class="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-[#635BFF] text-white text-sm font-bold hover:bg-[#4f48d6] disabled:opacity-60 transition-colors shadow-sm">
+              <span class="material-symbols-outlined text-[20px]">lock</span>
+              {{ modoSimulado() ? 'Confirmar pago (demostración)' : 'Pagar con tarjeta en Stripe' }}
+            </button>
+
+            @if (!modoSimulado()) {
+              <button type="button" (click)="verificarEstado()" [disabled]="procesando()"
+                      class="mt-3 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold hover:border-[#002d62] hover:text-[#002d62] disabled:opacity-60 transition-colors">
+                <span class="material-symbols-outlined text-[18px]">sync</span>
+                Ya pagué, verificar estado
+              </button>
+            }
+
+            <div class="mt-5 rounded-xl bg-slate-50 border border-slate-200 p-4 flex items-start gap-3">
+              <span class="material-symbols-outlined text-slate-500 text-[20px]">shield_lock</span>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Los datos de tu tarjeta se ingresan directamente en Stripe. La plataforma no almacena
+                números de tarjeta ni códigos de seguridad.
+              </p>
+            </div>
+          </section>
+
+          <section class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
+            <h2 class="text-lg font-bold text-[#002d62] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined">qr_code_2</span>
+              Pago con QR
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">Escanea el código con tu teléfono para abrir la misma pasarela de pago.</p>
+
+            <div class="mt-4 flex items-center justify-center">
+              @if (qrObjectUrl()) {
+                <img [src]="qrObjectUrl()" alt="Código QR de pago" class="w-48 h-48 rounded-xl border border-slate-200 bg-white p-2" />
+              } @else {
+                <div class="w-48 h-48 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                  Generando QR...
+                </div>
+              }
+            </div>
+
+            <p class="text-[11px] text-slate-400 mt-3 break-all">
+              {{ qrPayload() || 'El código QR apunta a la sesión de pago.' }}
+            </p>
+          </section>
+        </div>
+
+        <p class="text-center text-xs text-slate-400">
+          Pago procesado por Stripe. Moneda: {{ p.moneda }}. La sesión de pago expira automáticamente.
+        </p>
+      }
+    }
+  </main>
+</div>

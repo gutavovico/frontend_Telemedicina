@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Header } from '../../../shared/components/header/header';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -51,6 +51,7 @@ function limpiarTituloMedico(nombre: string | null | undefined): string {
 export class MisCitasComponent implements OnInit {
   readonly appointmentService = inject(AppointmentService);
   readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   // Filtro de instituciones
   readonly instituciones = [
@@ -221,7 +222,8 @@ export class MisCitasComponent implements OnInit {
 
   ejecutarAccionSecundaria(cita: PacienteCitaCard): void {
     if (cita.accionSecundaria === 'PAGAR_AHORA') {
-      alert(`Iniciando pasarela de pago para la cita con ${cita.medicoNombre}...`);
+      // CU19: abre la pantalla de pago en línea (Stripe Checkout + QR).
+      this.router.navigate(['/pagos/checkout', cita.id_cita]);
     } else {
       alert(`Abriendo disponibilidad médica para reprogramar cita con ${cita.medicoNombre}...`);
     }
