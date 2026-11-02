@@ -239,9 +239,70 @@ body {
   padding: 0;
 }
 
-/* Panel /admin: las páginas hijas traen padding-top para compensar el
-   header global fijo; dentro del panel el topbar es sticky y ese aire
-   sobra, así que se anula solo bajo .admin-panel. */
+/* Panel /admin: el aire superior se evita con pt condicional en app.html
+   ([class.pt-20]/[class.pt-0] según isAdminRoute), porque el header global
+   está oculto en /admin y el <main> exterior no debe reservar sus 80px. */
+
+/* --- Responsividad solo visual (sin cambiar funcionalidad) --- */
+
+/* 1. Vistas reutilizadas dentro y fuera de /admin: cuando van anidadas en
+   .admin-panel, ocultar el header/footer duplicado y el padding para el
+   header fijo global. Fuera de /admin siguen visibles igual que antes. */
+.admin-panel app-header,
+.admin-panel app-footer {
+  display: none !important;
+}
+
 .admin-panel main[class*='pt-'] {
-  padding-top: 0;
+  padding-top: 0 !important;
+}
+
+.admin-panel .min-h-screen {
+  min-height: auto;
+}
+
+/* 2. Tablas del panel: scroll horizontal seguro y celdas sin compresión extrema. */
+.admin-panel .table-card,
+.admin-panel [class*='table-card'],
+.admin-panel .overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-panel table {
+  min-width: 640px;
+}
+
+.admin-panel table td,
+.admin-panel table th {
+  overflow-wrap: break-word;
+}
+
+/* Columnas largas (correo, admin) pueden partirse sin romper layout. */
+.admin-panel td[class*='email'],
+.admin-panel .admin-email,
+.admin-panel td[class*='correo'] {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 3. Paginaciones y toolbars: permitir wrap en móvil. */
+.admin-panel [class*='pagination'],
+.admin-panel [class*='toolbar'],
+.admin-panel [class*='total-badge'] {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* 4. Agenda custom (CSS propio sin Tailwind): 2 columnas solo en desktop. */
+@media (max-width: 767px) {
+  .agenda-two {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 5. Widget de chat flotante: no desbordar en <380px. */
+chat-floating-widget,
+[class*='chat-floating'] {
+  max-width: calc(100vw - 2rem);
 }

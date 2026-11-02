@@ -6,6 +6,7 @@ import { clinicaGuard } from './core/guards/clinica.guard';
 import { superAdminGuard } from './core/guards/super-admin.guard';
 import { prescriptionAccessGuard } from './features/medical-records/prescriptions/guards/prescription-access.guard';
 import { reportsAccessGuard } from './features/analytics/reportes/guards/reports-access.guard';
+import { backupAccessGuard } from './features/admin/backups/guards/backup-access.guard';
 
 export const routes: Routes = [
   {
@@ -382,6 +383,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/auth/audit/bitacora-page').then((m) => m.BitacoraPage),
         title: 'Hospital San Juan de Dios - Bitácora de Auditoría',
+      },
+      {
+        path: 'backups',
+        canActivate: [backupAccessGuard],
+        loadComponent: () =>
+          import('./features/admin/backups/backups-page/backups-page').then(
+            (m) => m.BackupsPage,
+          ),
+        title: 'Hospital San Juan de Dios - Copias de Seguridad',
       },
     ],
   },

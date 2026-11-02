@@ -1,6 +1,6 @@
 <!-- Navbar Superior (solo fuera del panel /admin, que tiene topbar propio) -->
 @if (!isAdminRoute) {
-<header class="w-full bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+<header class="w-full bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-2 flex-wrap sticky top-0 z-50">
   <div class="flex items-center gap-3">
     <div class="w-8 h-8 rounded-lg bg-[#1a56db] text-white flex items-center justify-center shadow-sm">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,7 +11,7 @@
     <span class="font-semibold text-slate-800 text-sm tracking-tight">{{ teleconsultaService.nombreClinica() }}</span>
   </div>
 
-  <nav class="hidden md:flex items-center gap-8 text-slate-600 font-medium text-xs">
+  <nav class="flex items-center gap-4 sm:gap-8 text-slate-600 font-medium text-xs order-3 sm:order-none w-full sm:w-auto overflow-x-auto">
     <a routerLink="/" class="hover:text-blue-600 transition">Home</a>
     <a routerLink="/citas" class="text-blue-600 font-semibold transition">Mis Citas</a>
     <a routerLink="/perfil" class="hover:text-blue-600 transition">Perfil</a>
@@ -21,7 +21,7 @@
     <div class="w-6 h-6 rounded-full bg-[#102a43] text-white font-bold text-[10px] flex items-center justify-center">
       {{ teleconsultaService.usuarioActivo().iniciales }}
     </div>
-    <span class="text-xs font-semibold text-slate-700">{{ teleconsultaService.usuarioActivo().nombre }}</span>
+    <span class="text-xs font-semibold text-slate-700 max-w-[110px] sm:max-w-none truncate">{{ teleconsultaService.usuarioActivo().nombre }}</span>
     <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
     </svg>

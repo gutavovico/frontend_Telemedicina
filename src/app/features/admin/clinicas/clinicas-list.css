@@ -1,12 +1,27 @@
 .clinicas-container {
-  padding: 1.5rem 2rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .clinicas-container {
+    padding: 1.5rem 2rem;
+  }
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .page-header h2 {
@@ -42,6 +57,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 
@@ -71,11 +88,13 @@
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   border: 1px solid #e2e8f0;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -114,6 +133,8 @@
 .clinic-admin .admin-email {
   color: #64748b;
   font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .text-muted {
@@ -157,6 +178,7 @@
 .actions-cell {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .btn-action {
@@ -304,18 +326,31 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .form-field.full-width {
-  grid-column: span 2;
+  grid-column: span 1;
+}
+
+@media (min-width: 640px) {
+  .form-field.full-width {
+    grid-column: span 2;
+  }
 }
 
 .form-field label {
