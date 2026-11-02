@@ -1,0 +1,4 @@
+/* Estilos mínimos: el sistema visual global (Tailwind + styles.css) domina. */
+section[aria-label='Copias de seguridad'] {
+  max-width: 56rem;
+}

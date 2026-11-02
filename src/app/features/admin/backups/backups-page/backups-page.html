@@ -1,0 +1,193 @@
+<section class="space-y-6" aria-label="Copias de seguridad">
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-on-surface">Copias de seguridad</h1>
+      <p class="text-sm text-on-surface-variant">
+        Respaldo completo de la base de datos. Horas en horario de Bolivia (La Paz).
+      </p>
+    </div>
+  </header>
+
+  @if (mensaje()) {
+    <p role="status" class="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 text-sm border border-emerald-200">
+      {{ mensaje() }}
+    </p>
+  }
+  @if (errorMessage()) {
+    <p role="alert" class="px-4 py-2.5 rounded-xl bg-error-container/40 text-error text-sm border border-error/20">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  <!-- Copias manuales -->
+  <article class="bg-white rounded-2xl border border-outline-variant/30 shadow-xs overflow-hidden">
+    <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant/20">
+      <h2 class="font-semibold text-sm text-on-surface">
+        Copias de seguridad manuales ({{ manuales().length }})
+      </h2>
+      <button
+        type="button"
+        (click)="generar()"
+        [disabled]="isGenerating()"
+        class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
+      >
+        @if (isGenerating()) { Generando… } @else { Generar copia ahora }
+      </button>
+    </div>
+    @if (isLoading()) {
+      <p class="px-4 py-6 text-sm text-on-surface-variant">Cargando copias…</p>
+    } @else if (manuales().length === 0) {
+      <p class="px-4 py-6 text-sm text-on-surface-variant">Aún no hay copias manuales. Usa “Generar copia ahora”.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-on-surface-variant border-b border-outline-variant/20">
+              <th scope="col" class="px-4 py-2.5 font-semibold">Archivo</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">Tamaño</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">Creada el</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20">
+            @for (archivo of manuales(); track archivo.nombre) {
+              <tr>
+                <td class="px-4 py-3 font-medium text-on-surface break-all">{{ archivo.nombre }}</td>
+                <td class="px-4 py-3 text-on-surface-variant whitespace-nowrap">{{ formatoTamanio(archivo.tamanio) }}</td>
+                <td class="px-4 py-3 text-on-surface-variant whitespace-nowrap">{{ archivo.fecha | date:'dd/MM/yyyy, HH:mm':'-0400' }}</td>
+                <td class="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    (click)="descargar(archivo)"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold text-primary hover:bg-primary-fixed/30 cursor-pointer"
+                  >
+                    Descargar
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </article>
+
+  <!-- Copias automáticas -->
+  <article class="bg-white rounded-2xl border border-outline-variant/30 shadow-xs overflow-hidden">
+    <div class="px-4 py-3 border-b border-outline-variant/20">
+      <h2 class="font-semibold text-sm text-on-surface">
+        Copias de seguridad automáticas ({{ automaticas().length }})
+      </h2>
+      <p class="text-xs text-on-surface-variant">Generadas por la programación automática (hora Bolivia).</p>
+    </div>
+    @if (isLoading()) {
+      <p class="px-4 py-6 text-sm text-on-surface-variant">Cargando copias…</p>
+    } @else if (automaticas().length === 0) {
+      <p class="px-4 py-6 text-sm text-on-surface-variant">Aún no hay copias automáticas. Se crearán según la programación.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-on-surface-variant border-b border-outline-variant/20">
+              <th scope="col" class="px-4 py-2.5 font-semibold">Archivo</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">Tamaño</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold">Creada el</th>
+              <th scope="col" class="px-4 py-2.5 font-semibold text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20">
+            @for (archivo of automaticas(); track archivo.nombre) {
+              <tr>
+                <td class="px-4 py-3 font-medium text-on-surface break-all">{{ archivo.nombre }}</td>
+                <td class="px-4 py-3 text-on-surface-variant whitespace-nowrap">{{ formatoTamanio(archivo.tamanio) }}</td>
+                <td class="px-4 py-3 text-on-surface-variant whitespace-nowrap">{{ archivo.fecha | date:'dd/MM/yyyy, HH:mm':'-0400' }}</td>
+                <td class="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    (click)="descargar(archivo)"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold text-primary hover:bg-primary-fixed/30 cursor-pointer"
+                  >
+                    Descargar
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </article>
+
+  @if (puedeGestionar) {
+    <article class="bg-white rounded-2xl border border-outline-variant/30 shadow-xs overflow-hidden">
+      <h2 class="px-4 py-3 font-semibold text-sm text-on-surface border-b border-outline-variant/20">
+        Restaurar desde archivo .sql
+      </h2>
+      <div class="px-4 py-4 space-y-2">
+        <p class="text-xs text-on-surface-variant">
+          La restauración reemplaza los datos de todas las clínicas. Elige el archivo dos veces para confirmar.
+        </p>
+        <label class="inline-flex px-4 py-2 rounded-xl bg-error/10 text-error text-sm font-semibold hover:bg-error/20 cursor-pointer">
+          @if (isRestoring()) { Restaurando… } @else if (restoreArmed) { Confirma: elige el mismo archivo }
+          @else { Elegir archivo .sql }
+          <input type="file" accept=".sql" class="hidden" (change)="onArchivoRestore($event)" [disabled]="isRestoring()" />
+        </label>
+      </div>
+    </article>
+
+    <article class="bg-white rounded-2xl border border-outline-variant/30 shadow-xs overflow-hidden">
+      <h2 class="px-4 py-3 font-semibold text-sm text-on-surface border-b border-outline-variant/20">
+        Programación automática (hora Bolivia)
+      </h2>
+      <div class="px-4 py-4 space-y-4">
+        @if (config(); as cfg) {
+          <p class="text-xs text-on-surface-variant">
+            Última ejecución: {{ cfg.ultima_ejecucion ? (cfg.ultima_ejecucion | date:'dd/MM/yyyy, HH:mm':'-0400') : '—' }} ·
+            Estado: {{ cfg.ultimo_estado ?? '—' }}
+          </p>
+        }
+        <div class="flex flex-wrap items-end gap-4">
+          <label class="flex flex-col gap-1 text-xs font-medium text-on-surface">
+            Hora (La Paz, 24h)
+            <input
+              type="time"
+              [(ngModel)]="hora"
+              class="px-3 py-2 rounded-xl border border-outline-variant/40 text-sm"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-xs font-medium text-on-surface">
+            Retención (días)
+            <input
+              type="number"
+              [(ngModel)]="retencionDias"
+              min="1"
+              max="365"
+              class="px-3 py-2 rounded-xl border border-outline-variant/40 text-sm w-28"
+            />
+          </label>
+          <label class="flex items-center gap-2 text-xs font-medium text-on-surface">
+            <input type="checkbox" [(ngModel)]="activo" class="w-4 h-4" />
+            Programación activa
+          </label>
+        </div>
+        <fieldset class="flex flex-wrap gap-2">
+          <legend class="text-xs font-medium text-on-surface mb-1">Días</legend>
+          @for (dia of diasDisponibles; track dia.valor) {
+            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-outline-variant/40 text-xs cursor-pointer">
+              <input type="checkbox" [(ngModel)]="dias[dia.valor]" class="w-4 h-4" />
+              {{ dia.etiqueta }}
+            </label>
+          }
+        </fieldset>
+        <button
+          type="button"
+          (click)="guardarConfig()"
+          [disabled]="isSavingConfig()"
+          class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
+        >
+          @if (isSavingConfig()) { Guardando… } @else { Guardar programación }
+        </button>
+      </div>
+    </article>
+  }
+</section>
