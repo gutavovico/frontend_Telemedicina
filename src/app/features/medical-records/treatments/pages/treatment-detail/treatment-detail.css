@@ -1,0 +1,4 @@
+/* Estilos específicos para TreatmentDetail */
+:host {
+  display: block;
+}

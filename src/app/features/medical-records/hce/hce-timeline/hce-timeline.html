@@ -273,6 +273,9 @@
                   >
                     Cita N° {{ c.id_cita }}
                   </span>
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-teal-50 text-[#006b5f]">
+                    Consulta ID {{ c.id_consulta }}
+                  </span>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-[#424750]">
                   <span class="material-symbols-outlined text-[15px]">event</span>
@@ -297,6 +300,16 @@
                 </span>
                 Emitir receta
               </button>
+              <a
+                *ngIf="authService.isDoctor()"
+                [routerLink]="[adminBase + '/tratamientos/crear']"
+                [queryParams]="{ id_consulta: c.id_consulta, id_diagnostico: c.diagnosticos.length === 1 ? c.diagnosticos[0].id_diagnostico : null }"
+                (click)="$event.stopPropagation()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 text-[#049CAB] border border-teal-200 text-xs font-bold hover:bg-teal-100 transition"
+              >
+                <span class="material-symbols-outlined text-[16px]" aria-hidden="true">pill</span>
+                Crear tratamiento
+              </a>
               <span
                 class="material-symbols-outlined text-[#727781] transition-transform duration-200"
                 [class.rotate-180]="consultaExpandidaId() === c.id_consulta"
@@ -324,6 +337,7 @@
             >
               <span class="font-mono font-bold">[{{ d.codigo_cie }}]</span>
               <span>{{ d.descripcion }}</span>
+              <span class="font-mono text-[10px]">ID {{ d.id_diagnostico }}</span>
               <span class="text-[10px] uppercase opacity-75 font-normal">({{ d.tipo }})</span>
             </div>
           </div>

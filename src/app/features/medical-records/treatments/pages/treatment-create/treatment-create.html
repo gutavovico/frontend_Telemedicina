@@ -1,0 +1,566 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Navegación Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs text-gray-500" aria-label="Breadcrumb">
+      <a routerLink="/" class="hover:text-[#049CAB] transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Inicio
+      </a>
+      <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+      <a routerLink="/consultas" class="hover:text-[#049CAB] transition-colors">Consultas</a>
+      <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+      <span class="text-[#293954] font-semibold">Nuevo Plan de Tratamiento (CU17)</span>
+    </nav>
+
+    <!-- Encabezado de página -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-[#293954] flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#049CAB] text-[32px]">clinical_notes</span>
+          Crear Plan de Tratamiento
+        </h1>
+        <p class="text-sm text-gray-600 mt-1">
+          Definición del cronograma de dosificación y seguimiento farmacológico para la consulta clínica.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#049CAB]/10 text-[#049CAB]">
+          <span class="material-symbols-outlined text-[16px]">verified_user</span>
+          Médico Tratante
+        </span>
+      </div>
+    </div>
+
+    <!-- Banner Toast de Error -->
+    @if (errorMessage()) {
+      <div
+        class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-4 flex items-start gap-3 shadow-sm transition-all"
+        role="alert"
+      >
+        <span class="material-symbols-outlined text-rose-600 text-[22px] flex-shrink-0 mt-0.5">error</span>
+        <div class="flex-grow text-sm">
+          <h4 class="font-semibold text-rose-900">Validación o Error Clínico</h4>
+          <p class="mt-0.5 text-rose-800">{{ errorMessage() }}</p>
+        </div>
+        <button
+          type="button"
+          (click)="errorMessage.set(null)"
+          class="text-rose-400 hover:text-rose-600 transition-colors"
+          title="Cerrar notificación"
+        >
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    }
+
+    <!-- Banner Toast de Éxito -->
+    @if (successMessage()) {
+      <div
+        class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 flex items-start gap-3 shadow-sm transition-all"
+        role="status"
+      >
+        <span class="material-symbols-outlined text-emerald-600 text-[22px] flex-shrink-0 mt-0.5">check_circle</span>
+        <div class="flex-grow text-sm">
+          <h4 class="font-semibold text-emerald-900">Plan de Tratamiento</h4>
+          <p class="mt-0.5 text-emerald-800">{{ successMessage() }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Verificación de Rol: Solo Médico Tratante -->
+    @if (!authService.isDoctor()) {
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-[#E8EDF4] text-center max-w-lg mx-auto">
+        <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-symbols-outlined text-[36px]">lock</span>
+        </div>
+        <h2 class="text-xl font-bold text-[#293954] mb-2">Acceso Exclusivo de Médicos</h2>
+        <p class="text-sm text-gray-600 mb-6">
+          Solo el médico tratante autenticado tiene autorización para formular y emitir planes de tratamiento.
+        </p>
+        <a
+          routerLink="/"
+          class="inline-flex items-center gap-2 bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors"
+        >
+          <span class="material-symbols-outlined text-[20px]">home</span>
+          Regresar al Inicio
+        </a>
+      </div>
+    } @else {
+
+      <!-- Formulario Principal -->
+      <form (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Sección 1: Identificadores Clínicos -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <h2 class="text-base font-bold text-[#293954] flex items-center gap-2 mb-4 pb-3 border-b border-[#E8EDF4]">
+            <span class="material-symbols-outlined text-[#049CAB] text-[20px]">medical_services</span>
+            1. Vinculación Clínica y Receta
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- ID Consulta -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                ID Consulta Médica <span class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="idConsulta()"
+                  (ngModelChange)="idConsulta.set($event)"
+                  name="idConsulta"
+                  placeholder="Ej. 104"
+                  required
+                  class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+                />
+                <span class="material-symbols-outlined absolute right-3 top-2.5 text-gray-400 text-[20px] pointer-events-none">tag</span>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">Obligatorio. Consulta de la cual deriva el tratamiento.</p>
+            </div>
+
+            <!-- ID Diagnóstico -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                ID Diagnóstico <span class="text-gray-400 font-normal lowercase">(opcional)</span>
+              </label>
+              <div class="relative">
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="idDiagnostico()"
+                  (ngModelChange)="idDiagnostico.set($event)"
+                  name="idDiagnostico"
+                  placeholder="Opcional si es único"
+                  class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+                />
+                <span class="material-symbols-outlined absolute right-3 top-2.5 text-gray-400 text-[20px] pointer-events-none">diagnosis</span>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">Requerido si la consulta registró múltiples diagnósticos.</p>
+            </div>
+
+            <!-- ID Receta -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                ID Receta Médica <span class="text-gray-400 font-normal lowercase">(opcional)</span>
+              </label>
+              <div class="flex gap-2">
+                <div class="relative flex-grow">
+                  <input
+                    type="number"
+                    min="1"
+                    [ngModel]="idReceta()"
+                    (ngModelChange)="onIdRecetaChange($event)"
+                    name="idReceta"
+                    placeholder="Sin receta = sin fármacos"
+                    class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+                  />
+                </div>
+                <button
+                  type="button"
+                  (click)="cargarReceta()"
+                  [disabled]="!idReceta() || isLoadingReceta()"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 bg-[#F0F5FB] hover:bg-[#E8EDF4] text-[#293954] border border-[#E8EDF4] rounded-xl text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  title="Cargar medicamentos de la receta"
+                >
+                  <span class="material-symbols-outlined text-[18px]">
+                    {{ isLoadingReceta() ? 'progress_activity' : 'download' }}
+                  </span>
+                  <span>{{ isLoadingReceta() ? 'Cargando' : 'Cargar' }}</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-1">Si no se provee receta, el plan es no farmacológico.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Temporalidad y Zona Horaria -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 pb-3 border-b border-[#E8EDF4]">
+            <h2 class="text-base font-bold text-[#293954] flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#049CAB] text-[20px]">calendar_clock</span>
+              2. Temporalidad y Zona Horaria
+            </h2>
+
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
+                [ngClass]="duracionDias() > 366 || duracionDias() < 1 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
+              >
+                <span class="material-symbols-outlined text-[14px]">timelapse</span>
+                Duración: {{ duracionDias() }} día(s)
+                @if (duracionDias() > 366) {
+                  <span>(Excede 366 días)</span>
+                }
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Fecha Inicio -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                Fecha de Inicio <span class="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                [ngModel]="fechaInicio()"
+                (ngModelChange)="fechaInicio.set($event)"
+                name="fechaInicio"
+                required
+                class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+              />
+              <p class="text-[11px] text-gray-500 mt-1">Por defecto hoy (primer día de seguimiento).</p>
+            </div>
+
+            <!-- Fecha Fin -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                Fecha de Fin <span class="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                [ngModel]="fechaFin()"
+                (ngModelChange)="fechaFin.set($event)"
+                name="fechaFin"
+                [min]="fechaInicio()"
+                required
+                class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+              />
+              <p class="text-[11px] text-gray-500 mt-1">Debe ser &gt;= fecha inicio. Máximo 366 días.</p>
+            </div>
+
+            <!-- Zona Horaria -->
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] uppercase tracking-wider mb-1.5">
+                Zona Horaria <span class="text-rose-500">*</span>
+              </label>
+              <select
+                [ngModel]="zonaHoraria()"
+                (ngModelChange)="zonaHoraria.set($event)"
+                name="zonaHoraria"
+                required
+                class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3.5 py-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all"
+              >
+                <option value="America/La_Paz">America/La_Paz (UTC-4, Bolivia)</option>
+                <option value="America/Lima">America/Lima (UTC-5)</option>
+                <option value="America/Bogota">America/Bogota (UTC-5)</option>
+                <option value="America/Santiago">America/Santiago (Chile)</option>
+                <option value="America/Buenos_Aires">America/Buenos_Aires (UTC-3)</option>
+                <option value="UTC">UTC (Tiempo Universal Coordinado)</option>
+              </select>
+              <p class="text-[11px] text-gray-500 mt-1">Zona IANA para cálculo de tomas y recordatorios.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 3: Medicamentos y Pauta Horaria (Visible si hay receta asociada o fármacos) -->
+        @if (tieneReceta() || (idReceta() && idReceta()! > 0)) {
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#E8EDF4]">
+              <div>
+                <h2 class="text-base font-bold text-[#293954] flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[#049CAB] text-[20px]">pill</span>
+                  3. Medicamentos y Pauta Horaria de Tomas
+                </h2>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  Defina los horarios en formato HH:mm ordenados para cada medicamento.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                (click)="agregarMedicamento()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#F0F5FB] hover:bg-[#E8EDF4] text-[#049CAB] font-semibold border border-[#E8EDF4] rounded-xl text-xs transition-colors self-start sm:self-auto"
+              >
+                <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                <span>Añadir Medicamento</span>
+              </button>
+            </div>
+
+            @if (medicamentos().length === 0) {
+              <div class="p-8 text-center bg-[#F0F5FB]/40 border-2 border-dashed border-[#E8EDF4] rounded-2xl">
+                <span class="material-symbols-outlined text-[36px] text-gray-400 mb-2">medication_liquid</span>
+                <p class="text-sm font-semibold text-[#293954]">No hay medicamentos configurados en el plan</p>
+                <p class="text-xs text-gray-500 mt-1 mb-4">
+                  Presione "Cargar" en la sección de receta o agregue los medicamentos manualmente.
+                </p>
+                <button
+                  type="button"
+                  (click)="agregarMedicamento()"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl text-xs font-semibold transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  Agregar Primer Medicamento
+                </button>
+              </div>
+            } @else {
+              <div class="space-y-6">
+                @for (med of medicamentos(); track $index; let i = $index) {
+                  <div class="p-5 rounded-2xl border border-[#E8EDF4] bg-[#F0F5FB]/30 hover:bg-[#F0F5FB]/50 transition-colors">
+
+                    <!-- Fila Superior: Encabezado del Fármaco -->
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                      <div class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-lg bg-[#049CAB] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                          {{ i + 1 }}
+                        </span>
+                        <span class="text-sm font-bold text-[#293954]">
+                          {{ med.medicamento_nombre || 'Medicamento #' + (i + 1) }}
+                        </span>
+                        <span class="text-xs text-gray-400 font-medium">
+                          (Detalle Receta #{{ med.id_receta_detalle }})
+                        </span>
+                        @if (med.frecuencia_receta) {
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="material-symbols-outlined text-[13px]">prescriptions</span>
+                            Frecuencia receta: {{ med.frecuencia_receta }}
+                          </span>
+                        }
+                      </div>
+
+                      <button
+                        type="button"
+                        (click)="eliminarMedicamento(i)"
+                        class="text-gray-400 hover:text-rose-600 transition-colors p-1 rounded-lg"
+                        title="Eliminar medicamento"
+                      >
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                      </button>
+                    </div>
+
+                    <!-- Campos descriptivos -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                      <div class="md:col-span-2">
+                        <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-1">
+                          Nombre del Medicamento <span class="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          [ngModel]="med.medicamento_nombre"
+                          (ngModelChange)="actualizarMedicamentoCampo(i, 'medicamento_nombre', $event)"
+                          [name]="'med_nombre_' + i"
+                          placeholder="Ej. Amoxicilina 500mg"
+                          required
+                          class="w-full bg-white border border-[#E8EDF4] rounded-xl text-xs px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+                        />
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-1">
+                          ID Detalle Receta <span class="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          [ngModel]="med.id_receta_detalle"
+                          (ngModelChange)="actualizarMedicamentoCampo(i, 'id_receta_detalle', $event)"
+                          [name]="'med_id_detalle_' + i"
+                          required
+                          class="w-full bg-white border border-[#E8EDF4] rounded-xl text-xs px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+                        />
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-1">
+                          Indicaciones de Toma
+                        </label>
+                        <input
+                          type="text"
+                          [ngModel]="med.indicaciones"
+                          (ngModelChange)="actualizarMedicamentoCampo(i, 'indicaciones', $event)"
+                          [name]="'med_indicaciones_' + i"
+                          placeholder="Ej. Con abundante agua"
+                          class="w-full bg-white border border-[#E8EDF4] rounded-xl text-xs px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Fechas de este medicamento -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-1">
+                          Fecha Inicio Fármaco
+                        </label>
+                        <input
+                          type="date"
+                          [ngModel]="med.fecha_inicio"
+                          (ngModelChange)="actualizarMedicamentoCampo(i, 'fecha_inicio', $event)"
+                          [name]="'med_inicio_' + i"
+                          required
+                          class="w-full bg-white border border-[#E8EDF4] rounded-xl text-xs px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-1">
+                          Fecha Fin Fármaco
+                        </label>
+                        <input
+                          type="date"
+                          [ngModel]="med.fecha_fin"
+                          (ngModelChange)="actualizarMedicamentoCampo(i, 'fecha_fin', $event)"
+                          [name]="'med_fin_' + i"
+                          [min]="med.fecha_inicio"
+                          required
+                          class="w-full bg-white border border-[#E8EDF4] rounded-xl text-xs px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Bloque de Horarios y Presets de Toma -->
+                    <div class="bg-white p-4 rounded-xl border border-[#E8EDF4] space-y-3">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-[#293954] flex items-center gap-1.5">
+                          <span class="material-symbols-outlined text-[16px] text-[#049CAB]">schedule</span>
+                          Tomas Diarias Programadas:
+                        </span>
+
+                        <!-- Badge de Equidistancia -->
+                        @let equi = obtenerEquidistancia(med.horas_locales);
+                        <span
+                          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                          [ngClass]="equi.esEquidistante ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+                        >
+                          <span class="material-symbols-outlined text-[14px]">
+                            {{ equi.esEquidistante ? 'check_circle' : 'tune' }}
+                          </span>
+                          {{ equi.texto }}
+                        </span>
+                      </div>
+
+                      <!-- Botones de Presets Rápidos -->
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[11px] text-gray-500 font-medium">Presets rápidos:</span>
+                        <button
+                          type="button"
+                          (click)="aplicarPreset(i, '24h')"
+                          class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#E8EDF4] bg-[#F0F5FB]/60 hover:bg-[#049CAB] hover:text-white hover:border-[#049CAB] transition-all"
+                        >
+                          c/24h (08:00)
+                        </button>
+                        <button
+                          type="button"
+                          (click)="aplicarPreset(i, '12h')"
+                          class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#E8EDF4] bg-[#F0F5FB]/60 hover:bg-[#049CAB] hover:text-white hover:border-[#049CAB] transition-all"
+                        >
+                          c/12h (08:00, 20:00)
+                        </button>
+                        <button
+                          type="button"
+                          (click)="aplicarPreset(i, '8h')"
+                          class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#E8EDF4] bg-[#F0F5FB]/60 hover:bg-[#049CAB] hover:text-white hover:border-[#049CAB] transition-all"
+                        >
+                          c/8h (00:00, 08:00, 16:00)
+                        </button>
+                        <button
+                          type="button"
+                          (click)="aplicarPreset(i, '6h')"
+                          class="px-2.5 py-1 text-xs font-medium rounded-lg border border-[#E8EDF4] bg-[#F0F5FB]/60 hover:bg-[#049CAB] hover:text-white hover:border-[#049CAB] transition-all"
+                        >
+                          c/6h (00:00, 06:00, 12:00, 18:00)
+                        </button>
+                      </div>
+
+                      <!-- Chips de Horas Configuradas -->
+                      <div class="flex flex-wrap items-center gap-2 pt-1">
+                        @for (hora of med.horas_locales; track $index; let hIndex = $index) {
+                          <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F0F5FB] border border-[#E8EDF4] rounded-lg text-xs font-semibold text-[#293954]">
+                            <span class="material-symbols-outlined text-[14px] text-[#049CAB]">alarm</span>
+                            {{ hora }}
+                            <button
+                              type="button"
+                              (click)="quitarHora(i, hIndex)"
+                              class="text-gray-400 hover:text-rose-500 transition-colors ml-0.5"
+                              title="Quitar hora"
+                            >
+                              <span class="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                          </span>
+                        }
+                        @if (med.horas_locales.length === 0) {
+                          <div class="flex items-center gap-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold w-full">
+                            <span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
+                            <span>Horario no configurado: seleccione un preset rápido o añada las horas de toma manualmente antes de crear el plan.</span>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Agregar Hora Específica -->
+                      <div class="flex items-center gap-2 pt-1 max-w-xs">
+                        <input
+                          type="time"
+                          [ngModel]="med.nuevaHora"
+                          (ngModelChange)="med.nuevaHora = $event"
+                          [name]="'nueva_hora_' + i"
+                          class="bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-lg text-xs px-2.5 py-1.5 text-[#293954] focus:outline-none focus:ring-1 focus:ring-[#049CAB]"
+                        />
+                        <button
+                          type="button"
+                          (click)="agregarHora(i, med.nuevaHora || '')"
+                          class="px-3 py-1.5 bg-[#049CAB] hover:bg-[#038795] text-white rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Añadir toma
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Sección 4: Notas Clínicas -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <h2 class="text-base font-bold text-[#293954] flex items-center gap-2 mb-4 pb-3 border-b border-[#E8EDF4]">
+            <span class="material-symbols-outlined text-[#049CAB] text-[20px]">edit_note</span>
+            4. Notas Clínicas y Recomendaciones <span class="text-gray-400 font-normal text-xs lowercase">(opcional)</span>
+          </h2>
+
+          <textarea
+            [ngModel]="notas()"
+            (ngModelChange)="notas.set($event)"
+            name="notas"
+            rows="3"
+            placeholder="Observaciones de seguimiento terapéutico, pautas dietéticas o precauciones clínicas..."
+            class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm p-3.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition-all resize-none"
+          ></textarea>
+          <p class="text-[11px] text-gray-500 mt-1">
+            Estas indicaciones serán visibles tanto para el paciente como para el equipo médico tratante.
+          </p>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cancelar()"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#E8EDF4] text-[#293954] bg-white hover:bg-[#F0F5FB] font-medium text-sm transition-colors"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            [disabled]="isSubmitting()"
+            class="w-full sm:w-auto bg-[#049CAB] hover:bg-[#038795] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl px-6 py-2.5 font-semibold text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2"
+          >
+            @if (isSubmitting()) {
+              <span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+              <span>Guardando Plan...</span>
+            } @else {
+              <span class="material-symbols-outlined text-[20px]">check</span>
+              <span>Crear Plan de Tratamiento</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</main>
+
+<app-footer></app-footer>

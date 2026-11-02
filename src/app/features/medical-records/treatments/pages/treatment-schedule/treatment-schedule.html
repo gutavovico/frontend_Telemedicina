@@ -1,0 +1,595 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-between">
+  <div class="max-w-5xl mx-auto w-full space-y-6">
+
+    <!-- Toast Notification -->
+    @if (toastMessage()) {
+      <div
+        class="fixed top-20 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all"
+        [ngClass]="toastMessage()?.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : toastMessage()?.type === 'info' ? 'bg-[#F0F5FB] text-[#293954] border-[#E8EDF4]' : 'bg-rose-50 text-rose-800 border-rose-200'"
+      >
+        <span class="material-symbols-outlined text-[20px]">
+          {{ toastMessage()?.type === 'success' ? 'check_circle' : toastMessage()?.type === 'info' ? 'info' : 'error' }}
+        </span>
+        <span>{{ toastMessage()?.text }}</span>
+        <button
+          type="button"
+          (click)="toastMessage.set(null)"
+          class="ml-2 text-slate-400 hover:text-slate-600"
+        >
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    }
+
+    <!-- Header navigation and Title -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <a
+          [routerLink]="['/tratamientos', idTratamiento()]"
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-[#049CAB] transition-colors mb-2"
+        >
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver al tratamiento
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-bold text-[#293954]">
+          Cronograma Diario y Registro de Tomas
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">
+          @if (plan()) {
+            <span>
+              Tratamiento #{{ idTratamiento() }} &bull;
+              {{ plan()?.diagnostico?.descripcion || 'Tratamiento Médico' }}
+              ({{ plan()?.fecha_inicio }} al {{ plan()?.fecha_fin }})
+            </span>
+          } @else {
+            <span>Seguimiento de tomas del tratamiento #{{ idTratamiento() }}</span>
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Error Banner Global -->
+    @if (errorMessage()) {
+      <div class="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl flex items-center justify-between gap-3 text-sm">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">error</span>
+          <span>{{ errorMessage() }}</span>
+        </div>
+        <button
+          type="button"
+          (click)="loadCronograma()"
+          class="text-xs font-semibold text-rose-700 underline hover:no-underline"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- Selector de fecha -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Fecha seleccionada</span>
+          <p class="text-lg font-bold text-[#293954] capitalize">
+            {{ formatFechaHuman(fechaSeleccionada()) }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Botón Día anterior -->
+          <button
+            type="button"
+            (click)="cambiarDia(-1)"
+            class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#293954] bg-[#F0F5FB]/70 hover:bg-[#F0F5FB] rounded-xl border border-[#E8EDF4] transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+            Día anterior
+          </button>
+
+          <!-- Botón Hoy -->
+          <button
+            type="button"
+            (click)="irAHoy()"
+            [ngClass]="isHoy() ? 'bg-[#049CAB] text-white' : 'bg-[#F0F5FB]/70 text-[#293954] hover:bg-[#F0F5FB]'"
+            class="px-4 py-2 text-sm font-semibold rounded-xl border border-[#E8EDF4] transition-colors"
+          >
+            Hoy
+          </button>
+
+          <!-- Botón Día siguiente -->
+          <button
+            type="button"
+            (click)="cambiarDia(1)"
+            class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#293954] bg-[#F0F5FB]/70 hover:bg-[#F0F5FB] rounded-xl border border-[#E8EDF4] transition-colors"
+          >
+            Día siguiente
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+
+          <!-- Datepicker input -->
+          <div class="relative">
+            <input
+              type="date"
+              [ngModel]="fechaSeleccionada()"
+              (ngModelChange)="onFechaChange($event)"
+              class="bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm px-3 py-2 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white cursor-pointer"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget de adherencia del día/plan -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-[#293954] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#049CAB] text-[22px]">monitoring</span>
+            Nivel de Adherencia Terapéutica
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Métrica calculada sobre las dosis programadas acumuladas del tratamiento
+          </p>
+        </div>
+
+        <!-- Badge de nivel de adherencia -->
+        <div class="flex items-center gap-2">
+          <span
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border"
+            [ngClass]="adherenciaBadgeClass()"
+          >
+            {{ adherenciaNivel() }}
+          </span>
+        </div>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#E8EDF4]">
+        <div class="flex items-baseline gap-3">
+          <span class="text-3xl sm:text-4xl font-extrabold text-[#293954]">
+            {{ adherenciaPorcentajeTexto() }}
+          </span>
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Adherencia
+          </span>
+        </div>
+
+        <div class="flex items-center justify-start sm:justify-end gap-2 text-sm text-slate-600 font-medium">
+          <span class="material-symbols-outlined text-[#049CAB] text-[20px]">fact_check</span>
+          <span>{{ adherenciaFraccionTexto() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de dosis programadas del día -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-[#293954] flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#049CAB] text-[22px]">medication</span>
+          Dosis Programadas del Día
+          <span class="text-xs bg-[#F0F5FB] text-[#293954] font-semibold px-2 py-0.5 rounded-full border border-[#E8EDF4]">
+            {{ cronograma()?.dosis?.length ?? 0 }}
+          </span>
+        </h2>
+        @if (cronograma()?.zona_horaria) {
+          <span class="text-xs text-slate-400 font-medium">
+            Zona horaria: {{ cronograma()?.zona_horaria }}
+          </span>
+        }
+      </div>
+
+      @if (isLoading()) {
+        <div class="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+          <div class="w-8 h-8 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-sm font-medium">Cargando cronograma...</span>
+        </div>
+      } @else if (!cronograma() || cronograma()?.dosis?.length === 0) {
+        <div class="py-12 text-center text-slate-400 space-y-2">
+          <span class="material-symbols-outlined text-[48px] text-slate-300">event_busy</span>
+          <p class="text-base font-semibold text-[#293954]">No hay dosis programadas para esta fecha</p>
+          <p class="text-xs text-slate-500">Selecciona otra fecha para consultar las tomas correspondientes.</p>
+        </div>
+      } @else {
+        <div class="divide-y divide-[#E8EDF4]">
+          @for (dosis of cronograma()?.dosis; track dosis.id_dosis) {
+            <div class="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+              <!-- Información de hora y medicamento -->
+              <div class="flex items-start gap-3">
+                <div class="flex flex-col items-center justify-center bg-[#F0F5FB] rounded-xl px-3 py-2 border border-[#E8EDF4] min-w-[72px]">
+                  <span class="text-lg font-extrabold text-[#293954]">
+                    {{ dosis.programada_hora_local }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-medium">
+                    {{ dosis.zona_horaria }}
+                  </span>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-bold text-[#293954]">
+                      {{ getMedicamentoNombre(dosis.id_medicamento_plan) }}
+                    </h3>
+
+                    <!-- Badge de Estado -->
+                    @if (dosis.estado === 'PENDIENTE') {
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                        PENDIENTE
+                      </span>
+                    } @else if (dosis.estado === 'INGERIDA') {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                        <span class="material-symbols-outlined text-[14px]">check</span>
+                        INGERIDA
+                      </span>
+                    } @else if (dosis.estado === 'OMITIDA') {
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                        OMITIDA
+                      </span>
+                    } @else if (dosis.estado === 'POSPUESTA') {
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                        POSPUESTA
+                      </span>
+                    }
+
+                    <!-- Badge adicional si vencida -->
+                    @if (dosis.estado === 'PENDIENTE' && dosis.vencida) {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                        Vencida
+                      </span>
+                    }
+
+                    <!-- Indicador si hay una operación pendiente de confirmación -->
+                    @if (tieneOperacionGuardada(dosis.id_dosis)) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span class="material-symbols-outlined text-[14px]">sync_problem</span>
+                        Pendiente de confirmación
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Indicaciones del fármaco -->
+                  @if (getMedicamentoIndicaciones(dosis.id_medicamento_plan)) {
+                    <p class="text-xs text-slate-500">
+                      {{ getMedicamentoIndicaciones(dosis.id_medicamento_plan) }}
+                    </p>
+                  }
+
+                  <!-- Detalle de toma registrada si aplica -->
+                  @if (dosis.estado !== 'PENDIENTE' || dosis.registrada_en) {
+                    <div class="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600">
+                      @if (dosis.efectiva_en) {
+                        <span>Hora efectiva: <strong>{{ formatHoraEfectiva(dosis.efectiva_en) }}</strong></span>
+                      }
+                      @if (dosis.estado === 'INGERIDA') {
+                        @if (dosis.puntual) {
+                          <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            Puntual
+                          </span>
+                        } @else {
+                          <span class="inline-flex items-center text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            Tardía
+                          </span>
+                        }
+                      }
+                      @if (dosis.nota) {
+                        <span class="italic text-slate-500">"{{ dosis.nota }}"</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- El paciente puede corregir cualquier registro; el historial conserva cada cambio. -->
+              @if (isPacienteTitular()) {
+                <div class="flex items-center">
+                  <button
+                    type="button"
+                    (click)="abrirModalRegistro(dosis)"
+                    class="bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-4 py-2 font-semibold text-sm transition-colors inline-flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+                    {{ tieneOperacionGuardada(dosis.id_dosis) ? 'Revisar / Reintentar' : dosis.estado === 'PENDIENTE' ? 'Registrar toma' : 'Corregir registro' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- Modal / Formulario de Registro de Toma -->
+  @if (isModalOpen() && selectedDosis()) {
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl border border-[#E8EDF4] max-w-lg w-full p-6 space-y-5 animate-fade-in">
+
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-[#293954]">
+              Registrar Toma de Medicamento
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+              {{ getMedicamentoNombre(selectedDosis()!.id_medicamento_plan) }} &bull;
+              Programada: {{ selectedDosis()!.programada_hora_local }} ({{ selectedDosis()!.zona_horaria }})
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            class="text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <!-- Banner de recuperación tras cierre de sesión / re-entrada con resultado incierto -->
+        @if (activeRecoveryMarker()) {
+          <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-xs space-y-3">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-amber-700 text-xl">lock_clock</span>
+              <div class="space-y-1">
+                <p class="font-bold text-amber-800 text-sm">Operación previa pendiente de verificación</p>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                  Existe una operación previa con resultado incierto para esta dosis tras reiniciar la sesión. Para evitar registros duplicados y proteger tu seguridad clínica, el registro nuevo está bloqueado hasta verificar con el servidor el resultado de esa toma.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-200">
+              <button
+                type="button"
+                (click)="verificarMarcadorRecuperacion()"
+                [disabled]="isReconciling() || isResolving()"
+                class="px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors inline-flex items-center gap-2 shadow-sm disabled:opacity-50"
+              >
+                @if (isReconciling()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Verificando estado...</span>
+                } @else {
+                  <span class="material-symbols-outlined text-base">sync</span>
+                  <span>{{ modalError() ? 'Reintentar verificación' : 'Verificar estado' }}</span>
+                }
+              </button>
+
+              <button
+                type="button"
+                (click)="resolverOperacionAbandonada()"
+                [disabled]="isResolving() || isReconciling()"
+                class="px-3 py-1.5 text-xs font-semibold bg-white text-rose-700 border border-rose-300 rounded-lg hover:bg-rose-50 transition-colors inline-flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              >
+                @if (isResolving()) {
+                  <div class="w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Resolviendo...</span>
+                } @else {
+                  <span class="material-symbols-outlined text-[16px]">cancel</span>
+                  <span>Resolver operación abandonada</span>
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Banner de advertencia: operación pendiente con datos modificados por el usuario -->
+        @if (pendingOperation() && haModificadoDatosPendientes()) {
+          <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs space-y-2">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-amber-700 text-[18px]">warning</span>
+              <div class="space-y-1">
+                <p class="font-bold text-amber-800">Operación previa no confirmada con datos modificados</p>
+                <p class="text-[11px] text-amber-700">
+                  Has editado los datos tras un intento previo no confirmado. Para evitar conflictos de duplicación o rechazo de idempotencia (409), debes restaurar los datos originales para reintentar la operación con la misma clave, o verificar el estado con el servidor.
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-200">
+              <button
+                type="button"
+                (click)="restaurarDatosOriginales()"
+                class="px-2.5 py-1.5 text-[11px] font-semibold bg-white text-amber-800 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors inline-flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[16px]">undo</span>
+                Restaurar datos originales
+              </button>
+              <button
+                type="button"
+                (click)="reconciliarManual()"
+                [disabled]="isReconciling() || isSaving()"
+                class="px-2.5 py-1.5 text-[11px] font-semibold bg-white text-amber-800 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors inline-flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[16px]">sync</span>
+                {{ isReconciling() ? 'Verificando...' : 'Verificar en servidor' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Banner informativo: operación pendiente idéntica lista para reintento -->
+        @if (pendingOperation() && !haModificadoDatosPendientes()) {
+          <div class="bg-[#F0F5FB] border border-[#E8EDF4] text-[#293954] p-3 rounded-xl text-xs flex items-center justify-between gap-2">
+            <div class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-[#049CAB] text-[18px]">info</span>
+              <div>
+                <p class="font-semibold text-[#293954]">Operación pendiente de confirmación</p>
+                <p class="text-[11px] text-slate-500">
+                  El resultado del intento anterior es incierto. Pulsa "Reintentar registro" para enviar los mismos datos y clave, o "Verificar" para consultar con el servidor.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              (click)="reconciliarManual()"
+              [disabled]="isReconciling() || isSaving()"
+              class="px-2.5 py-1 text-[11px] font-semibold bg-white text-[#293954] rounded-lg border border-[#E8EDF4] hover:bg-[#F0F5FB] transition-colors inline-flex items-center gap-1"
+            >
+              <span class="material-symbols-outlined text-[16px]">sync</span>
+              {{ isReconciling() ? 'Verificando...' : 'Verificar' }}
+            </button>
+          </div>
+        }
+
+        @if (modalError()) {
+          <div class="bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-xs flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">error</span>
+            <span>{{ modalError() }}</span>
+          </div>
+        }
+
+        <div class="space-y-4" [ngClass]="{ 'opacity-50 pointer-events-none select-none': activeRecoveryMarker() }">
+          <!-- Opciones de estado -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Estado de la toma
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                (click)="modalEstado.set('INGERIDA')"
+                [ngClass]="modalEstado() === 'INGERIDA' ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold ring-2 ring-emerald-500/20' : 'bg-[#F0F5FB]/70 text-slate-600 border-[#E8EDF4] hover:bg-[#F0F5FB]'"
+                class="py-2.5 px-3 rounded-xl border text-xs text-center transition-all flex flex-col items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Ingerida
+              </button>
+
+              <button
+                type="button"
+                (click)="modalEstado.set('OMITIDA')"
+                [ngClass]="modalEstado() === 'OMITIDA' ? 'bg-gray-100 text-gray-800 border-gray-300 font-bold ring-2 ring-gray-400/20' : 'bg-[#F0F5FB]/70 text-slate-600 border-[#E8EDF4] hover:bg-[#F0F5FB]'"
+                class="py-2.5 px-3 rounded-xl border text-xs text-center transition-all flex flex-col items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[20px]">cancel</span>
+                Omitida
+              </button>
+
+              <button
+                type="button"
+                (click)="modalEstado.set('POSPUESTA')"
+                [ngClass]="modalEstado() === 'POSPUESTA' ? 'bg-amber-50 text-amber-800 border-amber-300 font-bold ring-2 ring-amber-500/20' : 'bg-[#F0F5FB]/70 text-slate-600 border-[#E8EDF4] hover:bg-[#F0F5FB]'"
+                class="py-2.5 px-3 rounded-xl border text-xs text-center transition-all flex flex-col items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[20px]">schedule</span>
+                Pospuesta
+              </button>
+            </div>
+          </div>
+
+          <!-- Campos condicionales según estado -->
+          @if (modalEstado() === 'INGERIDA') {
+            <div>
+              <label class="block text-xs font-semibold text-[#293954] mb-1">
+                Hora efectiva de la ingesta
+              </label>
+              <input
+                type="datetime-local"
+                [(ngModel)]="modalHoraEfectiva"
+                class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm p-2.5 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">
+                Indica el momento exacto en el que tomaste el medicamento.
+              </p>
+            </div>
+          } @else if (modalEstado() === 'OMITIDA') {
+            @if (isDosisFutura(selectedDosis())) {
+              <div class="bg-amber-50 border border-amber-200 text-amber-800 p-2.5 rounded-xl text-xs flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">info</span>
+                <span>Solo se puede omitir una toma a partir de su hora programada.</span>
+              </div>
+            } @else {
+              <p class="text-xs text-slate-500 bg-[#F0F5FB] p-2.5 rounded-xl border border-[#E8EDF4]">
+                La dosis se registrará como omitida en tu historial terapéutico.
+              </p>
+            }
+          } @else if (modalEstado() === 'POSPUESTA') {
+            <p class="text-xs text-slate-500 bg-[#F0F5FB] p-2.5 rounded-xl border border-[#E8EDF4]">
+              Indica que tomarás esta dosis más tarde. La pauta original se conserva sin alteraciones.
+            </p>
+          }
+
+          <!-- Campo para nota -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-[#293954]">
+                Nota u observaciones (opcional)
+              </label>
+              <span class="text-[11px] text-slate-400">
+                {{ modalNota().length }}/1000
+              </span>
+            </div>
+            <textarea
+              [(ngModel)]="modalNota"
+              rows="3"
+              maxlength="1000"
+              placeholder="Síntomas, efectos adversos o motivo de posposición/omisión..."
+              class="w-full bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm p-3 text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white resize-none"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#E8EDF4]">
+          <button
+            type="button"
+            (click)="cerrarModal()"
+            [disabled]="isSaving() || isReconciling() || isResolving()"
+            class="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 rounded-xl transition-colors"
+          >
+            Cancelar
+          </button>
+          @if (!activeRecoveryMarker()) {
+            <button
+              type="button"
+              (click)="guardarRegistro()"
+              [disabled]="isSaving() || isReconciling() || isResolving() || haModificadoDatosPendientes() || (modalEstado() === 'OMITIDA' && isDosisFutura(selectedDosis()))"
+              class="bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+            >
+              @if (isSaving()) {
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Guardando...</span>
+              } @else if (pendingOperation()) {
+                <span>Reintentar registro</span>
+              } @else {
+                <span>Guardar registro</span>
+              }
+            </button>
+          } @else {
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="resolverOperacionAbandonada()"
+                [disabled]="isResolving() || isReconciling()"
+                class="border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-xl px-4 py-2.5 font-semibold text-xs transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                @if (isResolving()) {
+                  <div class="w-4 h-4 border-2 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Resolviendo...</span>
+                } @else {
+                  <span class="material-symbols-outlined text-[16px]">cancel</span>
+                  <span>Resolver abandonada</span>
+                }
+              </button>
+              <button
+                type="button"
+                (click)="verificarMarcadorRecuperacion()"
+                [disabled]="isReconciling() || isResolving()"
+                class="bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                @if (isReconciling()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Verificando...</span>
+                } @else {
+                  <span class="material-symbols-outlined text-[18px]">sync</span>
+                  <span>{{ modalError() ? 'Reintentar verificación' : 'Verificar estado' }}</span>
+                }
+              </button>
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+</main>
+
+<app-footer></app-footer>

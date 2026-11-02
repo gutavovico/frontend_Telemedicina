@@ -52,6 +52,16 @@ export class Header {
     return this.router.url.startsWith('/recetas');
   }
 
+  isTratamientosRoute(): boolean {
+    return this.router.url.startsWith('/tratamientos');
+  }
+
+  canSeeTratamientos(): boolean {
+    if (!this.authService.isAuthenticated()) return false;
+    const role = this.authService.userRole();
+    return role === 'doctor' || role === 'paciente';
+  }
+
   isProductsRoute(): boolean {
     return this.router.url.startsWith('/medicamentos');
   }
