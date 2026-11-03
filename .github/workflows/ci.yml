@@ -81,13 +81,13 @@ jobs:
       - uses: cypress-io/github-action@v6
         with:
           build: npm run build
-          start: npm run start
-          wait-on: 'http://localhost:4200'
+          start: npm run start -- --host 0.0.0.0
+          wait-on: 'http://127.0.0.1:4200'
           wait-on-timeout: 120
           browser: chrome
           record: false
         env:
-          CYPRESS_BASE_URL: http://localhost:4200
+          CYPRESS_BASE_URL: http://127.0.0.1:4200
 
   deploy-preview:
     name: Deploy Preview (Netlify/Vercel)
