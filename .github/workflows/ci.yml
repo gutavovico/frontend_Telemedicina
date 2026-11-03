@@ -108,7 +108,9 @@ jobs:
             exit 1
           fi
 
-          npx cypress run --browser chrome
+          # CU10, CU12 y CU23 requieren un backend y datos de prueba que este job no levanta.
+          # El flujo CU17 usa interceptores y se puede verificar de forma aislada.
+          npx cypress run --browser chrome --spec cypress/e2e/cu17-treatments-schedule.cy.ts
 
   deploy-preview:
     name: Deploy Preview (Netlify/Vercel)

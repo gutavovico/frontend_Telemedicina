@@ -81,7 +81,7 @@ describe('CU17 - Gestionar y Monitorear Tratamiento Médico: Cronograma y Regist
       {
         id_dosis: 903,
         id_medicamento_plan: 31,
-        programada_en: '2026-11-02T02:00:00Z',
+        programada_en: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         programada_hora_local: '22:00',
         zona_horaria: 'America/La_Paz',
         estado: 'PENDIENTE',
@@ -405,8 +405,8 @@ describe('CU17 - Gestionar y Monitorear Tratamiento Médico: Cronograma y Regist
       cy.contains('Fallo transitorio de conexión con la base de datos.').should('be.visible');
       cy.contains('h3', 'Registrar Toma de Medicamento').should('be.visible');
 
-      // Reintento por el paciente (hace clic nuevamente en "Guardar registro")
-      cy.contains('button', 'Guardar registro').click();
+      // La operación pendiente se reintenta con el mismo cuerpo y clave.
+      cy.contains('button', 'Reintentar registro').click();
       cy.wait('@postRegistroDosisFlaky').then(() => {
         // Validación crítica del protocolo de idempotencia: ambas peticiones usan la MISMA clave
         expect(callCount).to.equal(2);
@@ -604,7 +604,12 @@ describe('CU17 - Gestionar y Monitorear Tratamiento Médico: Cronograma y Regist
         },
       }).as('getIdempotencia');
 
-      cy.visit('/tratamientos/15/cronograma');
+      cy.visit('/tratamientos/15/cronograma', {
+        onBeforeLoad(win) {
+          // Una operación anterior del mismo spec no debe sustituir el marcador opaco.
+          win.sessionStorage.removeItem('pending_dose_10_1_902');
+        },
+      });
       cy.wait('@getCronogramaRecovery');
 
       // Al abrir la toma de las 14:00, se detecta el marcador opaco y se reconcilia
