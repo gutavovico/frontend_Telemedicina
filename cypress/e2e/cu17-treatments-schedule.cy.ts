@@ -612,8 +612,8 @@ describe('CU17 - Gestionar y Monitorear Tratamiento Médico: Cronograma y Regist
       });
       cy.wait('@getCronogramaRecovery');
 
-      // Al abrir la toma de las 14:00, se detecta el marcador opaco y se reconcilia
-      cy.contains('button', 'Registrar toma').first().click();
+      // La dosis con marcador muestra la acción de recuperación, no "Registrar toma".
+      cy.contains('button', 'Revisar / Reintentar').click();
 
       // Debe consultar el endpoint simulado de idempotencia
       cy.wait('@getIdempotencia');
