@@ -135,6 +135,22 @@ describe('CU17 - Gestionar y Monitorear Tratamiento Médico: Cronograma y Regist
 
   beforeEach(() => {
     // Interceptar llamadas base de auth
+    cy.intercept('GET', '**/api/v1/tenant/context', {
+      statusCode: 200,
+      body: {
+        clinica_id: 1,
+        clinica_nombre: 'Clínica de prueba',
+        clinica_estado: 'ACTIVO',
+        usuario_id: 10,
+        usuario_nombres: 'Carlos',
+        usuario_apellidos: 'Mamani',
+        usuario_correo: 'paciente@test.com',
+        rol: 'PACIENTE',
+        permisos: [],
+        es_super_admin: false,
+      },
+    }).as('getTenantContext');
+
     cy.intercept('GET', '**/auth/me', {
       statusCode: 200,
       body: {
