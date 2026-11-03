@@ -12,11 +12,17 @@ describe('Backups: servicio web ADMIN', () => {
   const base = `${environment.apiUrl}/backup`;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(BackupService);
     http = TestBed.inject(HttpTestingController);
   });
-  afterEach(() => http.verify());
+  afterEach(() => {
+    if (http) {
+      http.verify();
+    }
+    TestBed.resetTestingModule();
+  });
 
   it('lista copias sin enviar id_clinica', () => {
     service.listar().subscribe();
