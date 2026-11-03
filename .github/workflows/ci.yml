@@ -77,16 +77,38 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - uses: cypress-io/github-action@v6
+      - uses: actions/cache@v4
         with:
-          build: npm run build
-          start: node scripts/serve-cypress.mjs
-          wait-on: 'http://127.0.0.1:4200'
-          wait-on-timeout: 120
-          browser: chrome
-          record: false
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx cypress install
+      - run: npm run build
+      - name: Start app and run Cypress
         env:
           CYPRESS_BASE_URL: http://127.0.0.1:4200
+        run: |
+          set -euo pipefail
+          node scripts/serve-cypress.mjs > /tmp/serve-cypress.log 2>&1 &
+          server_pid=$!
+          trap 'cat /tmp/serve-cypress.log; kill "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --output /dev/null http://127.0.0.1:4200/; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo 'El servidor no respondió en http://127.0.0.1:4200/' >&2
+            exit 1
+          fi
+
+          npx cypress run --browser chrome
 
   deploy-preview:
     name: Deploy Preview (Netlify/Vercel)
