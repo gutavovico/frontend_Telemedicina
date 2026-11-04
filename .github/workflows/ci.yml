@@ -77,16 +77,37 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - uses: cypress-io/github-action@v6
-        with:
-          build: npm run build
-          start: npm run start
-          wait-on: 'http://localhost:4200'
-          wait-on-timeout: 120
-          browser: chrome
-          record: false
+      - run: npx cypress install
+      - name: Start Angular, wait for HTTP and run Cypress
         env:
-          CYPRESS_BASE_URL: http://localhost:4200
+          CYPRESS_BASE_URL: http://127.0.0.1:4200
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/angular-e2e.log"
+          npm run start -- --host 127.0.0.1 --port 4200 > "$log" 2>&1 &
+          server_pid=$!
+          trap 'cat "$log"; kill "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          deadline=$((SECONDS + 120))
+          while (( SECONDS < deadline )); do
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              echo '::error::Angular terminó antes de responder en http://127.0.0.1:4200/'
+              exit 1
+            fi
+            if curl --fail --silent --connect-timeout 2 --max-time 5 --output /dev/null http://127.0.0.1:4200/; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo '::error::Angular no respondió en http://127.0.0.1:4200/ dentro de 120 segundos'
+            exit 1
+          fi
+
+          echo 'Angular ready at http://127.0.0.1:4200/'
+          npx cypress run --browser chrome
 
   deploy-preview:
     name: Deploy Preview (Netlify/Vercel)
