@@ -31,7 +31,7 @@ export class AuthService {
   private readonly inactivity = inject(InactivityService);
   private readonly tenantService = inject(TenantService);
 
-  private readonly apiUrl = environment.apiUrl;
+  private get apiUrl(): string { return environment.apiUrl; }
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   // Reactive state signals

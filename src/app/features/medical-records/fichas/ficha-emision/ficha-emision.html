@@ -118,7 +118,34 @@
           </div>
         </div>
 
-        <!-- Sección 2: Fecha de Atención -->
+                <!-- Selector de Modalidad (Virtual / Presencial) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Modalidad de Atención *
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              (click)="form.get('tipo_consulta')?.setValue('VIDEOCONSULTA')"
+              class="flex items-center justify-center gap-2.5 p-3 rounded-2xl border-2 transition font-bold text-xs sm:text-sm cursor-pointer"
+              [ngClass]="form.get('tipo_consulta')?.value === 'VIDEOCONSULTA' ? 'border-[#002d62] bg-[#eff4fa] text-[#002d62] shadow-xs' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'"
+            >
+              <span class="material-symbols-outlined text-[20px]">videocam</span>
+              <span>Videoconsulta (Virtual)</span>
+            </button>
+            <button
+              type="button"
+              (click)="form.get('tipo_consulta')?.setValue('PRESENCIAL')"
+              class="flex items-center justify-center gap-2.5 p-3 rounded-2xl border-2 transition font-bold text-xs sm:text-sm cursor-pointer"
+              [ngClass]="form.get('tipo_consulta')?.value === 'PRESENCIAL' ? 'border-[#002d62] bg-[#eff4fa] text-[#002d62] shadow-xs' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'"
+            >
+              <span class="material-symbols-outlined text-[20px]">person</span>
+              <span>Presencial (En Consultorio)</span>
+            </button>
+          </div>
+        </div>
+
+<!-- Sección 2: Fecha de Atención -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
