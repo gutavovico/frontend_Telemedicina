@@ -111,10 +111,9 @@ describe('authInterceptor (CU23)', () => {
       .expectOne('http://localhost:8000/auth/refresh')
       .flush({ detail: 'Refresh inválido' }, { status: 401, statusText: 'Unauthorized' });
 
-    const logoutReqs = httpMock.match('http://localhost:8000/auth/logout');
-    for (const req of logoutReqs) {
-      req.flush({});
-    }
+    // logout() revoca la sesión en el servidor y recién entonces limpia el
+    // almacenamiento local; hay que resolver esa petición antes de comprobarlo.
+    httpMock.expectOne('http://localhost:8000/auth/logout').flush({});
 
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);

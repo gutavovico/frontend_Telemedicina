@@ -13,6 +13,7 @@ import {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
+  ChangeTemporaryPasswordRequest,
   AppRole,
   normalizeAppRole,
 } from '../models/auth.models';
@@ -38,6 +39,7 @@ export class AuthService {
   readonly isAuthenticated = signal<boolean>(this.hasValidToken());
   readonly currentUser = signal<UsuarioResponse | null>(this.getStoredUser());
   readonly profileVerified = signal<boolean>(false);
+  readonly mustChangePassword = signal<boolean>(false);
 
   // Perfil médico del usuario autenticado (CU04): 200 en /medicos/me = es doctor.
   // Se carga tras el login y al revalidar la sesión.
@@ -167,6 +169,7 @@ export class AuthService {
     return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((response) => {
         this.saveTokens(response.access_token, response.refresh_token, rememberMe);
+        this.mustChangePassword.set(!!response.must_change_password);
 
         // Initial fallback user from email until backend profile loads
         if (!this.currentUser()) {
@@ -180,15 +183,16 @@ export class AuthService {
           this.saveUser(fallbackUser);
         }
         // Cargar perfil médico (define el rol doctor, CU04)
-        this.fetchPerfilMedico();
+        if (!response.must_change_password) this.fetchPerfilMedico();
       }),
-      switchMap(() => {
+      switchMap((response) => {
+        if (response.must_change_password) return of(null);
         return forkJoin({
           profile: this.fetchUserProfile().pipe(catchError(() => of(null))),
           tenant: this.tenantService.loadTenantContext().pipe(catchError(() => of(null))),
         });
       }),
-      map((res) => res.tenant),
+      map((res) => res?.tenant ?? null),
     );
   }
 
@@ -198,7 +202,7 @@ export class AuthService {
     const role = (tenant?.rol || this.currentUser()?.rol || '').toUpperCase();
 
     if (tenant?.es_super_admin || role.includes('SUPER')) {
-      this.router.navigate(['/admin/clinicas']);
+      this.router.navigate(['/admin/tenants']);
       return;
     }
     if (role.includes('ADMIN')) {
@@ -228,6 +232,20 @@ export class AuthService {
   ): Observable<{ detail: string }> {
     const payload: ResetPasswordRequest = { correo, codigo, nueva_password: nuevaPassword };
     return this.http.post<{ detail: string }>(`${this.apiUrl}/auth/reset-password`, payload);
+  }
+
+  changeTemporaryPassword(
+    nuevaPassword: string,
+    confirmarPassword: string,
+  ): Observable<{ detail: string }> {
+    const payload: ChangeTemporaryPasswordRequest = {
+      nueva_password: nuevaPassword,
+      confirmar_password: confirmarPassword,
+    };
+    return this.http.post<{ detail: string }>(
+      `${this.apiUrl}/auth/change-temporary-password`,
+      payload,
+    );
   }
 
   fetchUserProfile(): Observable<UsuarioResponse | null> {
