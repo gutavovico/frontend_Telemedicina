@@ -96,6 +96,12 @@ export const routes: Routes = [
         title: 'Hospital San Juan de Dios - Panel Administrador',
       },
       {
+        path: 'planes',
+        canActivate: [superAdminGuard],
+        loadComponent: () => import('./features/auth/planes/planes-page').then((m) => m.PlanesPage),
+        title: 'Catálogo de planes de suscripción',
+      },
+      {
         path: 'clinicas',
         canActivate: [superAdminGuard],
         loadComponent: () =>
