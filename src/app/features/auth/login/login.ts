@@ -81,6 +81,10 @@ export class Login implements OnInit {
     this.authService.login(email, password, rememberMe).subscribe({
       next: (tenantContext) => {
         this.isLoading.set(false);
+        if (this.authService.mustChangePassword()) {
+          this.router.navigate(['/cambiar-contrasena-temporal']);
+          return;
+        }
         if (this.returnUrl && this.returnUrl !== '/') {
           this.router.navigateByUrl(this.returnUrl);
         } else {

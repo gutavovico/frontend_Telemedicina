@@ -43,7 +43,7 @@ export class AdminDashboard implements OnInit {
         catchError(() => of({ total: 0, items: [], page: 1, per_page: 100 }))
       ).subscribe(res => {
         this.clinicasTotal.set(res.total);
-        const activas = res.items.filter(c => c.estado === 'ACTIVO').length;
+        const activas = res.items.filter(c => c.estado === 'ACTIVO' || c.estado === 'ACTIVE').length;
         this.clinicasActivas.set(activas);
       });
     }

@@ -63,16 +63,25 @@
             </a>
           }
 
-          <!-- Clínicas (Super Admin: solo gestiona clínicas) -->
+          <!-- Gestión de Tenants CU30 (Super Admin) -->
           @if (tenantService.isSuperAdmin()) {
             <a
-              routerLink="/admin/clinicas"
+              routerLink="/admin/tenants"
               routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
               (click)="closeSidebar()"
               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
             >
-              <span class="material-symbols-outlined text-[20px]">domain</span>
-              <span>Clínicas (SaaS)</span>
+              <span class="material-symbols-outlined text-[20px]">corporate_fare</span>
+              <span>Gestión de Tenants</span>
+            </a>
+            <a
+              routerLink="/admin/tenant-requests"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">inbox</span>
+              <span>Solicitudes de Ingreso</span>
             </a>
           }
 
@@ -198,6 +207,28 @@
             >
               <span class="material-symbols-outlined text-[20px]">history_toggle_off</span>
               <span>Bitácora</span>
+            </a>
+
+            <!-- Suscripción y pagos (CU31, solo ADMIN de clínica) -->
+            <a
+              routerLink="/admin/suscripcion"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">credit_card</span>
+              <span>Suscripción</span>
+            </a>
+
+            <!-- Solicitar baja de la entidad (solo ADMIN de clínica) -->
+            <a
+              routerLink="/admin/solicitar-baja"
+              routerLinkActive="bg-white/15 text-white font-semibold border-l-4 border-secondary-fixed shadow-xs"
+              (click)="closeSidebar()"
+              class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all duration-150"
+            >
+              <span class="material-symbols-outlined text-[20px]">domain_disabled</span>
+              <span>Solicitar baja</span>
             </a>
 
             <!-- Copias de seguridad (solo ADMIN de clínica) -->

@@ -1,0 +1,175 @@
+<div class="subscription-container">
+  <header class="header-section">
+    <h1 class="page-title">Suscripción de Plataforma</h1>
+    <p class="page-subtitle">Gestiona tu plan institucional, mantén activo tu tenant y descarga tus comprobantes fiscales en PDF.</p>
+  </header>
+
+  <div *ngIf="errorMessage()" class="alert alert-error">
+    <span>{{ errorMessage() }}</span>
+    <button class="alert-close" (click)="errorMessage.set(null)">&times;</button>
+  </div>
+  <div *ngIf="successMessage()" class="alert alert-success">
+    <span>{{ successMessage() }}</span>
+    <button class="alert-close" (click)="successMessage.set(null)">&times;</button>
+  </div>
+  <div *ngIf="statusMessage()" class="alert alert-info">
+    <span>{{ statusMessage() }}</span>
+    <button class="alert-close" (click)="statusMessage.set(null)">&times;</button>
+  </div>
+
+  <!-- Estado Actual de Suscripción -->
+  <section class="card current-subscription-card">
+    <div class="card-header">
+      <h2>Estado de la Suscripción Actual</h2>
+      <span
+        *ngIf="subscription()?.has_subscription"
+        class="badge"
+        [ngClass]="subscription()?.derived_status?.toLowerCase() || 'active'"
+      >
+        {{ subscription()?.derived_status }}
+      </span>
+      <span *ngIf="!subscription()?.has_subscription" class="badge inactive">
+        SIN SUSCRIPCIÓN ACTIVA
+      </span>
+    </div>
+
+    <div *ngIf="subscription()?.has_subscription" class="subscription-details-grid">
+      <div class="detail-box">
+        <span class="label">Plan Activo</span>
+        <strong class="value">{{ subscription()?.plan_nombre }}</strong>
+      </div>
+      <div class="detail-box">
+        <span class="label">Ciclo de Facturación</span>
+        <strong class="value">{{ subscription()?.ciclo }}</strong>
+      </div>
+      <div class="detail-box">
+        <span class="label">Vigencia Hasta</span>
+        <strong class="value">{{ subscription()?.fecha_fin | date:'mediumDate' }}</strong>
+      </div>
+      <div class="detail-box">
+        <span class="label">Capacidad Médicos</span>
+        <strong class="value">Hasta {{ subscription()?.limite_medicos }} profesionales</strong>
+      </div>
+    </div>
+
+    <div *ngIf="!subscription()?.has_subscription" class="empty-subscription">
+      <p>Tu clínica aún no cuenta con un plan de suscripción activo. Contrata uno para asegurar el acceso ininterrumpido.</p>
+    </div>
+  </section>
+
+  <!-- Selección y Renovación de Planes -->
+  <section class="card plans-card">
+    <h2>Seleccionar o Renovar Plan</h2>
+    <p class="section-desc">Selecciona la versión de plan y el ciclo de pago. El monto se calcula de forma autoritativa en el servidor.</p>
+
+    <!-- Selector de ciclo -->
+    <div class="cycle-selector">
+      <button
+        type="button"
+        class="cycle-btn"
+        [class.selected]="selectedCycle() === 'MONTHLY'"
+        (click)="selectedCycle.set('MONTHLY')"
+      >
+        Mensual
+      </button>
+      <button
+        type="button"
+        class="cycle-btn"
+        [class.selected]="selectedCycle() === 'ANNUAL'"
+        (click)="selectedCycle.set('ANNUAL')"
+      >
+        Anual (Mejor tarifa)
+      </button>
+    </div>
+
+    <!-- Planes Grid -->
+    <div class="plans-grid">
+      <div
+        *ngFor="let p of plans()"
+        class="plan-card"
+        [class.active-plan]="selectedPlanId() === p.id_plan_version"
+        (click)="selectedPlanId.set(p.id_plan_version)"
+      >
+        <div class="plan-header">
+          <input
+            type="radio"
+            name="plan_choice"
+            [checked]="selectedPlanId() === p.id_plan_version"
+            (change)="selectedPlanId.set(p.id_plan_version)"
+          />
+          <h3>{{ p.nombre }}</h3>
+        </div>
+        <p class="plan-desc">{{ p.descripcion }}</p>
+        <div class="plan-price">
+          <span class="price-val">
+            {{ selectedCycle() === 'ANNUAL' ? p.precio_anual : p.precio_mensual }}
+          </span>
+          <span class="price-curr">{{ p.moneda }} / {{ selectedCycle() === 'ANNUAL' ? 'año' : 'mes' }}</span>
+        </div>
+        <ul class="plan-features">
+          <li>✔ Hasta {{ p.limite_medicos }} médicos activos</li>
+          <li>✔ Hasta {{ p.limite_consultas_mes }} consultas mensuales</li>
+          <li>✔ Pasarela Stripe segura con comprobante PDF</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="checkout-action">
+      <button
+        class="btn-checkout"
+        [disabled]="loading() || !selectedPlanId()"
+        (click)="iniciarCheckout()"
+      >
+        <span *ngIf="loading()">Procesando sesión...</span>
+        <span *ngIf="!loading()">Proceder al Pago Seguro con Stripe</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Historial de Pagos y Comprobantes -->
+  <section class="card history-card">
+    <h2>Historial de Pagos y Facturación</h2>
+    <div *ngIf="payments().length === 0" class="empty-history">
+      <p>No se registran pagos de suscripción previos.</p>
+    </div>
+
+    <div *ngIf="payments().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Nº Factura</th>
+            <th>Plan</th>
+            <th>Monto</th>
+            <th>Ciclo</th>
+            <th>Estado</th>
+            <th>Comprobante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pay of payments()">
+            <td>{{ pay.fecha_creacion | date:'short' }}</td>
+            <td><strong>{{ pay.numero_factura || 'En trámite' }}</strong></td>
+            <td>{{ pay.plan_nombre || '—' }}</td>
+            <td>{{ pay.monto }} {{ pay.moneda }}</td>
+            <td>{{ pay.ciclo }}</td>
+            <td>
+              <span class="badge" [ngClass]="pay.estado.toLowerCase()">{{ pay.estado }}</span>
+            </td>
+            <td>
+              <button
+                *ngIf="pay.estado === 'PAGADO'"
+                class="btn-download"
+                (click)="descargarFactura(pay)"
+              >
+                Descargar PDF
+              </button>
+              <span *ngIf="pay.estado !== 'PAGADO'" class="text-muted">No disponible</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
