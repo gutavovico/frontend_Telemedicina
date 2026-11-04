@@ -220,6 +220,10 @@ export class MisCitasComponent implements OnInit {
     this.chatCitaActiva.set(null);
   }
 
+  verComoLlegar(cita: PacienteCitaCard): void {
+    alert(`Indicaciones de llegada a ${cita.clinicaNombre}: Av. Principal #123. Estacionamiento disponible.`);
+  }
+
   ejecutarAccionSecundaria(cita: PacienteCitaCard): void {
     if (cita.accionSecundaria === 'PAGAR_AHORA') {
       // CU19: abre la pantalla de pago en línea (Stripe Checkout + QR).

@@ -52,8 +52,8 @@
     </div>
 
     <!-- 2. PESTAÑAS DE FILTRADO (TABS) CON CONTADORES DINÁMICOS REALES -->
-    <div class="border-b border-slate-200">
-      <nav class="flex items-center space-x-6 sm:space-x-8 text-xs sm:text-sm">
+    <div class="border-b border-slate-200 overflow-x-auto">
+      <nav class="flex items-center space-x-6 sm:space-x-8 text-xs sm:text-sm whitespace-nowrap min-w-max">
         
         <!-- Tab Próximas -->
         <button
@@ -229,6 +229,17 @@
                 <span>Chatear</span>
               </button>
 
+              <!-- Botón Entrar a la Sala (En citas de Videoconsulta) -->
+              @if (cita.modalidad === 'VIDEOCONSULTA') {
+                <a
+                  [routerLink]="['/teleconsulta']" [queryParams]="{ idCita: cita.id_cita, medico: cita.medicoNombre, especialidad: cita.especialidad, clinica: cita.clinicaNombre, horario: cita.horario, ficha: cita.fichaCodigo }"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#002d62] hover:bg-[#001f44] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  <span class="material-symbols-outlined text-[17px]">videocam</span>
+                  <span>Entrar a la sala</span>
+                </a>
+              }
+
               <!-- Botón Contextual (Reprogramar / Pagar ahora / Ver receta) -->
               @if (cita.accionSecundaria === 'PAGAR_AHORA') {
                 <button
@@ -247,6 +258,22 @@
                 >
                   <span class="material-symbols-outlined text-[17px]">prescriptions</span>
                   <span>Ver receta</span>
+                </button>
+              } @else if (cita.modalidad === 'PRESENCIAL') {
+                <button
+                  type="button"
+                  (click)="ejecutarAccionSecundaria(cita)"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  <span>Reprogramar</span>
+                </button>
+                <button
+                  type="button"
+                  (click)="verComoLlegar(cita)"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  <span class="material-symbols-outlined text-[17px] text-slate-500">location_on</span>
+                  <span>Cómo llegar</span>
                 </button>
               } @else {
                 <button

@@ -6,3 +6,9 @@
 //  compiler, but '@angular/compiler' is not available."
 // No incluye mocks globales: no oculta errores de Angular ni del Router.
 import '@angular/compiler';
+import { TestBed } from '@angular/core/testing';
+import { afterEach } from 'vitest';
+
+afterEach(() => {
+  TestBed.resetTestingModule();
+});

@@ -306,7 +306,7 @@
               </select>
             } @else {
               <div class="space-y-3 bg-[#F5F7FA] p-4 rounded-xl border border-slate-100 shadow-sm" [formGroup]="newPatientForm">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">Nombres</label>
                     <input formControlName="nombres" type="text" placeholder="Ej: Maria Elena" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
@@ -316,7 +316,7 @@
                     <input formControlName="apellidos" type="text" placeholder="Ej: Rodriguez Lpez" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">C.I.</label>
                     <input formControlName="ci" type="text" placeholder="Ej: 9821112" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
@@ -330,7 +330,7 @@
                     </select>
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block text-[11px] font-bold text-slate-500 mb-1">Fecha Nac.</label>
                     <input formControlName="fecha_nacimiento" type="date" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#002D5A]/20" />
@@ -360,7 +360,7 @@
           <!-- Modalidad -->
           <div>
              <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A] mb-2"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">devices</span> Modalidad de Consulta</label>
-             <div class="grid grid-cols-2 gap-3">
+             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                <div (click)="setTipoConsulta('TELEMEDICINA')" class="rounded-xl p-3 flex items-center justify-center gap-2 font-bold text-sm cursor-pointer transition-all shadow-sm"
                  [ngClass]="tipoConsulta() === 'TELEMEDICINA' ? 'bg-[#EBF3FF] border-2 border-[#004A8C] text-[#002D5A]' : 'bg-[#F5F7FA] border-2 border-transparent text-slate-500 hover:border-slate-300'">
                  <span class="material-symbols-outlined text-[20px]" [class.text-[#004A8C]]="tipoConsulta() === 'TELEMEDICINA'">videocam</span>
@@ -386,7 +386,7 @@
               <label class="flex items-center gap-1.5 text-sm font-bold text-[#002D5A]"><span class="material-symbols-outlined text-[18px] text-[#40E0D0]">schedule</span> Horarios Disponibles <span class="text-slate-500 font-normal text-xs">(Slots de 30 min)</span></label>
               <span class="text-[10px] font-bold" [ngClass]="availableSlots().length - reservedSlots().length === 0 ? 'text-red-500' : 'text-[#004A8C]'">{{ availableSlots().length - reservedSlots().length }} cupos libres</span>
             </div>
-            <div class="grid grid-cols-4 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               @for (slot of availableSlots(); track slot) {
                 <button type="button" (click)="!reservedSlots().includes(slot) && selectedSlot.set(slot)" class="py-2.5 rounded-lg text-sm font-bold transition-all text-center shadow-sm border flex items-center justify-center gap-1"
                   [disabled]="reservedSlots().includes(slot)"
