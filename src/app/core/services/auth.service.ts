@@ -313,6 +313,12 @@ export class AuthService {
     this.logout();
   }
 
+  /** Descarta una sesión inválida sin encadenar otra petición de autenticación. */
+  logoutLocal(): void {
+    this.clearTokens();
+    this.router.navigate(['/login']);
+  }
+
   onSessionClosedByInactivity(): void {
     this.clearTokens();
     this.router.navigate(['/login'], { queryParams: { inactive: 'true' } });

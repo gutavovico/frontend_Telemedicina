@@ -282,4 +282,50 @@ describe('AuthService.userRole sin heurísticas (CU16 hallazgo 1)', () => {
     expect(profile).toBeNull();
     expect(service.profileVerified()).toBe(false);
   });
+
+  it('descarta localmente una sesión inválida sin solicitar revocación remota', () => {
+    service.saveTokens('token-sintetico', 'refresh-sintetico');
+    service.logoutLocal();
+
+    expect(httpMock.post).not.toHaveBeenCalled();
+    expect(service.getAccessToken()).toBeNull();
+    expect(service.getRefreshToken()).toBeNull();
+    expect(service.isAuthenticated()).toBe(false);
+    expect(tenantMock.clearTenant).toHaveBeenCalled();
+    expect(inactivityMock.stop).toHaveBeenCalled();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it.each(['logout', 'logoutRemoto'] as const)('%s conserva la revocación en el servidor', (action) => {
+    service.saveTokens('token-sintetico', 'refresh-sintetico');
+    const response = new Subject<null>();
+    httpMock.post.mockReturnValueOnce(response);
+
+    service[action]();
+
+    expect(httpMock.post).toHaveBeenCalledWith('http://localhost:8000/auth/logout', {
+      refresh_token: 'refresh-sintetico',
+    });
+    response.next(null);
+    response.complete();
+
+    expect(service.getAccessToken()).toBeNull();
+    expect(service.getRefreshToken()).toBeNull();
+    expect(service.isAuthenticated()).toBe(false);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('limpia la sesión manual aunque falle la solicitud de revocación', () => {
+    service.saveTokens('token-sintetico', 'refresh-sintetico');
+    httpMock.post.mockReturnValueOnce(throwError(() => new Error('revocación no disponible')));
+
+    service.logout();
+
+    expect(httpMock.post).toHaveBeenCalledWith('http://localhost:8000/auth/logout', {
+      refresh_token: 'refresh-sintetico',
+    });
+    expect(service.getAccessToken()).toBeNull();
+    expect(service.getRefreshToken()).toBeNull();
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login']);
+  });
 });

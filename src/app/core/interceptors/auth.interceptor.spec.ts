@@ -109,6 +109,25 @@ describe('authInterceptor (CU23)', () => {
 
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);
+    expect(localStorage.getItem('refresh_token')).toBeNull();
+    expect(localStorage.getItem('user_profile')).toBeNull();
+    httpMock.expectNone('http://localhost:8000/auth/logout');
+  });
+
+  it('cierra localmente ante un 401 sin refresh disponible', () => {
+    const navigate = vi.spyOn(router, 'navigate');
+    localStorage.removeItem('refresh_token');
+
+    http.get('http://localhost:8000/documentos').subscribe({ error: () => undefined });
+    httpMock
+      .expectOne('http://localhost:8000/documentos')
+      .flush({ detail: 'Credenciales inválidas' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(localStorage.getItem('access_token')).toBeNull();
+    expect(localStorage.getItem('user_profile')).toBeNull();
+    expect(navigate).toHaveBeenCalledWith(['/login']);
+    httpMock.expectNone('http://localhost:8000/auth/refresh');
+    httpMock.expectNone('http://localhost:8000/auth/logout');
   });
 
   it('no intenta refrescar cuando el propio login devuelve 401', () => {

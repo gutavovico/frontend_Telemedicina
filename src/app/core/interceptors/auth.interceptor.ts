@@ -52,12 +52,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               return next(retryReq);
             }),
             catchError((refreshError) => {
-              authService.logout();
+              authService.logoutLocal();
               return throwError(() => refreshError);
             })
           );
         } else {
-          authService.logout();
+          authService.logoutLocal();
         }
       }
 
