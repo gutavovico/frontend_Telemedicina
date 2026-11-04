@@ -1,0 +1,342 @@
+<header class="page-header">
+  <div>
+    <p class="eyebrow">PLATAFORMA / PLANES</p>
+    <h1>Catálogo de planes de suscripción</h1>
+    <p>Condiciones mensuales para las instituciones que usan la plataforma.</p>
+  </div>
+  <button class="primary" type="button" (click)="nuevo()" [disabled]="saving()">
+    <span aria-hidden="true">＋</span> Nuevo plan
+  </button>
+</header>
+@if (success()) {
+  <p class="notice success" role="status">{{ success() }}</p>
+}
+@if (error() && !confirm()) {
+  <p class="notice error" role="alert">{{ error() }}</p>
+}
+@if (!opciones()) {
+  <button type="button" (click)="loadOptions()">Reintentar carga de servicios</button>
+}
+<div class="workspace" [class.has-panel]="mode() !== 'closed' || panelLoading()">
+  <section class="card catalog" aria-label="Catálogo de planes" [attr.aria-busy]="loading()">
+    <div class="card-heading">
+      <h2>Catálogo</h2>
+      <p>Precios en Bs · BOB · Ciclo mensual</p>
+    </div>
+    <form class="filters" (submit)="$event.preventDefault(); load()">
+      <label
+        >Buscar plan<input
+          type="search"
+          placeholder="Nombre o código"
+          [formControl]="search"
+          maxlength="150"
+      /></label>
+      <label
+        >Estado<select [formControl]="estado" (change)="load()">
+          <option value="">Todos</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Desactivado</option>
+        </select></label
+      >
+      <button type="submit" [disabled]="loading()">Buscar</button>
+    </form>
+    @if (loading()) {
+      <p class="empty" role="status">Cargando catálogo…</p>
+    } @else if (listError()) {
+      <div class="empty">
+        <p class="error" role="alert">{{ listError() }}</p>
+        <button type="button" (click)="load(page())">Reintentar</button>
+      </div>
+    } @else if (!planes().length) {
+      <div class="empty">
+        <h3>No hay planes para mostrar</h3>
+        <p>Cree un plan o cambie los filtros de búsqueda.</p>
+      </div>
+    } @else {
+      <div
+        class="table-scroll"
+        tabindex="0"
+        aria-label="Tabla de planes; desplazamiento horizontal disponible"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Mensual (Bs)</th>
+              <th>Límites</th>
+              <th>Versión</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (plan of planes(); track plan.id) {
+              <tr [class.selected]="selected()?.id === plan.id">
+                <td>
+                  <strong>{{ plan.version.nombre }}</strong
+                  ><small>{{ plan.codigo }}</small>
+                </td>
+                <td class="nowrap">
+                  {{ precio(plan.version.precio_mensual) }}
+                  @if (plan.version.precio_mensual === '0.00') {
+                    <small>Gratuito</small>
+                  }
+                </td>
+                <td class="limits">
+                  <span>Médicos: {{ limite(plan.version.limite_medicos) }}</span
+                  ><span>Sedes: {{ limite(plan.version.limite_sedes) }}</span
+                  ><span>Consultas/mes: {{ limite(plan.version.limite_consultas) }}</span>
+                </td>
+                <td>v{{ plan.version_actual }}</td>
+                <td>
+                  <span class="badge" [class.inactive]="!plan.activo">{{
+                    plan.activo ? 'Activo' : 'Desactivado'
+                  }}</span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button type="button" (click)="abrir(plan)" [disabled]="saving()">Ver</button>
+                    @if (plan.activo) {
+                      <button type="button" (click)="abrir(plan, true)" [disabled]="saving()">
+                        Editar</button
+                      ><button
+                        type="button"
+                        class="danger-link"
+                        (click)="pedirDesactivar(plan)"
+                        [disabled]="saving()"
+                      >
+                        Desactivar
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <footer class="pagination">
+      <span>{{ total() }} planes · Página {{ page() }}</span>
+      <div>
+        <button
+          type="button"
+          (click)="load(page() - 1)"
+          [disabled]="loading() || page() <= 1"
+          aria-label="Página anterior"
+        >
+          Anterior</button
+        ><button
+          type="button"
+          (click)="load(page() + 1)"
+          [disabled]="loading() || page() * 10 >= total()"
+          aria-label="Página siguiente"
+        >
+          Siguiente
+        </button>
+      </div>
+    </footer>
+  </section>
+  @if (panelLoading()) {
+    <aside class="card empty" role="status">Cargando condiciones…</aside>
+  } @else if (mode() !== 'closed') {
+    <aside class="card panel" aria-label="Condiciones del plan">
+      <div class="panel-title">
+        <h2>
+          {{
+            mode() === 'new' ? 'Nuevo plan' : mode() === 'edit' ? 'Editar plan' : 'Detalle del plan'
+          }}
+        </h2>
+        <button type="button" (click)="cerrar()" [disabled]="saving()" aria-label="Cerrar panel">
+          ×
+        </button>
+      </div>
+      @if (selected(); as plan) {
+        <p class="version-label">
+          {{ plan.codigo }} · Versión {{ historical()?.numero ?? plan.version_actual }} ·
+          {{ plan.activo ? 'Activo' : 'Desactivado' }}
+        </p>
+        @if (historical()) {
+          <p class="notice">Consulta histórica. Las condiciones de esta versión se conservan.</p>
+          <button type="button" (click)="abrir(plan)">Ver versión actual</button>
+        }
+        @if (mode() === 'view' && plan.activo && !historical()) {
+          <button type="button" (click)="abrir(plan, true)">Editar condiciones</button>
+        }
+      }
+      @if (conflict()) {
+        <div class="notice" role="alert">
+          <p>
+            El plan cambió. Sus datos siguen en el formulario. Recargar descartará esta edición y
+            mostrará la versión actual.
+          </p>
+          <button type="button" (click)="abrir(selected()!, true)">Recargar versión actual</button>
+        </div>
+      }
+      <form [formGroup]="form" (ngSubmit)="guardar()">
+        <fieldset [disabled]="saving()">
+          <legend class="sr-only">Condiciones comerciales</legend>
+          <label
+            >Código del plan<input
+              formControlName="codigo"
+              maxlength="50"
+              autocomplete="off"
+              placeholder="Código único"
+          /></label>
+          <label
+            >Nombre del plan<input formControlName="nombre" maxlength="150" autocomplete="off"
+          /></label>
+          <label
+            >Descripción <span class="optional">(opcional)</span
+            ><textarea formControlName="descripcion" maxlength="2000" rows="2"></textarea>
+          </label>
+          <label
+            >Precio mensual (Bs)<input
+              formControlName="precio_mensual"
+              inputmode="decimal"
+              placeholder="0.00"
+          /></label>
+          <p class="help">BOB · Mensual · Use punto decimal. 0,00 representa un plan gratuito.</p>
+          <h3>Límites y excedentes</h3>
+          <p class="help">
+            0 = ninguna unidad incluida. Una tarifa sin configurar no autoriza el sobreuso.
+          </p>
+          @for (resource of recursos; track resource.key) {
+            <div class="resource" [formGroupName]="resource.key">
+              <h4>{{ resource.label }}</h4>
+              <label class="check"
+                ><input type="checkbox" formControlName="ilimitado" (change)="syncResources()" />
+                Sin límite</label
+              >
+              <label
+                >Cantidad incluida<input
+                  formControlName="limite"
+                  inputmode="numeric"
+                  [attr.aria-label]="'Límite de ' + resource.label"
+              /></label>
+              <label class="check"
+                ><input type="checkbox" formControlName="excedente" (change)="syncResources()" />
+                Configurar tarifa de excedente</label
+              >
+              @if (form.controls[resource.key].controls.excedente.value) {
+                <label
+                  >Bs {{ resource.unit
+                  }}<input formControlName="precio" inputmode="decimal" placeholder="0.00"
+                /></label>
+              }
+            </div>
+          }
+          <h3>Servicios incluidos</h3>
+          <div class="services">
+            @for (service of opciones()?.servicios ?? []; track service.codigo) {
+              <label class="check"
+                ><input
+                  #checkbox
+                  type="checkbox"
+                  [checked]="form.controls.servicios_incluidos.value.includes(service.codigo)"
+                  [disabled]="mode() === 'view' || saving()"
+                  (change)="toggleService(service.codigo, checkbox.checked)"
+                />{{ service.nombre }}</label
+              >
+            }
+          </div>
+          <label
+            >Días de demora permitida<input formControlName="demora_pago_dias" inputmode="numeric"
+          /></label>
+          <p class="help">
+            Días calendario enteros. El catálogo configura el plazo; no ejecuta cobros ni
+            suspensiones.
+          </p>
+        </fieldset>
+        @if (mode() === 'edit') {
+          <p class="notice">
+            Se guardará una nueva versión. Las suscripciones existentes conservarán sus condiciones
+            hasta su renovación cuando se integre esa funcionalidad.
+          </p>
+        }
+        @if (mode() === 'new' || mode() === 'edit') {
+          <div class="form-actions">
+            <button type="button" (click)="cerrar()" [disabled]="saving()">Cancelar</button
+            ><button
+              type="submit"
+              class="primary"
+              [disabled]="saving() || conflict() || !opciones()"
+            >
+              {{
+                saving() ? 'Guardando…' : mode() === 'new' ? 'Crear plan' : 'Guardar nueva versión'
+              }}
+            </button>
+          </div>
+        }
+      </form>
+      @if (selected()) {
+        <section class="history" aria-label="Historial de versiones">
+          <button type="button" (click)="historial()" [disabled]="saving() || historyLoading()">
+            Ver historial de versiones
+          </button>
+          @if (historyOpen()) {
+            @if (historyLoading()) {
+              <p role="status">Cargando historial…</p>
+            } @else if (historyError()) {
+              <p role="alert">{{ historyError() }}</p>
+              <button (click)="historial(historyPage())">Reintentar historial</button>
+            } @else {
+              <ul>
+                @for (v of history(); track v.id) {
+                  <li>
+                    <button type="button" (click)="verVersion(v.numero)">
+                      Versión {{ v.numero }} · {{ v.nombre }}</button
+                    ><small
+                      >{{ v.creado_en | date: 'dd/MM/yyyy HH:mm' }} · Bs
+                      {{ precio(v.precio_mensual) }}</small
+                    >
+                  </li>
+                }
+              </ul>
+              <div class="pagination">
+                <button (click)="historial(historyPage() - 1)" [disabled]="historyPage() <= 1">
+                  Anteriores</button
+                ><span>{{ historyPage() }}</span
+                ><button
+                  (click)="historial(historyPage() + 1)"
+                  [disabled]="historyPage() * 10 >= historyTotal()"
+                >
+                  Siguientes
+                </button>
+              </div>
+            }
+          }
+        </section>
+      }
+    </aside>
+  }
+</div>
+@if (confirm(); as plan) {
+  <div class="modal-backdrop">
+    <section
+      class="card modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="deactivate-title"
+      aria-describedby="deactivate-description"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      (keydown.escape)="!saving() && confirm.set(null)"
+    >
+      <h2 id="deactivate-title">Desactivar {{ plan.version.nombre }}</h2>
+      <p id="deactivate-description">
+        Impedirá nuevas contrataciones. El historial se conserva y esta acción no cancela
+        suscripciones existentes. No podrá editar este plan una vez desactivado.
+      </p>
+      @if (error()) {
+        <p class="notice error" role="alert">{{ error() }}</p>
+      }
+      <div class="form-actions">
+        <button type="button" (click)="confirm.set(null)" [disabled]="saving()">Cancelar</button
+        ><button type="button" class="danger" (click)="desactivar()" [disabled]="saving()">
+          {{ saving() ? 'Desactivando…' : 'Confirmar desactivación' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
