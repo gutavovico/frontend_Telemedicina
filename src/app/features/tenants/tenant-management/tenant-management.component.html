@@ -1,0 +1,416 @@
+<div class="tenants-container">
+  <header class="header-section">
+    <h1 class="page-title">Administración Global de Tenants</h1>
+    <p class="page-subtitle">Gestión centralizada de solicitudes de onboarding, ciclo de vida institucional y acuerdos comerciales.</p>
+  </header>
+
+  <!-- Navegación por pestañas -->
+  <nav class="tabs-nav">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'requests'"
+      (click)="setTab('requests')"
+    >
+      Solicitudes de Ingreso
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'tenants'"
+      (click)="setTab('tenants')"
+    >
+      Tenants Registrados
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'deactivations'"
+      (click)="setTab('deactivations')"
+    >
+      Solicitudes de Baja
+    </button>
+  </nav>
+
+  <!-- Mensajes de Alerta -->
+  <div *ngIf="errorMessage()" class="alert alert-error" role="alert">
+    <span>{{ errorMessage() }}</span>
+    <button class="alert-close" (click)="errorMessage.set(null)">&times;</button>
+  </div>
+  <div *ngIf="successMessage()" class="alert alert-success" role="alert">
+    <span>{{ successMessage() }}</span>
+    <button class="alert-close" (click)="successMessage.set(null)">&times;</button>
+  </div>
+
+  <!-- PESTAÑA: Solicitudes de Onboarding -->
+  <section *ngIf="activeTab() === 'requests'" class="tab-content">
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label for="reqStatus">Filtrar por estado:</label>
+        <select
+          id="reqStatus"
+          [value]="requestsStatusFilter()"
+          (change)="onFilterRequests($any($event.target).value)"
+          class="form-select"
+        >
+          <option value="ALL">Todas las solicitudes</option>
+          <option value="PENDING">Pendientes</option>
+          <option value="APPROVED">Aprobadas</option>
+          <option value="REJECTED">Rechazadas</option>
+        </select>
+      </div>
+      <button class="btn-refresh" (click)="loadRequests()">Actualizar</button>
+    </div>
+
+    <div *ngIf="loading()" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+
+    <div *ngIf="!loading() && requests().length === 0" class="empty-state">
+      <p>No se encontraron solicitudes con el filtro seleccionado.</p>
+    </div>
+
+    <div *ngIf="!loading() && requests().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Institución</th>
+            <th>NIT</th>
+            <th>Contacto</th>
+            <th>Responsable</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let req of requests()">
+            <td>
+              <strong>{{ req.institucion_nombre }}</strong>
+              <div *ngIf="req.razon_social" class="text-muted">{{ req.razon_social }}</div>
+            </td>
+            <td>{{ req.nit }}</td>
+            <td>
+              <div>{{ req.correo }}</div>
+              <small class="text-muted">{{ req.telefono || 'Sin teléfono' }}</small>
+            </td>
+            <td>
+              <div>{{ req.responsable_nombre }}</div>
+              <small class="text-muted">{{ req.responsable_correo }}</small>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="req.status.toLowerCase()">{{ req.status }}</span>
+            </td>
+            <td>{{ req.fecha_creacion | date:'short' }}</td>
+            <td class="actions-cell">
+              <button class="btn-action view" (click)="verDetalleSolicitud(req)">Ver Detalle</button>
+              <ng-container *ngIf="req.status === 'PENDING'">
+                <button class="btn-action approve" (click)="aprobarSolicitud(req)">Aprobar</button>
+                <button class="btn-action reject" (click)="abrirModalRechazo(req)">Rechazar</button>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PESTAÑA: Tenants Registrados -->
+  <section *ngIf="activeTab() === 'tenants'" class="tab-content">
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label for="tenantStatus">Filtrar por estado:</label>
+        <select
+          id="tenantStatus"
+          [value]="tenantsStatusFilter()"
+          (change)="onFilterTenants($any($event.target).value)"
+          class="form-select"
+        >
+          <option value="ALL">Todos los tenants</option>
+          <option value="ACTIVE">Activos</option>
+          <option value="SUSPENDED">Suspendidos</option>
+          <option value="INACTIVE">Inactivos</option>
+        </select>
+      </div>
+      <button class="btn-refresh" (click)="loadTenants()">Actualizar</button>
+    </div>
+
+    <div *ngIf="loading()" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+
+    <div *ngIf="!loading() && tenants().length === 0" class="empty-state">
+      <p>No se encontraron tenants con el filtro seleccionado.</p>
+    </div>
+
+    <div *ngIf="!loading() && tenants().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre del Tenant</th>
+            <th>NIT</th>
+            <th>Contacto</th>
+            <th>Plan / Acuerdo</th>
+            <th>Estado</th>
+            <th>Acciones de Ciclo de Vida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tenants()">
+            <td>
+              <strong>{{ t.nombre }}</strong>
+              <div *ngIf="t.tenant_id" class="text-muted"><small>UUID: {{ t.tenant_id }}</small></div>
+            </td>
+            <td>{{ t.nit || 'Sin NIT' }}</td>
+            <td>
+              <div>{{ t.correo || 'Sin correo' }}</div>
+              <small class="text-muted">{{ t.telefono || 'Sin teléfono' }}</small>
+            </td>
+            <td>
+              <span class="plan-tag">{{ t.plan_id || 'Estándar' }}</span>
+              <div *ngIf="t.commercial_notes" class="commercial-note">
+                {{ t.commercial_notes }}
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="estadoCanonico(t.estado).toLowerCase()">{{ estadoCanonico(t.estado) }}</span>
+            </td>
+            <td class="actions-cell">
+              <button
+                *ngIf="estadoCanonico(t.estado) === 'ACTIVE'"
+                class="btn-action suspend"
+                (click)="abrirModalSuspension(t)"
+              >
+                Suspender
+              </button>
+              <button
+                *ngIf="estadoCanonico(t.estado) === 'SUSPENDED'"
+                class="btn-action activate"
+                (click)="reactivarTenant(t)"
+              >
+                Reactivar
+              </button>
+              <button
+                *ngIf="estadoCanonico(t.estado) === 'INACTIVE'"
+                class="btn-action activate"
+                (click)="activarTenant(t)"
+              >
+                Activar
+              </button>
+              <button
+                *ngIf="estadoCanonico(t.estado) !== 'INACTIVE'"
+                class="btn-action reject"
+                (click)="desactivarTenant(t)"
+              >
+                Dar de baja
+              </button>
+              <button class="btn-action agreement" (click)="abrirModalAcuerdo(t)">
+                Acuerdo Comercial
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PESTAÑA: Solicitudes de Baja (CU32) -->
+  <section *ngIf="activeTab() === 'deactivations'" class="tab-content">
+    <div class="filters-bar">
+      <div class="filter-group">
+        <label>Pendientes de decisión del Super Administrador</label>
+      </div>
+      <button class="btn-refresh" (click)="loadDeactivations()">Actualizar</button>
+    </div>
+
+    <div *ngIf="deactivationRequests().length === 0" class="empty-state">
+      <p>No hay solicitudes de baja pendientes.</p>
+    </div>
+
+    <div *ngIf="deactivationRequests().length > 0" class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Entidad</th>
+            <th>Motivo</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let req of deactivationRequests()">
+            <td>
+              <strong>{{ req.institucion }}</strong>
+              <div *ngIf="req.tenant_id" class="text-muted"><small>{{ req.tenant_id }}</small></div>
+            </td>
+            <td>{{ req.motivo }}</td>
+            <td>{{ req.fecha_creacion | date:'short' }}</td>
+            <td><span class="badge pending">{{ req.status }}</span></td>
+            <td class="actions-cell">
+              <button class="btn-action approve" (click)="aprobarBaja(req)">Aprobar baja</button>
+              <button class="btn-action reject" (click)="rechazarBaja(req)">Rechazar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Modal Detalle Solicitud -->
+  <div *ngIf="selectedRequest() && !showRejectModal()" class="modal-backdrop" (click)="cerrarDetalleSolicitud()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalle de la Solicitud</h2>
+        <button class="btn-close" (click)="cerrarDetalleSolicitud()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <span class="detail-label">Institución:</span>
+          <span>{{ selectedRequest()?.institucion_nombre }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Razón Social:</span>
+          <span>{{ selectedRequest()?.razon_social || 'N/A' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">NIT:</span>
+          <span>{{ selectedRequest()?.nit }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Dirección:</span>
+          <span>{{ selectedRequest()?.direccion || 'N/A' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Responsable:</span>
+          <span>{{ selectedRequest()?.responsable_nombre }} ({{ selectedRequest()?.responsable_correo }})</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Código Seguimiento:</span>
+          <code>{{ selectedRequest()?.tracking_code }}</code>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Estado:</span>
+          <span class="badge" [ngClass]="selectedRequest()!.status.toLowerCase()">{{ selectedRequest()?.status }}</span>
+        </div>
+        <div *ngIf="selectedRequest()?.decision_motivo" class="detail-row">
+          <span class="detail-label">Motivo de Decisión:</span>
+          <span>{{ selectedRequest()?.decision_motivo }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Documentos legales:</span>
+          <div *ngIf="documentosSolicitud().length > 0" class="documents-list">
+            <div *ngFor="let doc of documentosSolicitud()" class="document-item">
+              <span>{{ doc.nombre }}</span>
+              <button class="btn-action view" type="button" (click)="descargarDocumento(doc.indice)">
+                Descargar
+              </button>
+            </div>
+          </div>
+          <span *ngIf="documentosSolicitud().length === 0" class="text-muted">
+            Sin documentos adjuntos
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cerrarDetalleSolicitud()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Rechazo de Solicitud -->
+  <div *ngIf="showRejectModal()" class="modal-backdrop" (click)="cerrarModalRechazo()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Rechazar Solicitud de Onboarding</h2>
+        <button class="btn-close" (click)="cerrarModalRechazo()">&times;</button>
+      </div>
+      <form [formGroup]="rejectForm" (ngSubmit)="confirmarRechazo()">
+        <div class="modal-body">
+          <p>Indica el motivo justificado para el rechazo de la solicitud institucional:</p>
+          <div class="form-group">
+            <textarea
+              formControlName="reason"
+              rows="4"
+              class="form-control"
+              placeholder="Ej: La documentación legal adjunta no es legible o presenta incongruencias tributarias..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="cerrarModalRechazo()">Cancelar</button>
+          <button type="submit" [disabled]="rejectForm.invalid || loading()" class="btn-danger">
+            Confirmar Rechazo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Suspensión de Tenant -->
+  <div *ngIf="showSuspendModal()" class="modal-backdrop" (click)="cerrarModalSuspension()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Suspender Tenant</h2>
+        <button class="btn-close" (click)="cerrarModalSuspension()">&times;</button>
+      </div>
+      <form [formGroup]="suspendForm" (ngSubmit)="confirmarSuspension()">
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <strong>Continuidad Clínica Garantizada:</strong> La suspensión impedirá nuevas citas o reservas, pero los pacientes y médicos conservarán acceso para finalizar consultas en curso y consultar historiales clínicos.
+          </div>
+          <div class="form-group">
+            <label for="suspendReason">Motivo de suspensión *</label>
+            <textarea
+              id="suspendReason"
+              formControlName="reason"
+              rows="3"
+              class="form-control"
+              placeholder="Ej: Mora en la suscripción mensual o solicitud administrativa..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="cerrarModalSuspension()">Cancelar</button>
+          <button type="submit" [disabled]="suspendForm.invalid || loading()" class="btn-danger">
+            Confirmar Suspensión
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Acuerdo Comercial -->
+  <div *ngIf="showAgreementModal()" class="modal-backdrop" (click)="cerrarModalAcuerdo()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Acuerdo Comercial: {{ selectedTenant()?.nombre }}</h2>
+        <button class="btn-close" (click)="cerrarModalAcuerdo()">&times;</button>
+      </div>
+      <form [formGroup]="agreementForm" (ngSubmit)="confirmarAcuerdo()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="planId">ID de versión del plan</label>
+            <input id="planId" type="number" min="1" formControlName="plan_id" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="notes">Notas Comerciales y Condiciones Especiales</label>
+            <textarea
+              id="notes"
+              formControlName="commercial_notes"
+              rows="3"
+              class="form-control"
+              placeholder="Condiciones acordadas, descuentos especiales, notas internas..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="cerrarModalAcuerdo()">Cancelar</button>
+          <button type="submit" [disabled]="loading()" class="btn-primary">
+            Guardar Acuerdo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

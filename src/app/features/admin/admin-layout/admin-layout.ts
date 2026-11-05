@@ -52,7 +52,20 @@ export class AdminLayout {
 
   goToProfile(): void {
     this.closeDropdown();
-    this.router.navigate(['/mi-perfil-medico']);
+    // El Super Admin no tiene perfil profesional: su panel canónico es CU30.
+    if (this.tenantService.isSuperAdmin()) {
+      this.router.navigate(['/admin/tenants']);
+      return;
+    }
+    if (this.authService.isRecepcion()) {
+      this.router.navigate(['/admin/agenda']);
+      return;
+    }
+    if (this.authService.isDoctor()) {
+      this.router.navigate(['/mi-perfil-medico']);
+      return;
+    }
+    this.router.navigate(['/admin/dashboard']);
   }
 
   logout(): void {

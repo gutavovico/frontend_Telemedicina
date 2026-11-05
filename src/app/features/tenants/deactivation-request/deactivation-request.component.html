@@ -1,0 +1,65 @@
+<div class="deactivation-container">
+  <div class="card deactivation-card">
+    <div class="header-danger">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <h2>Solicitud Formal de Baja de Entidad</h2>
+        <p class="subtitle">Trámite administrativo de cierre para entidades de salud activas</p>
+      </div>
+    </div>
+
+    <!-- Banner explicativo de custodia clínica -->
+    <div class="info-retention-banner">
+      <strong>🔒 Garantía de Custodia de Datos Clínicos:</strong>
+      <p>
+        En cumplimiento con la normativa sanitaria, la solicitud de baja <strong>NO elimina</strong> el historial de consultas,
+        historias clínicas electrónicas (HCE), recetas ni auditorías previas. Dichos registros permanecerán en custodia segura.
+      </p>
+    </div>
+
+    <div *ngIf="successMessage()" class="alert alert-success" role="alert">
+      {{ successMessage() }}
+    </div>
+
+    <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+      {{ errorMessage() }}
+    </div>
+
+    <form *ngIf="!successMessage()" [formGroup]="deactForm" (ngSubmit)="submitDeactivation()" novalidate>
+      <div class="form-group">
+        <label for="motivo">Motivo Formal de la Solicitud de Baja <span class="req">*</span></label>
+        <textarea
+          id="motivo"
+          rows="4"
+          formControlName="motivo"
+          placeholder="Especifique las razones del cese de actividades o desvinculación (mínimo 10 caracteres)..."
+          [class.invalid]="deactForm.get('motivo')?.invalid && deactForm.get('motivo')?.touched"
+        ></textarea>
+        <span class="error-text" *ngIf="deactForm.get('motivo')?.invalid && deactForm.get('motivo')?.touched">
+          Debe ingresar un motivo detallado (mínimo 10 caracteres).
+        </span>
+      </div>
+
+      <div class="form-checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="confirmacion" />
+          <span>
+            Confirmo que soy el Administrador autorizado de esta institución y entiendo que la solicitud entrará en estado
+            <strong>PENDIENTE</strong> para evaluación por parte del Super Administrador.
+          </span>
+        </label>
+        <span class="error-text" *ngIf="deactForm.get('confirmacion')?.invalid && deactForm.get('confirmacion')?.touched">
+          Debe confirmar la declaración para continuar.
+        </span>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-danger" [disabled]="loading()">
+          <span *ngIf="!loading()">🛑 Enviar Solicitud de Baja</span>
+          <span *ngIf="loading()">Procesando solicitud...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

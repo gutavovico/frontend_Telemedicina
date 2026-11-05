@@ -1,0 +1,153 @@
+<div class="subscription-container" [attr.aria-busy]="loading()">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">INSTITUCIÓN / PLAN Y FACTURACIÓN</p>
+      <h1>Cambiar de plan</h1>
+      <p *ngIf="subscription()?.has_subscription; else noSubscription">
+        Ciclo actual: {{ subscription()?.fecha_inicio | date:'mediumDate' }} — {{ subscription()?.fecha_fin | date:'mediumDate' }}
+        <span class="badge">{{ subscription()?.derived_status || subscription()?.estado }}</span>
+      </p>
+      <ng-template #noSubscription><p>Elige las condiciones mensuales para tu entidad.</p></ng-template>
+    </div>
+    <span class="monthly-pill">Mensual · BOB</span>
+  </header>
+
+  <div *ngIf="errorMessage()" class="notice error" role="alert">{{ errorMessage() }}</div>
+  <div *ngIf="successMessage()" class="notice success" role="status">{{ successMessage() }}</div>
+  <div *ngIf="statusMessage()" class="notice info" role="status">{{ statusMessage() }}</div>
+  <button class="refresh" type="button" [disabled]="loading()" (click)="loadData()">{{ loading() ? 'Actualizando…' : 'Actualizar estado' }}</button>
+
+  <section aria-labelledby="catalog-title" class="catalog-section">
+    <div class="section-heading"><h2 id="catalog-title">Planes disponibles hoy</h2><span>Catálogo vigente · precios por ciclo mensual</span></div>
+    <div class="plans-grid" role="group" aria-label="Seleccionar plan del catálogo">
+      <button *ngFor="let p of visiblePlans()" type="button" class="plan-card"
+        [class.selected]="selectedPlanId() === p.id" [attr.aria-pressed]="selectedPlanId() === p.id"
+        [disabled]="loading() || hasPending() || subscription()?.estado === 'CANCELLED'" (click)="selectPlan(p.id)">
+        <span class="plan-heading"><strong>{{ p.nombre }}</strong><span *ngIf="subscription()?.version?.plan_id === p.plan_id" class="badge">Tu plan · oferta actual</span></span>
+        <span class="price">{{ p.precio_mensual }} <small>BOB / mes</small></span>
+        <span class="plan-description" *ngIf="p.descripcion">{{ p.descripcion }}</span>
+        <span class="feature">Médicos: {{ p.limite_medicos ?? 'Sin límite' }} · Sedes: {{ p.limite_sedes ?? 'Sin límite' }}</span>
+        <span class="feature">{{ p.limite_consultas ?? 'Sin límite' }} consultas por ciclo</span>
+        <span class="feature">{{ serviceNames(p) }}</span>
+        <span class="version-label">Oferta publicada v{{ p.numero }} · ID {{ p.id }}</span>
+        <span *ngIf="subscription()?.version?.plan_id === p.plan_id && subscription()?.plan_version_id !== p.id" class="version-note">Esta oferta difiere de tu versión contratada. El ciclo pagado conserva sus condiciones.</span>
+      </button>
+    </div>
+    <p *ngIf="!plans().length && !loading()" class="muted">No hay planes disponibles para nuevas contrataciones.</p>
+    <nav *ngIf="plans().length > 3" class="pagination" aria-label="Páginas de planes">
+      <button type="button" [disabled]="planPage() === 0" (click)="planPage.set(planPage() - 1)">Anteriores</button>
+      <span>Página {{ planPage() + 1 }} · {{ plans().length }} planes disponibles</span>
+      <button type="button" [disabled]="(planPage() + 1) * 3 >= plans().length" (click)="planPage.set(planPage() + 1)">Siguientes</button>
+    </nav>
+  </section>
+
+  <div class="change-workspace">
+    <div class="left-column">
+      <section class="card" aria-labelledby="timing-title" *ngIf="subscription()?.estado === 'ACTIVE'">
+        <h2 id="timing-title">¿Cuándo aplicar el cambio?</h2>
+        <p class="muted">Selecciona un plan arriba. Los límites y el ajuste se validan en el servidor.</p>
+        <fieldset [disabled]="loading() || hasPending()" class="timing-options">
+          <legend class="sr-only">Fecha de aplicación del cambio</legend>
+          <label class="timing-option" [class.selected]="mode.value === 'IMMEDIATE'">
+            <input type="radio" name="change-mode" value="IMMEDIATE" [formControl]="mode" (change)="changeMode()" />
+            <span><strong>De inmediato</strong><small>Solo plan superior. Revisa el ajuste proporcional antes de confirmar. Si hay cobro, se aplica tras confirmar el pago.</small></span>
+          </label>
+          <label class="timing-option" [class.selected]="mode.value === 'NEXT_CYCLE'">
+            <input type="radio" name="change-mode" value="NEXT_CYCLE" [formControl]="mode" (change)="changeMode()" />
+            <span><strong>Al siguiente ciclo</strong><small>Fecha efectiva: {{ subscription()?.fecha_fin | date:'medium' }}. Conservas el plan vigente hasta entonces. La renovación requiere pago confirmado.</small></span>
+          </label>
+        </fieldset>
+        <p *ngIf="hasPending()" class="notice info">Hay una solicitud pendiente. Consulta su estado antes de registrar otra.</p>
+      </section>
+
+      <section class="card contracted-card" aria-labelledby="contract-title">
+        <h2 id="contract-title">Condiciones contratadas</h2>
+        <ng-container *ngIf="subscription()?.version as current; else noContract">
+          <p><strong>{{ current.nombre }} · v{{ current.numero }}</strong> <span class="muted">ID {{ current.id }}</span></p>
+          <p class="contract-price">{{ current.precio_mensual }} BOB / mes</p>
+          <p>Médicos: {{ current.limite_medicos ?? 'Sin límite' }} · Sedes: {{ current.limite_sedes ?? 'Sin límite' }} · Consultas por ciclo: {{ current.limite_consultas ?? 'Sin límite' }}</p>
+          <p class="muted">{{ serviceNames(current) }}</p>
+          <p class="muted">Una nueva oferta del catálogo no modifica el ciclo ya pagado.</p>
+        </ng-container>
+        <ng-template #noContract><p class="muted">No hay condiciones contratadas disponibles.</p></ng-template>
+      </section>
+
+      <section class="card cancellation-card" aria-labelledby="cancel-title" *ngIf="subscription()?.has_subscription">
+        <h2 id="cancel-title">Cancelar la suscripción</h2>
+        <p>El servicio se mantiene hasta {{ subscription()?.fecha_fin | date:'medium' }}. Desde la cancelación efectiva se bloquea el uso clínico; los datos, el acceso administrativo a facturación y los comprobantes se conservan.</p>
+        <button type="button" class="danger" [disabled]="loading() || hasPending() || subscription()?.estado !== 'ACTIVE'" (click)="requestCancellation()">Cancelar suscripción</button>
+        <div *ngIf="confirmation() === 'CANCEL'" class="confirmation" role="region" aria-label="Confirmar operación">
+          <p>La cancelación será efectiva el {{ subscription()?.fecha_fin | date:'medium' }}. Conservas el ciclo pagado. No se elimina la entidad ni el historial.</p>
+          <button type="button" class="danger" [disabled]="loading()" (click)="confirmRequest()">Confirmar cancelación</button>
+          <button type="button" [disabled]="loading()" (click)="confirmation.set(null)">Volver</button>
+        </div>
+        <p *ngIf="latestCancellation() as cancellation" role="status" class="request-status">Solicitud de cancelación: <strong>{{ changeStatus(cancellation.status) }}</strong> · Fin del servicio: {{ cancellation.effective_at | date:'medium' }}<span *ngIf="cancellation.reason"> · {{ cancellation.reason }}</span></p>
+      </section>
+    </div>
+
+    <aside class="card change-summary" aria-labelledby="summary-title">
+      <h2 id="summary-title">Resumen del cambio</h2>
+      <dl>
+        <div><dt>Plan vigente</dt><dd>{{ subscription()?.version?.nombre || subscription()?.plan_nombre || 'Sin suscripción' }}<small *ngIf="subscription()?.version as current">v{{ current.numero }} · {{ current.precio_mensual }} BOB / mes</small></dd></div>
+        <div><dt>Plan seleccionado</dt><dd>{{ selectedPlan()?.nombre || 'Selecciona un plan' }}<small *ngIf="selectedPlan() as target">Oferta v{{ target.numero }} · {{ target.precio_mensual }} BOB / mes</small></dd></div>
+        <div *ngIf="subscription()?.fecha_fin"><dt>Cierre pagado</dt><dd>{{ subscription()?.fecha_fin | date:'medium' }}</dd></div>
+        <div *ngIf="mode.value === 'IMMEDIATE' && quoteResult() as quote"><dt>Ajuste hoy</dt><dd class="summary-amount">{{ quote.amount }} {{ quote.currency }}</dd></div>
+        <div *ngIf="mode.value === 'NEXT_CYCLE' && subscription()?.estado === 'ACTIVE'"><dt>Fecha efectiva</dt><dd>{{ subscription()?.fecha_fin | date:'medium' }}<small>Sin cobro al registrar la solicitud</small></dd></div>
+      </dl>
+      <ng-container *ngIf="subscription()?.estado === 'ACTIVE' && !hasPending()">
+        <button class="primary wide" type="button" [disabled]="loading() || !selectedPlan() || selectedPlanId() === subscription()?.plan_version_id" (click)="prepareChange()">{{ mode.value === 'IMMEDIATE' ? 'Calcular ajuste y revisar' : 'Revisar cambio programado' }}</button>
+        <div *ngIf="confirmation() === 'CHANGE'" class="confirmation" role="region" aria-label="Confirmar operación">
+          <p *ngIf="mode.value === 'IMMEDIATE'">Ajuste: {{ quoteResult()?.amount }} BOB. El cierre permanece en {{ quoteResult()?.cycle_end | date:'medium' }}. El plan vigente se conserva hasta que se confirme el pago.</p>
+          <p *ngIf="mode.value === 'NEXT_CYCLE'">Con pago confirmado, el cambio se aplicará el {{ subscription()?.fecha_fin | date:'medium' }}. Hasta entonces sigue vigente {{ subscription()?.plan_nombre }}. La solicitud no cobra; revisa y paga la renovación del destino.</p>
+          <button class="primary wide" type="button" [disabled]="loading()" (click)="confirmRequest()">{{ mode.value === 'IMMEDIATE' ? 'Confirmar cambio y continuar' : 'Confirmar cambio programado' }}</button>
+          <button type="button" [disabled]="loading()" (click)="confirmation.set(null)">Volver</button>
+        </div>
+      </ng-container>
+      <div *ngIf="requestFeedback() as request" class="notice info" role="status">
+        <strong>{{ changeStatus(request.status) }}</strong><p>{{ operationLabel(request.operation) }} · {{ request.effective_at | date:'medium' }}</p>
+        <p *ngIf="request.status === 'WAITING_PAYMENT'">El plan vigente se conserva hasta que se confirme el pago.</p>
+        <p *ngIf="request.status === 'FAILED'">El pago falló. Se conserva el plan vigente.</p>
+        <p *ngIf="request.reason">{{ request.reason }}</p>
+        <a *ngIf="request.checkout_url" class="primary payment-link" [href]="request.checkout_url">Continuar al pago seguro</a>
+      </div>
+      <div class="renewal-action" *ngIf="renewalCandidate()">
+        <h3>Renovación mensual</h3>
+        <p class="muted">Revisa la oferta vigente del mismo plan o la versión exacta de tu cambio programado.</p>
+        <button type="button" [disabled]="loading()" (click)="iniciarCheckout()">Revisar condiciones y renovar</button>
+      </div>
+      <div class="confirmation" *ngIf="renewalReview() as accepted" aria-label="Confirmar renovación">
+        <h3>Condiciones de la renovación</h3>
+        <p>{{ accepted.nombre }} v{{ accepted.numero }} (ID {{ accepted.id }}) · {{ accepted.precio_mensual }} BOB / mes</p>
+        <p>Médicos: {{ accepted.limite_medicos ?? 'Sin límite' }} · Sedes: {{ accepted.limite_sedes ?? 'Sin límite' }} · Consultas por ciclo: {{ accepted.limite_consultas ?? 'Sin límite' }}</p>
+        <p>Servicios: {{ serviceNames(accepted) }} · Demora de pago: {{ accepted.demora_pago_dias }} días.</p>
+        <p>Conservas las condiciones actuales hasta el cierre pagado. Se aplica al nuevo ciclo solo con pago confirmado. Renovación manual.</p>
+        <button class="primary" type="button" [disabled]="loading()" (click)="confirmRenewal()">Aceptar condiciones e iniciar pago</button>
+        <button type="button" [disabled]="loading()" (click)="renewalReview.set(null)">Volver</button>
+      </div>
+    </aside>
+  </div>
+
+  <section class="card" *ngIf="changes().length" aria-labelledby="requests-title">
+    <h2 id="requests-title">Solicitudes de suscripción</h2>
+    <ul class="requests-list"><li *ngFor="let change of changes()">
+      <div><strong>{{ operationLabel(change.operation) }}</strong> <span class="badge">{{ changeStatus(change.status) }}</span></div>
+      <p>Versión {{ change.source_version_id }} → {{ change.target_version_id ?? 'Cancelación' }} · Fecha efectiva: {{ change.effective_at | date:'medium' }} · {{ change.amount }} BOB</p>
+      <p *ngIf="change.reason">{{ change.reason }}</p>
+      <a *ngIf="change.checkout_url" [href]="change.checkout_url">Continuar pago pendiente</a>
+    </li></ul>
+  </section>
+
+  <section class="card" aria-labelledby="payments-title">
+    <h2 id="payments-title">Historial de pagos y comprobantes</h2>
+    <p *ngIf="!payments().length" class="muted">No se registran pagos de suscripción previos.</p>
+    <div *ngIf="payments().length" class="table-responsive"><table>
+      <thead><tr><th>Fecha</th><th>Plan / versión cobrada</th><th>Concepto</th><th>Importe</th><th>Estado</th><th>Comprobante</th></tr></thead>
+      <tbody><tr *ngFor="let pay of payments()">
+        <td>{{ pay.fecha_creacion | date:'short' }}</td><td>{{ pay.plan_nombre }} · ID {{ pay.plan_version_id }}</td>
+        <td>{{ pay.purpose === 'UPGRADE' ? 'Ajuste de plan' : 'Renovación mensual' }}</td><td>{{ pay.monto }} {{ pay.moneda }}</td>
+        <td>{{ pay.estado }} · {{ changeStatus(pay.application_status) }}<p *ngIf="pay.application_reason">{{ pay.application_reason }}</p></td>
+        <td><button *ngIf="pay.estado === 'PAGADO'" type="button" (click)="descargarFactura(pay)">Descargar PDF</button><span *ngIf="pay.estado !== 'PAGADO'">No disponible</span></td>
+      </tr></tbody>
+    </table></div>
+  </section>
+</div>

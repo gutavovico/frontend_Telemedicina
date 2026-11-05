@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -78,9 +79,13 @@ export class Login implements OnInit {
 
     const { email, password, rememberMe } = this.loginForm.value;
 
-    this.authService.login(email, password, rememberMe).subscribe({
+    this.authService.login((email || '').trim().toLowerCase(), (password || '').trim(), rememberMe).subscribe({
       next: (tenantContext) => {
         this.isLoading.set(false);
+        if (this.authService.mustChangePassword()) {
+          this.router.navigate(['/cambiar-contrasena-temporal']);
+          return;
+        }
         if (this.returnUrl && this.returnUrl !== '/') {
           this.router.navigateByUrl(this.returnUrl);
         } else {
@@ -89,6 +94,10 @@ export class Login implements OnInit {
       },
       error: (err) => {
         this.isLoading.set(false);
+        if (err.status === 0) {
+          this.errorMessage.set(`No se pudo conectar con el servidor backend (${environment.apiUrl}). Asegúrate de que el celular esté conectado a la misma red Wi-Fi.`);
+          return;
+        }
         let detail = err.error?.detail;
         if (Array.isArray(detail)) {
           detail = detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ');

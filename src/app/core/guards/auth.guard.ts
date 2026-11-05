@@ -7,6 +7,9 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (authService.isLoggedIn()) {
+    if (authService.mustChangePassword()) {
+      return router.createUrlTree(['/cambiar-contrasena-temporal']);
+    }
     return true;
   }
 

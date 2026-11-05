@@ -1,0 +1,203 @@
+<div class="search-container">
+  <header class="header-section">
+    <h1 class="page-title">Directorio de Especialistas y Disponibilidad</h1>
+    <p class="page-subtitle">Encuentra a tu profesional de salud ideal, consulta tarifas y revisa horarios disponibles.</p>
+  </header>
+
+  <!-- Formulario de Búsqueda y Filtros -->
+  <section class="filters-card">
+    <form [formGroup]="searchForm" (ngSubmit)="onBuscar()" class="filters-grid">
+      <div class="form-group">
+        <label for="nombre">Nombre del especialista</label>
+        <input
+          id="nombre"
+          type="text"
+          formControlName="nombre"
+          placeholder="Ej: Dra. Elena Ríos"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="especialidad_id">Especialidad</label>
+        <select id="especialidad_id" formControlName="especialidad_id" class="form-control">
+          <option value="">Todas las especialidades</option>
+          <option *ngFor="let e of especialidades()" [ngValue]="e.id_especialidad">{{ e.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="modalidad">Modalidad</label>
+        <select id="modalidad" formControlName="modalidad" class="form-control">
+          <option value="AMBAS">Todas las modalidades</option>
+          <option value="TELECONSULTA">Teleconsulta</option>
+          <option value="PRESENCIAL">Presencial</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="costo_min">Costo Mín. (BOB)</label>
+        <input
+          id="costo_min"
+          type="number"
+          formControlName="costo_min"
+          placeholder="0"
+          min="0"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="costo_max">Costo Máx. (BOB)</label>
+        <input
+          id="costo_max"
+          type="number"
+          formControlName="costo_max"
+          placeholder="500"
+          min="0"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="fecha_inicio">Desde *</label>
+        <input
+          id="fecha_inicio"
+          type="date"
+          formControlName="fecha_inicio"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="fecha_fin">Hasta *</label>
+        <input
+          id="fecha_fin"
+          type="date"
+          formControlName="fecha_fin"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="loading()" class="btn-buscar">
+          <span *ngIf="loading()">Buscando...</span>
+          <span *ngIf="!loading()">Buscar Especialistas</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Estado de Error -->
+  <div *ngIf="errorMessage()" class="alert-error" role="alert">
+    <p>{{ errorMessage() }}</p>
+  </div>
+
+  <!-- Estado de Carga -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Consultando catálogo y disponibilidad en tiempo real...</p>
+  </div>
+
+  <!-- Resultados de Búsqueda -->
+  <section *ngIf="!loading() && results()" class="results-section">
+    <div *ngIf="results()?.items?.length === 0" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No se encontraron resultados</h3>
+      <p>Prueba ajustando los filtros de búsqueda o seleccionando un rango de fechas diferente.</p>
+    </div>
+
+    <div *ngIf="results()?.items && results()!.items.length > 0" class="specialists-list">
+      <div *ngFor="let esp of results()!.items" class="specialist-card">
+        <div class="card-header">
+          <div class="avatar-placeholder">
+            <img *ngIf="esp.foto_url" [src]="esp.foto_url" [alt]="esp.nombre_completo" class="avatar-img" />
+            <span *ngIf="!esp.foto_url" class="avatar-initials">{{ esp.nombre_completo.charAt(0) }}</span>
+          </div>
+          <div class="specialist-info">
+            <h2 class="specialist-name">{{ esp.nombre_completo }}</h2>
+            <p class="license-badge">Matrícula: {{ esp.matricula_profesional }}</p>
+            <div class="specialties-tags">
+              <span *ngFor="let e of esp.especialidades" class="tag-specialty">
+                {{ e.nombre }}
+                <span *ngIf="e.es_principal" class="principal-label">Principal</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="esp.descripcion_profesional || esp.experiencia" class="profile-details">
+          <p *ngIf="esp.descripcion_profesional" class="professional-description">
+            {{ esp.descripcion_profesional }}
+          </p>
+          <p *ngIf="esp.experiencia" class="professional-experience">
+            <strong>Experiencia:</strong> {{ esp.experiencia }}
+          </p>
+        </div>
+
+        <div class="services-list">
+          <h4>Servicios ofrecidos:</h4>
+          <ul>
+            <li *ngFor="let s of esp.servicios" class="service-item">
+              <div class="service-main">
+                <span class="service-name">{{ s.nombre }}</span>
+                <span *ngIf="s.descripcion" class="service-description">{{ s.descripcion }}</span>
+                <span class="service-schedule">
+                  Horario de atención: {{ s.hora_inicio.slice(0, 5) }} - {{ s.hora_fin.slice(0, 5) }}
+                </span>
+              </div>
+              <div class="service-meta">
+                <span class="service-modality badge" [ngClass]="s.modalidad.toLowerCase()">{{ s.modalidad }}</span>
+                <span class="service-price">{{ s.costo }} {{ s.moneda }} ({{ s.duracion_minutos }} min)</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card-footer">
+          <button (click)="seleccionarEspecialista(esp)" class="btn-ver-disponibilidad">
+            Ver Calendario de Disponibilidad
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal / Vista Detalle de Disponibilidad -->
+  <div *ngIf="selectedSpecialist()" class="modal-backdrop" (click)="cerrarDetalle()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Disponibilidad: {{ selectedSpecialist()?.nombre_completo }}</h2>
+        <button (click)="cerrarDetalle()" class="btn-close" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="selectedSpecialist()?.disponibilidad?.length === 0" class="empty-state">
+          <p>No hay slots disponibles en este rango de fechas.</p>
+        </div>
+
+        <div *ngFor="let dia of selectedSpecialist()?.disponibilidad" class="day-availability">
+          <h3 class="day-date">{{ dia.fecha }}</h3>
+          <div *ngIf="dia.slots.length === 0" class="no-slots">Sin horarios configurados</div>
+          <div class="slots-grid">
+            <div
+              *ngFor="let slot of dia.slots"
+              class="slot-chip"
+              [class.available]="slot.disponible"
+              [class.occupied]="!slot.disponible"
+            >
+              <span>{{ slot.hora_inicio.slice(0, 5) }} - {{ slot.hora_fin.slice(0, 5) }}</span>
+              <small>{{ slot.disponible ? 'Libre' : 'Ocupado' }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <a routerLink="/appointments/consultas" class="btn-agendar">Agendar cita</a>
+        <button (click)="cerrarDetalle()" class="btn-secondary">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+

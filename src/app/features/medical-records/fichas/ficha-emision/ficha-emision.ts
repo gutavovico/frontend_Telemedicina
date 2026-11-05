@@ -76,6 +76,7 @@ export class FichaEmisionComponent implements OnInit {
     hora_inicio: ['', [Validators.required]],
     hora_fin: ['', [Validators.required]],
     motivo_consulta: ['', [Validators.required, Validators.minLength(4)]],
+    tipo_consulta: ['VIDEOCONSULTA'],
 
     // Signos Vitales preliminares (Opcionales)
     presion_arterial: [''],

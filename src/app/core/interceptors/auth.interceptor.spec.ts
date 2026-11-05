@@ -20,6 +20,7 @@ describe('authInterceptor (CU23)', () => {
   let router: Router;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     localStorage.setItem('access_token', 'access-1');
     localStorage.setItem('refresh_token', 'refresh-1');
     localStorage.setItem('user_profile', '{}');
@@ -40,7 +41,10 @@ describe('authInterceptor (CU23)', () => {
 
   afterEach(() => {
     localStorage.clear();
-    httpMock.verify();
+    if (httpMock) {
+      httpMock.verify();
+    }
+    TestBed.resetTestingModule();
   });
 
   it('añade el token de acceso a las peticiones autenticadas', () => {
@@ -106,6 +110,9 @@ describe('authInterceptor (CU23)', () => {
     httpMock
       .expectOne('http://localhost:8000/auth/refresh')
       .flush({ detail: 'Refresh inválido' }, { status: 401, statusText: 'Unauthorized' });
+
+    // El refresh falló: logout() limpia la sesión local sin enviar otra petición.
+    httpMock.expectNone('http://localhost:8000/auth/logout');
 
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(navigate).toHaveBeenCalledWith(['/login']);
