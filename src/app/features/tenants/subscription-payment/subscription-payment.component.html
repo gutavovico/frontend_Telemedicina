@@ -60,27 +60,7 @@
   <!-- Selección y Renovación de Planes -->
   <section class="card plans-card">
     <h2>Seleccionar o Renovar Plan</h2>
-    <p class="section-desc">Selecciona la versión de plan y el ciclo de pago. El monto se calcula de forma autoritativa en el servidor.</p>
-
-    <!-- Selector de ciclo -->
-    <div class="cycle-selector">
-      <button
-        type="button"
-        class="cycle-btn"
-        [class.selected]="selectedCycle() === 'MONTHLY'"
-        (click)="selectedCycle.set('MONTHLY')"
-      >
-        Mensual
-      </button>
-      <button
-        type="button"
-        class="cycle-btn"
-        [class.selected]="selectedCycle() === 'ANNUAL'"
-        (click)="selectedCycle.set('ANNUAL')"
-      >
-        Anual (Mejor tarifa)
-      </button>
-    </div>
+    <p class="section-desc">Selecciona la versión del plan. La renovación es mensual y el monto se calcula de forma autoritativa en el servidor.</p>
 
     <!-- Planes Grid -->
     <div class="plans-grid">
@@ -101,14 +81,12 @@
         </div>
         <p class="plan-desc">{{ p.descripcion }}</p>
         <div class="plan-price">
-          <span class="price-val">
-            {{ selectedCycle() === 'ANNUAL' ? p.precio_anual : p.precio_mensual }}
-          </span>
-          <span class="price-curr">{{ p.moneda }} / {{ selectedCycle() === 'ANNUAL' ? 'año' : 'mes' }}</span>
+          <span class="price-val">{{ p.precio_mensual }}</span>
+          <span class="price-curr">{{ p.moneda }} / mes</span>
         </div>
         <ul class="plan-features">
-          <li>✔ Hasta {{ p.limite_medicos }} médicos activos</li>
-          <li>✔ Hasta {{ p.limite_consultas_mes }} consultas mensuales</li>
+          <li>✔ Hasta {{ limite(p.limite_medicos) }} médicos activos</li>
+          <li>✔ Hasta {{ limite(p.limite_consultas_mes) }} consultas mensuales</li>
           <li>✔ Pasarela Stripe segura con comprobante PDF</li>
         </ul>
       </div>
@@ -117,7 +95,7 @@
     <div class="checkout-action">
       <button
         class="btn-checkout"
-        [disabled]="loading() || !selectedPlanId()"
+        [disabled]="loading() || selectedPlanId() === null"
         (click)="iniciarCheckout()"
       >
         <span *ngIf="loading()">Procesando sesión...</span>

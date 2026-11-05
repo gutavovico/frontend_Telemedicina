@@ -49,4 +49,3 @@ ssl-key.pem
 .venv
 .venv/
 dev-gateway.mjs
-proxy.conf.json

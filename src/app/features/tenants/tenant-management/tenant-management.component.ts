@@ -60,7 +60,7 @@ export class TenantManagementComponent implements OnInit {
     });
 
     this.agreementForm = this.fb.group({
-      plan_id: [''],
+      plan_id: [null as number | null],
       commercial_notes: [''],
     });
   }
@@ -420,7 +420,7 @@ export class TenantManagementComponent implements OnInit {
   abrirModalAcuerdo(tenant: TenantItem): void {
     this.selectedTenant.set(tenant);
     this.agreementForm.patchValue({
-      plan_id: tenant.plan_id || '',
+      plan_id: tenant.id_version_plan ?? null,
       commercial_notes: tenant.commercial_notes || '',
     });
     this.showAgreementModal.set(true);
@@ -438,7 +438,7 @@ export class TenantManagementComponent implements OnInit {
     this.loading.set(true);
     this.tenantService
       .updateCommercialAgreement((tenant.tenant_id || tenant.id_clinica).toString(), {
-        plan_id: val.plan_id || undefined,
+        plan_id: val.plan_id ?? undefined,
         commercial_notes: val.commercial_notes || undefined,
         row_version: tenant.row_version,
       })

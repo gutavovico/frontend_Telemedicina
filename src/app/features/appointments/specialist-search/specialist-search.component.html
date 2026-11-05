@@ -118,18 +118,38 @@
             <h2 class="specialist-name">{{ esp.nombre_completo }}</h2>
             <p class="license-badge">Matrícula: {{ esp.matricula_profesional }}</p>
             <div class="specialties-tags">
-              <span *ngFor="let e of esp.especialidades" class="tag-specialty">{{ e.nombre }}</span>
+              <span *ngFor="let e of esp.especialidades" class="tag-specialty">
+                {{ e.nombre }}
+                <span *ngIf="e.es_principal" class="principal-label">Principal</span>
+              </span>
             </div>
           </div>
+        </div>
+
+        <div *ngIf="esp.descripcion_profesional || esp.experiencia" class="profile-details">
+          <p *ngIf="esp.descripcion_profesional" class="professional-description">
+            {{ esp.descripcion_profesional }}
+          </p>
+          <p *ngIf="esp.experiencia" class="professional-experience">
+            <strong>Experiencia:</strong> {{ esp.experiencia }}
+          </p>
         </div>
 
         <div class="services-list">
           <h4>Servicios ofrecidos:</h4>
           <ul>
             <li *ngFor="let s of esp.servicios" class="service-item">
-              <span class="service-name">{{ s.nombre }}</span>
-              <span class="service-modality badge" [ngClass]="s.modalidad.toLowerCase()">{{ s.modalidad }}</span>
-              <span class="service-price">{{ s.costo }} {{ s.moneda }} ({{ s.duracion_minutos }} min)</span>
+              <div class="service-main">
+                <span class="service-name">{{ s.nombre }}</span>
+                <span *ngIf="s.descripcion" class="service-description">{{ s.descripcion }}</span>
+                <span class="service-schedule">
+                  Horario de atención: {{ s.hora_inicio.slice(0, 5) }} - {{ s.hora_fin.slice(0, 5) }}
+                </span>
+              </div>
+              <div class="service-meta">
+                <span class="service-modality badge" [ngClass]="s.modalidad.toLowerCase()">{{ s.modalidad }}</span>
+                <span class="service-price">{{ s.costo }} {{ s.moneda }} ({{ s.duracion_minutos }} min)</span>
+              </div>
             </li>
           </ul>
         </div>

@@ -58,7 +58,7 @@ export class PublicOnboardingComponent implements OnInit {
       responsable_nombre: ['', [Validators.required, Validators.maxLength(150)]],
       responsable_correo: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
       responsable_telefono: ['', [Validators.maxLength(30)]],
-      plan_version_id: [''],
+      plan_version_id: [null as number | null],
     });
   }
 
@@ -129,7 +129,9 @@ export class PublicOnboardingComponent implements OnInit {
     formData.append('responsable_nombre', val.responsable_nombre.trim());
     formData.append('responsable_correo', val.responsable_correo.trim());
     if (val.responsable_telefono) formData.append('responsable_telefono', val.responsable_telefono.trim());
-    if (val.plan_version_id) formData.append('plan_version_id', val.plan_version_id);
+    if (val.plan_version_id !== null && val.plan_version_id !== undefined) {
+      formData.append('plan_version_id', String(val.plan_version_id));
+    }
 
     for (const file of this.selectedFiles) {
       formData.append('documentos', file, file.name);
@@ -154,6 +156,10 @@ export class PublicOnboardingComponent implements OnInit {
         }
       },
     });
+  }
+
+  limite(value: number | null): string {
+    return value === null ? 'Sin límite' : String(value);
   }
 
   buscarSeguimiento(): void {

@@ -29,10 +29,9 @@ describe('CU32 Public Health Entity Onboarding Frontend', () => {
   it('obtiene planes activos y consulta seguimiento por tracking code', () => {
     const mockPlans: PublicPlan[] = [
       {
-        id_plan_version: 'plan-1',
+        id_plan_version: 101,
         nombre: 'Plan Básico',
         precio_mensual: 100,
-        precio_anual: 1000,
         moneda: 'BOB',
         limite_medicos: 5,
         limite_consultas_mes: 50,
@@ -97,7 +96,7 @@ describe('CU32 Public Health Entity Onboarding Frontend', () => {
       responsable_nombre: 'Dra. Patricia Silva',
       responsable_correo: 'psilva@hospitalmodelo.com',
       responsable_telefono: '71122335',
-      plan_version_id: 'plan-1',
+      plan_version_id: 101,
     });
 
     component.submitOnboarding();
@@ -108,6 +107,8 @@ describe('CU32 Public Health Entity Onboarding Frontend', () => {
       expect.stringContaining('/public/tenant-requests'),
       expect.any(FormData),
     );
+    const submitted = mockHttp.post.mock.calls[0][1] as FormData;
+    expect(submitted.get('plan_version_id')).toBe('101');
   });
 
   it('consulta de seguimiento procesa resultado y error 404', () => {

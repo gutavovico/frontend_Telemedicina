@@ -3,7 +3,10 @@ export interface CurrentSubscription {
   id_suscripcion?: string;
   tenant_id?: string;
   plan_nombre?: string;
-  plan_version_id?: string;
+  /** Referencia canónica de la versión del plan. */
+  id_plan_version?: number;
+  /** Campo legacy tolerado únicamente para leer respuestas del backend actual. */
+  plan_version_id?: number | string;
   ciclo?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
@@ -15,14 +18,13 @@ export interface CurrentSubscription {
 }
 
 export interface PlanVersion {
-  id_plan_version: string;
+  id_plan_version: number;
   nombre: string;
   descripcion?: string;
   precio_mensual: number;
-  precio_anual: number;
   moneda: string;
-  limite_medicos: number;
-  limite_consultas_mes: number;
+  limite_medicos: number | null;
+  limite_consultas_mes: number | null;
 }
 
 export interface CheckoutResponse {

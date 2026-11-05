@@ -389,8 +389,8 @@
       <form [formGroup]="agreementForm" (ngSubmit)="confirmarAcuerdo()">
         <div class="modal-body">
           <div class="form-group">
-            <label for="planId">Identificador del Plan</label>
-            <input id="planId" type="text" formControlName="plan_id" class="form-control" />
+            <label for="planId">ID de versión del plan</label>
+            <input id="planId" type="number" min="1" formControlName="plan_id" class="form-control" />
           </div>
           <div class="form-group">
             <label for="notes">Notas Comerciales y Condiciones Especiales</label>

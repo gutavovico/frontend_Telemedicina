@@ -27,9 +27,8 @@ export class SubscriptionPaymentComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly statusMessage = signal<string | null>(null);
 
-  // Selección de plan y ciclo
-  selectedPlanId = signal<string>('');
-  selectedCycle = signal<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+  /** ID canónico de la versión del plan seleccionada. */
+  selectedPlanId = signal<number | null>(null);
 
   constructor(subService?: SubscriptionPaymentService) {
     this.subService = subService ?? inject(SubscriptionPaymentService);
@@ -86,8 +85,9 @@ export class SubscriptionPaymentComponent implements OnInit {
     this.subService.getCurrentSubscription().subscribe({
       next: (sub) => {
         this.subscription.set(sub);
-        if (sub.plan_version_id) {
-          this.selectedPlanId.set(sub.plan_version_id);
+        const planVersionId = this.canonicalPlanVersionId(sub);
+        if (planVersionId !== null) {
+          this.selectedPlanId.set(planVersionId);
         }
       },
       error: (err) => {
@@ -98,7 +98,7 @@ export class SubscriptionPaymentComponent implements OnInit {
     this.subService.getActivePlans().subscribe({
       next: (planes) => {
         this.plans.set(planes);
-        if (!this.selectedPlanId() && planes.length > 0) {
+        if (this.selectedPlanId() === null && planes.length > 0) {
           this.selectedPlanId.set(planes[0].id_plan_version);
         }
       },
@@ -117,15 +117,14 @@ export class SubscriptionPaymentComponent implements OnInit {
 
   iniciarCheckout(): void {
     const planId = this.selectedPlanId();
-    const cycle = this.selectedCycle();
-    if (!planId) {
+    if (planId === null) {
       this.errorMessage.set('Por favor, selecciona un plan');
       return;
     }
 
     this.loading.set(true);
     this.errorMessage.set(null);
-    this.subService.createCheckout(planId, cycle).subscribe({
+    this.subService.createCheckout(planId).subscribe({
       next: (res) => {
         this.loading.set(false);
         this.successMessage.set(null);
@@ -142,6 +141,22 @@ export class SubscriptionPaymentComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  private canonicalPlanVersionId(sub: CurrentSubscription): number | null {
+    const value = sub.id_plan_version ?? sub.plan_version_id;
+    if (typeof value === 'number') {
+      return Number.isInteger(value) && value > 0 ? value : null;
+    }
+    if (typeof value === 'string' && /^\d+$/.test(value)) {
+      const id = Number(value);
+      return Number.isSafeInteger(id) && id > 0 ? id : null;
+    }
+    return null;
+  }
+
+  limite(value: number | null): string {
+    return value === null ? 'Sin límite' : String(value);
   }
 
   descargarFactura(pago: SubscriptionPaymentItem): void {

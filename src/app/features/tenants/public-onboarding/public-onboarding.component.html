@@ -192,7 +192,7 @@
               <div class="plan-info">
                 <strong>{{ p.nombre }}</strong>
                 <span>{{ p.precio_mensual }} {{ p.moneda }} / mes</span>
-                <small>{{ p.limite_medicos }} médicos · {{ p.limite_consultas_mes }} consultas/mes</small>
+                <small>{{ limite(p.limite_medicos) }} médicos · {{ limite(p.limite_consultas_mes) }} consultas/mes</small>
               </div>
             </label>
           </div>

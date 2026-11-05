@@ -30,10 +30,10 @@ export class SubscriptionPaymentService {
     return this.http.get<PlanVersion[]>(`${this.apiUrl}/subscriptions/plans`);
   }
 
-  createCheckout(planVersionId: string, cycle: 'MONTHLY' | 'ANNUAL'): Observable<CheckoutResponse> {
+  createCheckout(planVersionId: number): Observable<CheckoutResponse> {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/subscriptions/checkout`, {
       plan_version_id: planVersionId,
-      cycle,
+      cycle: 'MONTHLY',
     });
   }
 

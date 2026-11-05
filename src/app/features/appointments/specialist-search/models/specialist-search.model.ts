@@ -1,15 +1,19 @@
 export interface EspecialidadItem {
   id_especialidad: number;
   nombre: string;
+  es_principal?: boolean;
 }
 
 export interface ServicioItem {
   id_servicio: number;
   nombre: string;
+  descripcion?: string | null;
   modalidad: 'PRESENCIAL' | 'TELECONSULTA' | string;
   costo: number;
   moneda: string;
   duracion_minutos: number;
+  hora_inicio: string;
+  hora_fin: string;
 }
 
 export interface SlotItem {
@@ -28,6 +32,8 @@ export interface EspecialistaItem {
   nombre_completo: string;
   foto_url: string | null;
   matricula_profesional: string;
+  descripcion_profesional?: string | null;
+  experiencia?: string | null;
   especialidades: EspecialidadItem[];
   servicios: ServicioItem[];
   disponibilidad: DiaDisponibilidadItem[];

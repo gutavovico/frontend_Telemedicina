@@ -27,7 +27,7 @@ describe('CU31 Subscription Payment Frontend', () => {
       has_subscription: true,
       id_suscripcion: 'sub-1',
       tenant_id: 'tenant-10',
-      plan_version_id: 'plan-v1',
+      id_plan_version: 101,
       plan_nombre: 'Plan Profesional',
       estado: 'ACTIVE',
       ciclo: 'MONTHLY',
@@ -40,10 +40,9 @@ describe('CU31 Subscription Payment Frontend', () => {
 
     const mockPlans: PlanVersion[] = [
       {
-        id_plan_version: 'plan-v1',
+        id_plan_version: 101,
         nombre: 'Plan Profesional',
         precio_mensual: 100,
-        precio_anual: 1000,
         moneda: 'BOB',
         limite_medicos: 10,
         limite_consultas_mes: 100,
@@ -64,7 +63,7 @@ describe('CU31 Subscription Payment Frontend', () => {
     });
   });
 
-  it('inicia checkout enviando plan_version_id y billing_cycle al backend', () => {
+  it('inicia checkout enviando el ID canónico y el ciclo mensual al backend', () => {
     const mockCheckout: CheckoutResponse = {
       id_pago: 'pay-001',
       checkout_url: 'https://checkout.stripe.com/pay/cs_test_123',
@@ -74,14 +73,14 @@ describe('CU31 Subscription Payment Frontend', () => {
 
     mockHttp.post.mockReturnValue(of(mockCheckout));
 
-    service.createCheckout('plan-v1', 'MONTHLY').subscribe((res) => {
+    service.createCheckout(101).subscribe((res) => {
       expect(res.id_pago).toBe('pay-001');
       expect(res.checkout_url).toContain('checkout.stripe.com');
     });
 
     expect(mockHttp.post).toHaveBeenCalledWith(
       expect.stringContaining('/checkout'),
-      { plan_version_id: 'plan-v1', cycle: 'MONTHLY' },
+      { plan_version_id: 101, cycle: 'MONTHLY' },
     );
   });
 
@@ -90,7 +89,7 @@ describe('CU31 Subscription Payment Frontend', () => {
       has_subscription: true,
       id_suscripcion: 'sub-1',
       tenant_id: 'tenant-10',
-      plan_version_id: 'plan-v1',
+      id_plan_version: 101,
       plan_nombre: 'Plan Profesional',
       estado: 'ACTIVE',
       ciclo: 'MONTHLY',
@@ -103,10 +102,9 @@ describe('CU31 Subscription Payment Frontend', () => {
 
     const mockPlans: PlanVersion[] = [
       {
-        id_plan_version: 'plan-v1',
+        id_plan_version: 101,
         nombre: 'Plan Profesional',
         precio_mensual: 100,
-        precio_anual: 1000,
         moneda: 'BOB',
         limite_medicos: 10,
         limite_consultas_mes: 100,
@@ -164,16 +162,15 @@ describe('CU31 Subscription Payment Frontend', () => {
     } as unknown as SubscriptionPaymentService;
 
     const component = new SubscriptionPaymentComponent(mockService);
-    component.selectedPlanId.set('');
+    component.selectedPlanId.set(null);
     component.iniciarCheckout();
 
     expect(component.errorMessage()).toBe('Por favor, selecciona un plan');
 
-    component.selectedPlanId.set('plan-v2');
-    component.selectedCycle.set('ANNUAL');
+    component.selectedPlanId.set(102);
     component.iniciarCheckout();
 
-    expect(mockService.createCheckout).toHaveBeenCalledWith('plan-v2', 'ANNUAL');
+    expect(mockService.createCheckout).toHaveBeenCalledWith(102);
     expect(component.statusMessage()).toContain('1000 BOB');
   });
 });

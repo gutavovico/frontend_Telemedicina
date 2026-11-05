@@ -7,6 +7,7 @@ export interface TenantRequestItem {
   telefono?: string;
   responsable_nombre: string;
   responsable_correo: string;
+  id_version_plan?: number;
   plan_version_id?: string;
   tracking_code: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
@@ -41,6 +42,7 @@ export interface TenantItem {
   telefono?: string;
   direccion?: string;
   estado: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | string;
+  id_version_plan?: number;
   plan_id?: string;
   commercial_notes?: string;
   row_version: number;
@@ -80,7 +82,7 @@ export interface DeactivationListResponse {
 }
 
 export interface CommercialAgreementUpdate {
-  plan_id?: string;
+  plan_id?: number;
   commercial_notes?: string;
   row_version: number;
 }
