@@ -6,4 +6,4 @@ Solo pantalla, tipos, cliente HTTP y pruebas de suscripción. No incorpora cambi
 
 Validación: 292 pruebas aprobadas, 5 skips existentes; build production aprobado con dependencias existentes. Pagos simulados en las pruebas; Stripe sandbox real pendiente. Sin cambios Flutter.
 
-La entrega usa review/cu34-cu35-integrado desde main: Terrazas diverge con tres commits anteriores y mantiene cambios locales ajenos. No se reescribió esa rama ni se hizo force push. Revisar la API, el mapa de ancla original y la copia Neon antes del despliegue.
+La entrega usa review/cu34-cu35-integrado desde main: Terrazas diverge con tres commits anteriores y mantiene cambios locales ajenos. No se reescribió esa rama ni se hizo force push. Revisar la API, el mapa privado autorizado (ancla 5 para ambas suscripciones) y la copia Neon antes del despliegue.

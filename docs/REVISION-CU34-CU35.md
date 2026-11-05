@@ -10,13 +10,15 @@ cambio al cierre pagado y cancelación como regresión interna. No cambia Flutte
 La demo, credenciales/configuración, SI2-Grupo3.md personal, capturas, temporales,
 dependencias y arreglos Cypress anteriores quedan fuera de la entrega.
 
-Pruebas finales: backend 159 passed / 5 PG skipped; selección PostgreSQL 76 passed
+Pruebas finales: backend 159 passed / 5 PG skipped; selección PostgreSQL 77 passed
 incluyendo concurrencia, worker idempotente y CU18 poblada; frontend 292 passed,
 5 skips existentes y build production aprobado. No sumar selecciones superpuestas.
 Cadena final cu35_cu18_convergencia_023; CU18 recuperada de main/d952a29c,
 sin reescribir revisiones compartidas. No hubo escrituras Neon ni Stripe real.
-Ancla original de la suscripción Neon por acreditar antes de migrar; el fixture
-anónimo usa un ancla explícita solo de test. Copia Neon identificada, Render Live
+Anclas de las dos suscripciones Neon resueltas por decisión explícita del
+responsable: adoptar día 5 tras verificar aniversario mensual exacto. Mapa privado
+fuera de Git; diez regresiones PostgreSQL CU35 aprobadas, incluido cotejo del
+esquema y ambos historiales anónimos. No es inferencia de evidencia histórica. Copia Neon identificada, Render Live
 SHA/rama, Stripe sandbox y CLI OpenSpec siguen pendientes. doctor/validate no
 pudieron ejecutarse: CommandNotFoundException; no se instalaron dependencias.
 
