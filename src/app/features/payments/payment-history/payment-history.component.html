@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-[#F8FAFC]">
+  <app-header></app-header>
+
+  <main class="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+    <div class="flex items-center gap-2 text-sm flex-wrap">
+      <a routerLink="/" class="inline-flex items-center gap-2 rounded-full bg-secondary-container/30 px-3 py-1.5 text-secondary font-medium">
+        <span class="material-symbols-outlined text-[16px]">home</span>
+        Mi salud
+      </a>
+      <span class="material-symbols-outlined text-[18px] text-outline">chevron_right</span>
+      <span class="text-primary font-medium">Mis pagos</span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#002d62] tracking-tight">Mis pagos</h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">Consulta tus pagos y descarga tus comprobantes digitales.</p>
+      </div>
+      <button type="button" (click)="cargar()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:border-[#002d62] hover:text-[#002d62] transition-colors">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        Actualizar
+      </button>
+    </div>
+
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">{{ error() }}</div>
+    }
+
+    @if (cargando()) {
+      <div class="bg-white rounded-2xl border border-slate-200 p-10 text-center text-slate-600 shadow-sm">
+        <span class="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+        <p class="mt-2 text-sm">Cargando información de pagos...</p>
+      </div>
+    } @else {
+      <!-- Citas pendientes de pago -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-bold text-[#002d62] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">pending_actions</span>
+            Citas pendientes de pago
+          </h2>
+          <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">{{ pendientes().length }}</span>
+        </div>
+
+        @if (pendientes().length === 0) {
+          <p class="px-5 py-8 text-center text-sm text-slate-500">No tienes citas pendientes de pago.</p>
+        } @else {
+          <div class="divide-y divide-slate-100">
+            @for (cita of pendientes(); track cita.id_cita) {
+              <div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-800">{{ cita.medico_nombre || 'Especialista' }}</p>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    {{ cita.especialidad_nombre || 'Medicina General' }} · {{ cita.fecha_cita || '—' }} {{ cita.hora_inicio || '' }} · {{ cita.tipo_consulta || 'TELEMEDICINA' }}
+                  </p>
+                </div>
+                <div class="text-left sm:text-right">
+                  <p class="text-lg font-extrabold text-[#002d62]">Bs. {{ formatoMonto(cita.monto) }}</p>
+                  <p class="text-[11px] text-slate-400">Cita #{{ cita.id_cita }}</p>
+                </div>
+                <a [routerLink]="['/pagos/checkout', cita.id_cita]"
+                   class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#002d62] text-white text-sm font-bold hover:bg-[#001f45] transition-colors">
+                  <span class="material-symbols-outlined text-[18px]">payment</span>
+                  Pagar ahora
+                </a>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Historial de pagos -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="font-bold text-[#002d62] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+            Historial de pagos
+          </h2>
+          <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">{{ pagos().length }}</span>
+        </div>
+
+        @if (pagos().length === 0) {
+          <p class="px-5 py-8 text-center text-sm text-slate-500">Aún no registras pagos.</p>
+        } @else {
+          <div class="divide-y divide-slate-100">
+            @for (pago of pagos(); track pago.id_pago) {
+              <div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                     [ngClass]="esPagado(pago) ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'">
+                  <span class="material-symbols-outlined text-[22px]">{{ esPagado(pago) ? 'check_circle' : 'schedule' }}</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-slate-800">
+                    {{ pago.medico_nombre || 'Consulta médica' }}
+                    <span class="ml-1 text-xs font-bold px-2 py-0.5 rounded-full"
+                          [ngClass]="esPagado(pago) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+                      {{ pago.estado }}
+                    </span>
+                  </p>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    Pago #{{ pago.id_pago }} · {{ pago.cita_fecha || '—' }} {{ pago.cita_hora || '' }}
+                    @if (pago.comprobante) {
+                      · Comprobante {{ pago.comprobante.numero_comprobante }}
+                    }
+                  </p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    {{ pago.pasarela || 'STRIPE' }} · {{ pago.metodo_pago || 'TARJETA' }}
+                  </p>
+                </div>
+                <div class="text-left sm:text-right">
+                  <p class="text-lg font-extrabold text-[#002d62]">Bs. {{ formatoMonto(pago.monto) }}</p>
+                  <p class="text-[11px] text-slate-400">{{ pago.moneda }}</p>
+                </div>
+                @if (esPagado(pago) && pago.comprobante) {
+                  <button type="button" (click)="descargar(pago)" [disabled]="descargandoId() === pago.id_pago"
+                          class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-bold hover:border-[#002d62] hover:text-[#002d62] disabled:opacity-60 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+                    {{ descargandoId() === pago.id_pago ? 'Generando...' : 'PDF' }}
+                  </button>
+                } @else if (!esPagado(pago) && pago.id_cita) {
+                  <a [routerLink]="['/pagos/checkout', pago.id_cita]"
+                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#002d62] text-white text-sm font-bold">
+                    Continuar pago
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+    }
+  </main>
+</div>
