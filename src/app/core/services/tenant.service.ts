@@ -29,7 +29,7 @@ export class TenantService {
   readonly isClinicaActiva = computed(() => {
     const estado = this.currentTenant()?.clinica_estado;
     if (this.isSuperAdmin() && !this.clinicaId()) return true; // Super admin global view is active
-    return estado === 'ACTIVO';
+    return estado === 'ACTIVO' || estado === 'ACTIVE';
   });
   readonly permisos = computed(() => this.currentTenant()?.permisos ?? []);
 

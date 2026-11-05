@@ -15,6 +15,21 @@ export const routes: Routes = [
     title: 'Hospital San Juan de Dios - Telemedicina',
   },
   // =========================================================================
+  // 0. CU32: ONBOARDING INSTITUCIONAL PÚBLICO
+  // =========================================================================
+  {
+    path: 'solicitud-alta',
+    loadComponent: () =>
+      import('./features/tenants/public-onboarding/public-onboarding.component').then(
+        (m) => m.PublicOnboardingComponent
+      ),
+    title: 'Hospital San Juan de Dios - Solicitud de Alta Institucional',
+  },
+  {
+    path: 'seguimiento-solicitud',
+    redirectTo: 'solicitud-alta',
+  },
+  // =========================================================================
   // 1. MÓDULO CANÓNICO: AUTH (CU01, CU02, CU23, CU24, CU26)
   // =========================================================================
   {
@@ -37,6 +52,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/password-recovery/recover/recover').then((m) => m.Recover),
     title: 'Hospital San Juan de Dios - Recuperar Contraseña',
+  },
+  {
+    path: 'cambiar-contrasena-temporal',
+    loadComponent: () =>
+      import('./features/auth/change-temporary-password/change-temporary-password').then(
+        (m) => m.ChangeTemporaryPassword,
+      ),
+    title: 'Hospital San Juan de Dios - Cambiar Contraseña Temporal',
   },
   {
     path: 'recuperar-contrasena',
@@ -96,11 +119,53 @@ export const routes: Routes = [
         title: 'Hospital San Juan de Dios - Panel Administrador',
       },
       {
+        path: 'planes',
+        canActivate: [superAdminGuard],
+        loadComponent: () => import('./features/auth/planes/planes-page').then((m) => m.PlanesPage),
+        title: 'Catálogo de planes de suscripción',
+      },
+      {
         path: 'clinicas',
         canActivate: [superAdminGuard],
         loadComponent: () =>
           import('./features/admin/clinicas/clinicas-list').then((m) => m.ClinicasList),
         title: 'Hospital San Juan de Dios - Gestión de Clínicas',
+      },
+      {
+        path: 'tenants',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./features/tenants/tenant-management/tenant-management.component').then(
+            (m) => m.TenantManagementComponent
+          ),
+        title: 'Hospital San Juan de Dios - Gestión de Tenants',
+      },
+      {
+        path: 'tenant-requests',
+        canActivate: [superAdminGuard],
+        loadComponent: () =>
+          import('./features/tenants/tenant-management/tenant-management.component').then(
+            (m) => m.TenantManagementComponent
+          ),
+        title: 'Hospital San Juan de Dios - Solicitudes de Ingreso',
+      },
+      {
+        path: 'suscripcion',
+        canActivate: [adminOnlyGuard],
+        loadComponent: () =>
+          import('./features/tenants/subscription-payment/subscription-payment.component').then(
+            (m) => m.SubscriptionPaymentComponent
+          ),
+        title: 'Hospital San Juan de Dios - Suscripción y Pagos',
+      },
+      {
+        path: 'solicitar-baja',
+        canActivate: [adminOnlyGuard],
+        loadComponent: () =>
+          import('./features/tenants/deactivation-request/deactivation-request.component').then(
+            (m) => m.DeactivationRequestComponent
+          ),
+        title: 'Hospital San Juan de Dios - Solicitar Baja de Entidad',
       },
       {
         path: 'usuarios',
@@ -568,6 +633,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/appointments/live-queue/mi-cola/mi-cola').then((m) => m.MiCola),
     title: 'Hospital San Juan de Dios - Mi Turno en Fila',
+  },
+  {
+    path: 'especialistas',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/appointments/specialist-search/specialist-search.component').then(
+        (m) => m.SpecialistSearchComponent
+      ),
+    title: 'Hospital San Juan de Dios - Buscar Especialistas',
+  },
+  {
+    path: 'appointments/specialist-search',
+    redirectTo: 'especialistas',
   },
 
   // =========================================================================

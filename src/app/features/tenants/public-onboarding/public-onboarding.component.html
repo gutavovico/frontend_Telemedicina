@@ -1,0 +1,339 @@
+<div class="onboarding-container">
+  <header class="onboarding-header">
+    <div class="header-content">
+      <div class="header-icon">🏥</div>
+      <div>
+        <h1>Portal Institucional de Salud</h1>
+        <p class="subtitle">Solicitud de Alta y Seguimiento de Entidades de Salud</p>
+      </div>
+    </div>
+
+    <nav class="nav-tabs" role="tablist">
+      <button
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'registro'"
+        [class.active]="activeTab() === 'registro'"
+        (click)="cambiarTab('registro')"
+      >
+        📝 Solicitar Alta Institucional
+      </button>
+      <button
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'seguimiento'"
+        [class.active]="activeTab() === 'seguimiento'"
+        (click)="cambiarTab('seguimiento')"
+      >
+        🔍 Consultar Seguimiento
+      </button>
+    </nav>
+  </header>
+
+  <!-- TAB 1: REGISTRO DE ALTA -->
+  <main class="tab-content" *ngIf="activeTab() === 'registro'">
+    <!-- Exito con codigo de seguimiento -->
+    <section *ngIf="successTrackingCode()" class="success-banner" aria-live="polite">
+      <div class="success-icon">✅</div>
+      <div class="success-body">
+        <h2>¡Solicitud Recibida con Éxito!</h2>
+        <p>
+          Su solicitud de alta institucional ha sido registrada y se encuentra en estado
+          <strong>PENDIENTE</strong> de revisión por parte de la administración.
+        </p>
+        <p class="disclaimer">
+          <em>Nota: La entidad aún no se encuentra activa en la plataforma. Será notificado por correo institucional tras la evaluación.</em>
+        </p>
+        <div class="tracking-box">
+          <span class="tracking-label">Su Código de Seguimiento Seguro:</span>
+          <code class="tracking-code">{{ successTrackingCode() }}</code>
+        </div>
+        <p class="tracking-tip">
+          Guarde este código para consultar el avance del trámite en la pestaña <strong>Consultar Seguimiento</strong>.
+        </p>
+        <button class="btn btn-secondary" (click)="successTrackingCode.set(null)">
+          Registrar otra solicitud
+        </button>
+      </div>
+    </section>
+
+    <!-- Formulario de alta -->
+    <section *ngIf="!successTrackingCode()" class="card form-card">
+      <div class="notice-box">
+        <span class="info-icon">ℹ️</span>
+        <div>
+          <strong>Requisito de Evaluación:</strong>
+          Toda nueva institución de salud pasa por un proceso de verificación legal antes de su habilitación multitenant definitiva.
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage()" class="alert alert-danger" role="alert">
+        {{ errorMessage() }}
+      </div>
+
+      <form [formGroup]="onboardingForm" (ngSubmit)="submitOnboarding()" novalidate>
+        <!-- Datos de la institución -->
+        <fieldset class="form-section">
+          <legend>1. Datos Institucionales</legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nombre">Nombre de la Institución / Clínica <span class="req">*</span></label>
+              <input
+                id="nombre"
+                type="text"
+                formControlName="nombre"
+                placeholder="Ej. Hospital San Rafael"
+                [class.invalid]="onboardingForm.get('nombre')?.invalid && onboardingForm.get('nombre')?.touched"
+              />
+              <span class="error-text" *ngIf="onboardingForm.get('nombre')?.invalid && onboardingForm.get('nombre')?.touched">
+                El nombre es obligatorio.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="razon_social">Razón Social</label>
+              <input
+                id="razon_social"
+                type="text"
+                formControlName="razon_social"
+                placeholder="Ej. San Rafael Servicios Médicos S.R.L."
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="nit">NIT (Identificación Tributaria) <span class="req">*</span></label>
+              <input
+                id="nit"
+                type="text"
+                formControlName="nit"
+                placeholder="Ej. 1020304050"
+                [class.invalid]="onboardingForm.get('nit')?.invalid && onboardingForm.get('nit')?.touched"
+              />
+              <span class="error-text" *ngIf="onboardingForm.get('nit')?.invalid && onboardingForm.get('nit')?.touched">
+                El NIT es obligatorio.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="correo">Correo Institucional de Contacto <span class="req">*</span></label>
+              <input
+                id="correo"
+                type="email"
+                formControlName="correo"
+                placeholder="contacto@hospital.com"
+                [class.invalid]="onboardingForm.get('correo')?.invalid && onboardingForm.get('correo')?.touched"
+              />
+              <span class="error-text" *ngIf="onboardingForm.get('correo')?.invalid && onboardingForm.get('correo')?.touched">
+                Correo institucional no válido.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono / Celular</label>
+              <input id="telefono" type="text" formControlName="telefono" placeholder="Ej. +591 3 3456789" />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="direccion">Dirección Física</label>
+              <input id="direccion" type="text" formControlName="direccion" placeholder="Calle / Av., Número, Ciudad" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Datos del responsable legal -->
+        <fieldset class="form-section">
+          <legend>2. Responsable Legal / Administrador Solicitante</legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="responsable_nombre">Nombre Completo del Responsable <span class="req">*</span></label>
+              <input
+                id="responsable_nombre"
+                type="text"
+                formControlName="responsable_nombre"
+                placeholder="Ej. Dra. María Rojas"
+                [class.invalid]="onboardingForm.get('responsable_nombre')?.invalid && onboardingForm.get('responsable_nombre')?.touched"
+              />
+              <span class="error-text" *ngIf="onboardingForm.get('responsable_nombre')?.invalid && onboardingForm.get('responsable_nombre')?.touched">
+                El nombre del responsable es obligatorio.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="responsable_correo">Correo del Responsable <span class="req">*</span></label>
+              <input
+                id="responsable_correo"
+                type="email"
+                formControlName="responsable_correo"
+                placeholder="mrojas@hospital.com"
+                [class.invalid]="onboardingForm.get('responsable_correo')?.invalid && onboardingForm.get('responsable_correo')?.touched"
+              />
+              <span class="error-text" *ngIf="onboardingForm.get('responsable_correo')?.invalid && onboardingForm.get('responsable_correo')?.touched">
+                Correo del responsable no válido.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="responsable_telefono">Teléfono del Responsable</label>
+              <input id="responsable_telefono" type="text" formControlName="responsable_telefono" placeholder="Ej. 70012345" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Plan de interés -->
+        <fieldset class="form-section" *ngIf="plans().length > 0">
+          <legend>3. Plan de Interés</legend>
+          <div class="plans-selection">
+            <label *ngFor="let p of plans()" class="plan-option" [class.selected]="onboardingForm.get('plan_version_id')?.value === p.id_plan_version">
+              <input
+                type="radio"
+                formControlName="plan_version_id"
+                [value]="p.id_plan_version"
+              />
+              <div class="plan-info">
+                <strong>{{ p.nombre }}</strong>
+                <span>{{ p.precio_mensual }} {{ p.moneda }} / mes</span>
+                <small>{{ p.limite_medicos }} médicos · {{ p.limite_consultas_mes }} consultas/mes</small>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Documentos adjuntos -->
+        <fieldset class="form-section">
+          <legend>4. Documentación Legal Respaldatoria</legend>
+          <p class="section-desc">
+            Adjunte archivos PDF, JPG o PNG (máx. 10 MB por archivo) tales como Licencia de Funcionamiento, NIT, Poder Notarial o Personería.
+          </p>
+
+          <div class="file-upload-box">
+            <input
+              type="file"
+              id="fileInput"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png"
+              (change)="onFileSelected($event)"
+              class="hidden-file-input"
+            />
+            <label for="fileInput" class="upload-btn">
+              📎 Seleccionar Archivos
+            </label>
+            <span class="file-hint">Formatos soportados: PDF, JPG, PNG (máx. 10MB)</span>
+          </div>
+
+          <ul *ngIf="selectedFiles.length > 0" class="file-list" aria-label="Archivos seleccionados">
+            <li *ngFor="let file of selectedFiles; let i = index">
+              <span>📄 {{ file.name }} ({{ (file.size / 1024 / 1024) | number:'1.1-2' }} MB)</span>
+              <button type="button" class="btn-remove" (click)="removeFile(i)" aria-label="Eliminar archivo">
+                ✕
+              </button>
+            </li>
+          </ul>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-submit" [disabled]="loading()">
+            <span *ngIf="!loading()">🚀 Enviar Solicitud de Alta</span>
+            <span *ngIf="loading()">Enviando solicitud y documentos...</span>
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- TAB 2: CONSULTAR SEGUIMIENTO -->
+  <main class="tab-content" *ngIf="activeTab() === 'seguimiento'">
+    <section class="card tracking-card">
+      <h2>Consulta de Estado de Solicitud</h2>
+      <p class="subtitle">
+        Ingrese el código de seguimiento proporcionado al registrar su solicitud para verificar su estado en tiempo real.
+      </p>
+
+      <div class="tracking-search-bar">
+        <input
+          type="text"
+          [value]="trackingInput()"
+          (input)="trackingInput.set($any($event.target).value)"
+          placeholder="Ej. TRK-ABC123XYZ"
+          class="tracking-input"
+        />
+        <button
+          class="btn btn-primary"
+          (click)="buscarSeguimiento()"
+          [disabled]="trackingLoading()"
+        >
+          <span *ngIf="!trackingLoading()">Consultar</span>
+          <span *ngIf="trackingLoading()">Buscando...</span>
+        </button>
+      </div>
+
+      <div *ngIf="trackingError()" class="alert alert-danger mt-3" role="alert">
+        {{ trackingError() }}
+      </div>
+
+      <!-- Resultado del seguimiento -->
+      <div *ngIf="trackingResult()" class="tracking-result-box mt-4">
+        <div class="result-header">
+          <h3>{{ trackingResult()?.institucion }}</h3>
+          <span
+            class="status-badge"
+            [class.status-pending]="trackingResult()?.status === 'PENDING'"
+            [class.status-approved]="trackingResult()?.status === 'APPROVED'"
+            [class.status-rejected]="trackingResult()?.status === 'REJECTED'"
+          >
+            {{ trackingResult()?.status }}
+          </span>
+        </div>
+
+        <div class="result-body">
+          <p class="result-message">{{ trackingResult()?.mensaje }}</p>
+          <p *ngIf="trackingResult()?.fecha_decision" class="result-date">
+            Fecha de resolución: {{ trackingResult()?.fecha_decision | date:'medium' }}
+          </p>
+        </div>
+
+        <div *ngIf="trackingResult()?.access_email" class="credential-panel mt-4" aria-live="polite">
+          <div class="credential-header">
+            <span class="material-symbols-outlined text-[22px]">vpn_key</span>
+            <div>
+              <h4>Credenciales temporales de acceso</h4>
+              <p>Use estos datos para el primer ingreso. La contraseña caduca y debe cambiarse inmediatamente.</p>
+            </div>
+          </div>
+
+          <dl class="credential-list">
+            <div>
+              <dt>Correo de acceso</dt>
+              <dd><code>{{ trackingResult()?.access_email }}</code></dd>
+            </div>
+            <div *ngIf="trackingResult()?.temporary_password">
+              <dt>Contraseña temporal</dt>
+              <dd><code class="temporary-password">{{ trackingResult()?.temporary_password }}</code></dd>
+            </div>
+            <div *ngIf="trackingResult()?.expires_at">
+              <dt>Vence</dt>
+              <dd>{{ trackingResult()?.expires_at | date:'medium' }}</dd>
+            </div>
+            <div *ngIf="trackingResult()?.remaining_reveals !== null">
+              <dt>Visualizaciones restantes</dt>
+              <dd>{{ trackingResult()?.remaining_reveals }}</dd>
+            </div>
+          </dl>
+
+          <p class="credential-warning">
+            <span class="material-symbols-outlined text-[18px]">warning</span>
+            Esta información es sensible. No la comparta ni la envíe por correo o mensajería.
+          </p>
+        </div>
+
+        <div *ngIf="trackingResult()?.status === 'APPROVED' && !trackingResult()?.temporary_password" class="safe-notice mt-3">
+          La credencial temporal ya no está disponible por expiración, uso o límite de visualizaciones. Solicite assistance al Superadministrador.
+        </div>
+
+        <div class="safe-notice">
+          🔒 Consulta segura: La información institucional privada y los documentos adjuntos permanecen bajo custodia confidencial.
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
