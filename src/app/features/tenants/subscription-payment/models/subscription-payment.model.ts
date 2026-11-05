@@ -1,43 +1,45 @@
+import type { VersionPlan as CatalogVersion } from '../../../../core/models/plan.models';
 export interface CurrentSubscription {
   has_subscription: boolean;
   id_suscripcion?: string;
   tenant_id?: string;
   plan_nombre?: string;
-  /** Referencia canónica de la versión del plan. */
   id_plan_version?: number;
-  /** Campo legacy tolerado únicamente para leer respuestas del backend actual. */
-  plan_version_id?: number | string;
+  plan_version_id?: number;
   ciclo?: string;
   fecha_inicio?: string;
   fecha_fin?: string;
   dias_gracia?: number;
   estado?: string;
   derived_status?: 'ACTIVE' | 'DUE_SOON' | 'EXPIRED' | 'TRIALING' | string;
-  limite_medicos?: number;
-  limite_consultas_mes?: number;
+  version?: CatalogVersion;
+  row_version?: number;
+  limite_sedes?: number | null;
+  limite_medicos?: number | null;
+  limite_consultas_mes?: number | null;
 }
 
-export interface PlanVersion {
+export interface PlanVersion extends CatalogVersion {
   id_plan_version: number;
-  nombre: string;
-  descripcion?: string;
-  precio_mensual: number;
-  moneda: string;
-  limite_medicos: number | null;
   limite_consultas_mes: number | null;
 }
 
 export interface CheckoutResponse {
   id_pago: string;
-  monto: number;
+  monto: string;
   moneda: string;
   checkout_url: string;
   expira_en?: string;
 }
 
 export interface SubscriptionPaymentItem {
+  application_status: string;
+  application_reason?: string | null;
+  plan_version_id: number;
+  version: CatalogVersion;
+  purpose: 'RENEWAL' | 'UPGRADE';
   id_pago: string;
-  monto: number;
+  monto: string;
   moneda: string;
   ciclo: string;
   estado: string;
@@ -51,6 +53,9 @@ export interface CheckoutStatusResponse {
   id_pago: string;
   estado: string;
   confirmado: boolean;
+  application_status: string;
+  application_reason?: string | null;
+  effective_at?: string | null;
   checkout_url?: string;
   expira_en?: string;
 }
@@ -62,3 +67,26 @@ export interface SubscriptionPaymentHistoryResponse {
   items: SubscriptionPaymentItem[];
 }
 
+
+export interface ChangeQuote {
+  amount: string;
+  currency: 'BOB';
+  effective_at: string;
+  cycle_end: string;
+  quote_token: string;
+  expires_at: string;
+}
+export interface SubscriptionChange {
+  target_version?: CatalogVersion | null;
+  id: string;
+  source_version_id: number;
+  target_version_id: number | null;
+  operation: 'IMMEDIATE' | 'NEXT_CYCLE' | 'CANCEL';
+  status: string;
+  amount: string;
+  effective_at: string;
+  applied_at: string | null;
+  payment_id: string | null;
+  reason: string | null;
+  checkout_url: string | null;
+}

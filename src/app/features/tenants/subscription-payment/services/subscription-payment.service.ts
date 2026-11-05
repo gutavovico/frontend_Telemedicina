@@ -6,6 +6,7 @@ import {
   CheckoutResponse,
   CheckoutStatusResponse,
   CurrentSubscription,
+  ChangeQuote, SubscriptionChange,
   PlanVersion,
   SubscriptionPaymentHistoryResponse,
 } from '../models/subscription-payment.model';
@@ -30,10 +31,10 @@ export class SubscriptionPaymentService {
     return this.http.get<PlanVersion[]>(`${this.apiUrl}/subscriptions/plans`);
   }
 
-  createCheckout(planVersionId: number): Observable<CheckoutResponse> {
+  createCheckout(planVersionId: number, cycle: 'MENSUAL' | 'MONTHLY' = 'MONTHLY'): Observable<CheckoutResponse> {
     return this.http.post<CheckoutResponse>(`${this.apiUrl}/subscriptions/checkout`, {
       plan_version_id: planVersionId,
-      cycle: 'MONTHLY',
+      cycle,
     });
   }
 
@@ -59,5 +60,20 @@ export class SubscriptionPaymentService {
       responseType: 'blob',
     });
   }
+  getChanges(): Observable<SubscriptionChange[]> {
+    return this.http.get<SubscriptionChange[]>(this.apiUrl + '/api/v1/subscriptions/changes');
+  }
+  quote(planVersionId: number): Observable<ChangeQuote> {
+    return this.http.post<ChangeQuote>(this.apiUrl + '/api/v1/subscriptions/quote', { plan_version_id: planVersionId });
+  }
+  change(planVersionId: number, mode: 'IMMEDIATE' | 'NEXT_CYCLE', key: string, token?: string): Observable<SubscriptionChange> {
+    return this.http.post<SubscriptionChange>(this.apiUrl + '/api/v1/subscriptions/changes', {
+      plan_version_id: planVersionId, mode, idempotency_key: key, ...(token ? {quote_token: token} : {})
+    });
+  }
+  cancel(key: string): Observable<SubscriptionChange> {
+    return this.http.post<SubscriptionChange>(this.apiUrl + '/api/v1/subscriptions/cancellation', {idempotency_key: key});
+  }
+
 }
 
