@@ -1,5 +1,10 @@
 export type Recurso = 'MEDICOS' | 'SEDES' | 'CONSULTAS';
 export type Unidad = 'MEDICO_CICLO_MENSUAL' | 'SEDE_CICLO_MENSUAL' | 'CONSULTA';
+export const NOMBRES_SERVICIOS: Readonly<Record<string, string>> = {
+  AGENDA_TELECONSULTA: 'Agenda y teleconsulta', RECETAS_DIGITALES: 'Recetas digitales',
+  LABORATORIO: 'Laboratorio', LISTA_ESPERA: 'Lista de espera', REPORTES_AUDITORIA: 'Reportes y auditoría',
+  TRIAJE_IA: 'Triaje con IA', SUBDOMINIO_PROPIO: 'Subdominio propio', INTEGRACIONES: 'Integraciones',
+};
 export interface Tarifa {
   recurso: Recurso;
   unidad: Unidad;
