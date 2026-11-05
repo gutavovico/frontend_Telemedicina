@@ -78,6 +78,28 @@ describe('Header entrada Recetas (CU16 hallazgo 4)', () => {
     injector.destroy();
   });
 
+  it('canSeeTratamientos es visible para doctor y paciente, pero oculta para admin (contrato CU17)', () => {
+    for (const rol of ['doctor', 'paciente'] as AppRole[]) {
+      userRole.set(rol);
+      const header = create();
+      expect(header.canSeeTratamientos()).toBe(true);
+      injector.destroy();
+    }
+    userRole.set('admin');
+    const headerAdmin = create();
+    expect(headerAdmin.canSeeTratamientos()).toBe(false);
+    injector.destroy();
+    userRole.set('recepcion');
+    const headerRecepcion = create();
+    expect(headerRecepcion.canSeeTratamientos()).toBe(false);
+    injector.destroy();
+    userRole.set('doctor');
+    isAuthenticated.set(false);
+    const headerSinAuth = create();
+    expect(headerSinAuth.canSeeTratamientos()).toBe(false);
+    injector.destroy();
+  });
+
   it('visible para admin, doctor y paciente reales', () => {
     for (const rol of ['admin', 'doctor', 'paciente'] as AppRole[]) {
       userRole.set(rol);

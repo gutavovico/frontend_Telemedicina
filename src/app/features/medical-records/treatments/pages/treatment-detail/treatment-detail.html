@@ -1,0 +1,822 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#F0F5FB] flex flex-col justify-between">
+  <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <!-- Breadcrumb / Volver -->
+    <div class="mb-6 flex items-center justify-between">
+      <a
+        [routerLink]="adminBase + '/tratamientos'"
+        class="inline-flex items-center gap-2 text-sm font-semibold text-[#049CAB] hover:text-[#038795] transition-colors"
+      >
+        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+        Volver a tratamientos
+      </a>
+    </div>
+
+    <!-- Toast de Notificación -->
+    @if (toastMessage()) {
+      <div
+        class="mb-6 p-4 rounded-2xl flex items-center justify-between border shadow-sm transition-all"
+        [ngClass]="
+          toastType() === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-rose-50 border-rose-200 text-rose-800'
+        "
+        role="alert"
+      >
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-[20px]">
+            {{ toastType() === 'success' ? 'check_circle' : 'error' }}
+          </span>
+          <span class="text-sm font-medium">{{ toastMessage() }}</span>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarToast()"
+          class="p-1 rounded-lg hover:bg-black/5 text-slate-500"
+          aria-label="Cerrar notificación"
+        >
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    }
+
+    <!-- Estado de Carga -->
+    @if (isLoading()) {
+      <div class="bg-white p-12 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col items-center justify-center text-center">
+        <div class="w-12 h-12 border-4 border-[#049CAB] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <h3 class="text-lg font-bold text-[#293954]">Cargando plan de tratamiento...</h3>
+        <p class="text-sm text-slate-500 mt-1">Obteniendo información clínica y adherencia.</p>
+      </div>
+    }
+
+    <!-- Estado de Error -->
+    @if (!isLoading() && errorMessage()) {
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-rose-200 text-center max-w-lg mx-auto">
+        <div class="w-12 h-12 mx-auto rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-4">
+          <span class="material-symbols-outlined text-[28px]">error</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#293954]">Error al consultar el plan</h3>
+        <p class="text-sm text-slate-600 mt-2 mb-6">{{ errorMessage() }}</p>
+        <button
+          type="button"
+          (click)="cargarPlan()"
+          class="bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-5 py-2.5 font-semibold text-sm transition-colors inline-flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[20px]">refresh</span>
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- Detalle del Plan -->
+    @if (!isLoading() && plan()) {
+      <div class="space-y-6">
+        <!-- Tarjeta de Cabecera del Plan -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-2xl font-bold text-[#293954]">
+                  Plan de Tratamiento #{{ plan()!.id_tratamiento }}
+                </h1>
+                <span
+                  class="px-3 py-1 text-xs font-semibold rounded-full border"
+                  [ngClass]="getEstadoBadgeClasses(plan()!.estado)"
+                >
+                  {{ getEstadoLabel(plan()!.estado) }}
+                </span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1">
+                Consulta #{{ plan()!.id_consulta }}
+                @if (plan()!.id_receta) {
+                  • Receta asociada #{{ plan()!.id_receta }}
+                }
+                • Registrado el {{ plan()!.created_at | date: 'dd/MM/yyyy HH:mm' }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Enlace a Cronograma Diario -->
+              <a
+                [routerLink]="['/tratamientos', plan()!.id_tratamiento, 'cronograma']"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#049CAB] text-[#049CAB] hover:bg-[#049CAB]/5 font-semibold text-sm transition-colors"
+              >
+                <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                Ver Cronograma Diario y Tomas
+              </a>
+
+              <!-- Acciones del Médico Tratante -->
+              @if (canManagePlan()) {
+                <button
+                  type="button"
+                  (click)="abrirModalEvolucion()"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-[#293954] hover:bg-slate-50 font-semibold text-sm transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[20px]">history_edu</span>
+                  Registrar Evolución
+                </button>
+
+                <button
+                  type="button"
+                  (click)="abrirModalVigencia()"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-[#293954] hover:bg-slate-50 font-semibold text-sm transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[20px]">update</span>
+                  Prorrogar Vigencia
+                </button>
+
+                <button
+                  type="button"
+                  (click)="abrirModalFinalizar()"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-semibold text-sm transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[20px]">flag</span>
+                  Finalizar Tratamiento
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Callout Informativo si tiene Motivo de Cierre -->
+        @if (plan()!.motivo_cierre) {
+          <div class="p-5 rounded-2xl bg-blue-50/80 border border-blue-200 text-blue-900 flex items-start gap-3 shadow-sm">
+            <span class="material-symbols-outlined text-[24px] text-blue-700 mt-0.5">info</span>
+            <div>
+              <h4 class="font-bold text-sm text-blue-900">Motivo de cierre del tratamiento</h4>
+              <p class="text-sm text-blue-800 mt-1 whitespace-pre-line">{{ plan()!.motivo_cierre }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Grilla de Información General del Plan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Diagnóstico -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[18px] text-[#049CAB]">stethoscope</span>
+              Diagnóstico
+            </div>
+            @if (plan()!.diagnostico) {
+              <div class="font-bold text-base text-[#293954]">
+                {{ plan()!.diagnostico!.codigo_cie }}
+              </div>
+              <p class="text-xs text-slate-600 mt-1 line-clamp-2" [title]="plan()!.diagnostico!.descripcion">
+                {{ plan()!.diagnostico!.descripcion }}
+              </p>
+            } @else {
+              <p class="text-sm text-slate-400 italic">Sin diagnóstico CIE registrado</p>
+            }
+          </div>
+
+          <!-- Período de Vigencia -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[18px] text-[#049CAB]">date_range</span>
+              Vigencia del Plan
+            </div>
+            <div class="font-bold text-base text-[#293954]">
+              {{ plan()!.fecha_inicio }} al {{ plan()!.fecha_fin }}
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Zona horaria: {{ plan()!.zona_horaria }}</p>
+          </div>
+
+          <!-- Médico Tratante -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[18px] text-[#049CAB]">person</span>
+              Médico Tratante
+            </div>
+            <div class="font-bold text-base text-[#293954]">
+              Médico #{{ plan()!.id_medico }}
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Clínica #{{ plan()!.id_clinica }}</p>
+          </div>
+
+          <!-- Paciente -->
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[18px] text-[#049CAB]">medical_information</span>
+              Paciente
+            </div>
+            <div class="font-bold text-base text-[#293954]">
+              Paciente #{{ plan()!.id_paciente }}
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Titular del tratamiento</p>
+          </div>
+        </div>
+
+        <!-- Notas Clínicas del Plan -->
+        @if (plan()!.notas) {
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+            <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
+              <span class="material-symbols-outlined text-[18px] text-[#049CAB]">notes</span>
+              Indicaciones Generales / Notas Clínicas
+            </div>
+            <p class="text-sm text-[#293954] whitespace-pre-line">{{ plan()!.notas }}</p>
+          </div>
+        }
+
+        <!-- Widget de Adherencia Global -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-[#293954] flex items-center gap-2">
+                <span class="material-symbols-outlined text-[22px] text-[#049CAB]">donut_large</span>
+                Adherencia Terapéutica Global
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Seguimiento del cumplimiento de tomas horarias efectivas.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <span class="text-2xl font-black text-[#293954]">
+                {{ adherenciaPorcentaje() !== null ? adherenciaPorcentaje() + '%' : 'Sin datos' }}
+              </span>
+              <span
+                class="px-3 py-1 text-xs font-semibold rounded-full border"
+                [ngClass]="getNivelAdherenciaBadgeClasses(plan()!.adherencia.nivel)"
+              >
+                {{ getNivelAdherenciaLabel(plan()!.adherencia.nivel) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Barra de Progreso Visual -->
+          <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden mb-3">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [ngClass]="getAdherenciaBarColor(plan()!.adherencia.nivel)"
+              [style.width.%]="adherenciaPorcentajeClamped()"
+            ></div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 gap-2">
+            <div>
+              Tomas puntuales:
+              <strong class="text-[#293954] font-semibold">
+                {{ plan()!.adherencia.numerador_puntual }}
+              </strong>
+              /
+              <strong class="text-[#293954] font-semibold">
+                {{ plan()!.adherencia.denominador_programado }}
+              </strong>
+              programadas acumuladas
+            </div>
+            <div>
+              Calculado en: {{ plan()!.adherencia.calculado_en | date: 'dd/MM/yyyy HH:mm' }} UTC
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla / Lista de Medicamentos del Plan -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4]">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-[#293954] flex items-center gap-2">
+                <span class="material-symbols-outlined text-[22px] text-[#049CAB]">medication</span>
+                Medicamentos del Plan ({{ plan()!.medicamentos.length }})
+              </h2>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Fármacos prescritos con pauta horaria estructurada y administración.
+              </p>
+            </div>
+          </div>
+
+          @if (plan()!.medicamentos.length === 0) {
+            <div class="p-8 text-center border border-dashed border-slate-200 rounded-xl text-slate-500 text-sm">
+              Este plan no contiene fármacos prescritos.
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-[#E8EDF4] text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3 px-4">Medicamento / Dosis</th>
+                    <th class="py-3 px-4">Pauta Horaria</th>
+                    <th class="py-3 px-4">Rango de Fechas</th>
+                    <th class="py-3 px-4">Indicaciones</th>
+                    <th class="py-3 px-4">Estado</th>
+                    @if (canManagePlan()) {
+                      <th class="py-3 px-4 text-right">Acciones</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#E8EDF4] text-sm">
+                  @for (med of plan()!.medicamentos; track med.id_medicamento_plan) {
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                      <!-- Medicamento y Dosis -->
+                      <td class="py-4 px-4 align-top">
+                        <div class="font-bold text-[#293954]">{{ med.medicamento_nombre }}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">
+                          {{ med.dosis }} • Vía: {{ med.via_administracion }}
+                        </div>
+                      </td>
+
+                      <!-- Pauta Horaria -->
+                      <td class="py-4 px-4 align-top">
+                        <div class="flex flex-wrap gap-1 mb-1">
+                          @for (hora of med.horas_locales; track hora) {
+                            <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-xs font-mono font-medium">
+                              {{ hora }}
+                            </span>
+                          }
+                        </div>
+                        @if (med.intervalo_horas) {
+                          <div class="text-xs text-[#049CAB] font-medium">
+                            Cada {{ med.intervalo_horas }} horas
+                          </div>
+                        }
+                        @if (med.frecuencia_texto_receta) {
+                          <div class="text-xs text-slate-400 mt-0.5">
+                            Receta: {{ med.frecuencia_texto_receta }}
+                          </div>
+                        }
+                      </td>
+
+                      <!-- Fechas -->
+                      <td class="py-4 px-4 align-top text-xs text-slate-600">
+                        <div><span class="text-slate-400">Inicio:</span> {{ med.fecha_inicio }}</div>
+                        <div><span class="text-slate-400">Fin:</span> {{ med.fecha_fin }}</div>
+                      </td>
+
+                      <!-- Indicaciones -->
+                      <td class="py-4 px-4 align-top text-xs text-slate-600 max-w-xs">
+                        {{ med.indicaciones || 'Sin indicaciones clínicas adicionales' }}
+                      </td>
+
+                      <!-- Estado -->
+                      <td class="py-4 px-4 align-top">
+                        @if (med.estado === 'ACTIVO') {
+                          <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Activo
+                          </span>
+                        } @else {
+                          <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                            Suspendido
+                          </span>
+                        }
+                      </td>
+
+                      <!-- Acciones Clínicas por Medicamento -->
+                      @if (canManagePlan()) {
+                        <td class="py-4 px-4 align-top text-right">
+                          @if (med.estado === 'ACTIVO') {
+                            <button
+                              type="button"
+                              (click)="abrirModalSuspender(med)"
+                              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+                            >
+                              <span class="material-symbols-outlined text-[16px]">pause_circle</span>
+                              Suspender
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              (click)="abrirModalReactivar(med)"
+                              class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+                            >
+                              <span class="material-symbols-outlined text-[16px]">play_circle</span>
+                              Reactivar
+                            </button>
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- MODAL: REGISTRAR EVOLUCIÓN -->
+  @if (modalEvolucionOpen()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-evolucion"
+    >
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#E8EDF4] space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="titulo-evolucion" class="text-lg font-bold text-[#293954] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-[#049CAB]">history_edu</span>
+            Registrar Evolución Médica
+          </h2>
+          <button
+            type="button"
+            (click)="cerrarModalEvolucion()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-500">
+          Ingrese la nota clínica de seguimiento y evolución del paciente en relación con este plan terapéutico.
+        </p>
+
+        @if (actionError()) {
+          <div class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">
+            {{ actionError() }}
+          </div>
+        }
+
+        <div>
+          <label for="nota-evolucion" class="block text-xs font-semibold text-slate-700 mb-1">
+            Nota clínica * (10 a 4000 caracteres)
+          </label>
+          <textarea
+            id="nota-evolucion"
+            [ngModel]="notaEvolucion()"
+            (ngModelChange)="notaEvolucion.set($event)"
+            rows="5"
+            maxlength="4000"
+            placeholder="Describa el estado clínico, adherencia observada, tolerancia a medicamentos..."
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+          ></textarea>
+          <div class="text-right text-[11px] text-slate-400 mt-1">
+            {{ notaEvolucion().length }}/4000 caracteres
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModalEvolucion()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="guardarEvolucion()"
+            [disabled]="actionLoading() || notaEvolucion().trim().length < 10"
+            class="bg-[#049CAB] hover:bg-[#038795] disabled:opacity-50 text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors flex items-center gap-2"
+          >
+            @if (actionLoading()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            Guardar Evolución
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: PRORROGAR VIGENCIA -->
+  @if (modalVigenciaOpen()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-vigencia"
+    >
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#E8EDF4] space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="titulo-vigencia" class="text-lg font-bold text-[#293954] flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-[#049CAB]">update</span>
+            Prorrogar Vigencia del Plan
+          </h2>
+          <button
+            type="button"
+            (click)="cerrarModalVigencia()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-500">
+          Fecha fin actual del plan: <strong class="text-[#293954]">{{ plan()?.fecha_fin }}</strong>.
+          La prórroga extiende el seguimiento y genera las dosis programadas correspondientes para los medicamentos seleccionados.
+        </p>
+
+        @if (actionError()) {
+          <div class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">
+            {{ actionError() }}
+          </div>
+        }
+
+        <!-- Selector de Nueva Fecha Fin -->
+        <div>
+          <label for="nueva-fecha-fin" class="block text-xs font-semibold text-slate-700 mb-1">
+            Nueva Fecha Fin * (debe ser posterior a {{ plan()?.fecha_fin }})
+          </label>
+          <input
+            id="nueva-fecha-fin"
+            type="date"
+            [min]="plan()?.fecha_fin"
+            [ngModel]="nuevaFechaFin()"
+            (ngModelChange)="nuevaFechaFin.set($event)"
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+          />
+        </div>
+
+        <!-- Checkboxes de Medicamentos Activos -->
+        @if (activeMedications().length > 0) {
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-2">
+              Medicamentos a prorrogar hasta la nueva fecha fin:
+            </label>
+            <div class="space-y-2 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+              @for (med of activeMedications(); track med.id_medicamento_plan) {
+                <label class="flex items-center gap-3 p-1.5 hover:bg-white rounded-lg cursor-pointer text-xs text-[#293954]">
+                  <input
+                    type="checkbox"
+                    [checked]="isMedSelectedForVigencia(med.id_medicamento_plan)"
+                    (change)="toggleMedForVigencia(med.id_medicamento_plan)"
+                    class="rounded text-[#049CAB] focus:ring-[#049CAB]"
+                  />
+                  <div>
+                    <span class="font-semibold">{{ med.medicamento_nombre }}</span>
+                    <span class="text-slate-500"> (actual fin: {{ med.fecha_fin }})</span>
+                  </div>
+                </label>
+              }
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Los medicamentos no seleccionados mantendrán su fecha fin previa sin dosis adicionales.
+            </p>
+          </div>
+        }
+
+        <!-- Motivo Clínico -->
+        <div>
+          <label for="motivo-vigencia" class="block text-xs font-semibold text-slate-700 mb-1">
+            Motivo clínico de prórroga * (10 a 1000 caracteres)
+          </label>
+          <textarea
+            id="motivo-vigencia"
+            [ngModel]="motivoVigencia()"
+            (ngModelChange)="motivoVigencia.set($event)"
+            rows="3"
+            maxlength="1000"
+            placeholder="Describa la justificación médica para la ampliación del tratamiento..."
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#049CAB]"
+          ></textarea>
+          <div class="text-right text-[11px] text-slate-400 mt-1">
+            {{ motivoVigencia().length }}/1000 caracteres
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModalVigencia()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="guardarVigencia()"
+            [disabled]="actionLoading() || !nuevaFechaFin() || motivoVigencia().trim().length < 10"
+            class="bg-[#049CAB] hover:bg-[#038795] disabled:opacity-50 text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors flex items-center gap-2"
+          >
+            @if (actionLoading()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            Prorrogar Vigencia
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: FINALIZAR TRATAMIENTO -->
+  @if (modalFinalizarOpen()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-finalizar"
+    >
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#E8EDF4] space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="titulo-finalizar" class="text-lg font-bold text-rose-700 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-rose-600">flag</span>
+            Finalizar Tratamiento
+          </h2>
+          <button
+            type="button"
+            (click)="cerrarModalFinalizar()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+          <strong>Atención:</strong> Esta acción marcará el plan como <strong>FINALIZADO</strong>.
+          Las dosis programadas futuras serán canceladas y no se podrán realizar nuevos registros.
+        </div>
+
+        @if (actionError()) {
+          <div class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">
+            {{ actionError() }}
+          </div>
+        }
+
+        <div>
+          <label for="motivo-finalizar" class="block text-xs font-semibold text-slate-700 mb-1">
+            Motivo clínico de alta o cierre * (10 a 1000 caracteres)
+          </label>
+          <textarea
+            id="motivo-finalizar"
+            [ngModel]="motivoFinalizar()"
+            (ngModelChange)="motivoFinalizar.set($event)"
+            rows="4"
+            maxlength="1000"
+            placeholder="Describa la evolución satisfactoria, alta clínica o causa de finalización..."
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+          ></textarea>
+          <div class="text-right text-[11px] text-slate-400 mt-1">
+            {{ motivoFinalizar().length }}/1000 caracteres
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModalFinalizar()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="guardarFinalizar()"
+            [disabled]="actionLoading() || motivoFinalizar().trim().length < 10"
+            class="bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors flex items-center gap-2"
+          >
+            @if (actionLoading()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            Confirmar Finalización
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: SUSPENDER MEDICAMENTO -->
+  @if (modalSuspenderMedOpen()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-suspender-med"
+    >
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#E8EDF4] space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="titulo-suspender-med" class="text-lg font-bold text-amber-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-amber-700">pause_circle</span>
+            Suspender Fármaco
+          </h2>
+          <button
+            type="button"
+            (click)="cerrarModalSuspender()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-600">
+          Fármaco a suspender: <strong class="text-[#293954]">{{ selectedMed()?.medicamento_nombre }}</strong>.
+          Las dosis futuras programadas para este fármaco quedarán suspendidas temporalmente.
+        </p>
+
+        @if (actionError()) {
+          <div class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">
+            {{ actionError() }}
+          </div>
+        }
+
+        <div>
+          <label for="motivo-suspender" class="block text-xs font-semibold text-slate-700 mb-1">
+            Motivo clínico de suspensión * (10 a 1000 caracteres)
+          </label>
+          <textarea
+            id="motivo-suspender"
+            [ngModel]="motivoMedicamento()"
+            (ngModelChange)="motivoMedicamento.set($event)"
+            rows="4"
+            maxlength="1000"
+            placeholder="Describa el motivo clínico (efectos adversos, contraindicación, ajuste temporal)..."
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          ></textarea>
+          <div class="text-right text-[11px] text-slate-400 mt-1">
+            {{ motivoMedicamento().length }}/1000 caracteres
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModalSuspender()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="guardarSuspender()"
+            [disabled]="actionLoading() || motivoMedicamento().trim().length < 10"
+            class="bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors flex items-center gap-2"
+          >
+            @if (actionLoading()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            Confirmar Suspensión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: REACTIVAR MEDICAMENTO -->
+  @if (modalReactivarMedOpen()) {
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-reactivar-med"
+    >
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#E8EDF4] space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 id="titulo-reactivar-med" class="text-lg font-bold text-emerald-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[20px] text-emerald-700">play_circle</span>
+            Reactivar Fármaco
+          </h2>
+          <button
+            type="button"
+            (click)="cerrarModalReactivar()"
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-600">
+          Fármaco a reactivar: <strong class="text-[#293954]">{{ selectedMed()?.medicamento_nombre }}</strong>.
+          Se reanudarán las tomas programadas a partir de la fecha y hora actual hasta su fecha fin.
+        </p>
+
+        @if (actionError()) {
+          <div class="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">
+            {{ actionError() }}
+          </div>
+        }
+
+        <div>
+          <label for="motivo-reactivar" class="block text-xs font-semibold text-slate-700 mb-1">
+            Motivo clínico de reactivación * (10 a 1000 caracteres)
+          </label>
+          <textarea
+            id="motivo-reactivar"
+            [ngModel]="motivoMedicamento()"
+            (ngModelChange)="motivoMedicamento.set($event)"
+            rows="4"
+            maxlength="1000"
+            placeholder="Describa la razón para reanudar la prescripción del medicamento..."
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          ></textarea>
+          <div class="text-right text-[11px] text-slate-400 mt-1">
+            {{ motivoMedicamento().length }}/1000 caracteres
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarModalReactivar()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="guardarReactivar()"
+            [disabled]="actionLoading() || motivoMedicamento().trim().length < 10"
+            class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition-colors flex items-center gap-2"
+          >
+            @if (actionLoading()) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            }
+            Confirmar Reactivación
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</main>
+
+<app-footer></app-footer>

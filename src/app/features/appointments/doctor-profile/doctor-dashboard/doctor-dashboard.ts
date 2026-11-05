@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { MedicoService } from '../../../../core/services/medico.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
@@ -35,7 +35,7 @@ const AVATAR_PALETTE = [
 
 @Component({
   selector: 'app-doctor-dashboard',
-  imports: [CommonModule, FormsModule, Header],
+  imports: [CommonModule, FormsModule, RouterLink, Header],
   templateUrl: './doctor-dashboard.html',
   styleUrl: './doctor-dashboard.css'
 })

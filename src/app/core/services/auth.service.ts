@@ -309,26 +309,24 @@ export class AuthService {
   }
 
   logout(): void {
-    const refreshToken = this.getRefreshToken();
     this.inactivity.stop();
-
-    const request$: Observable<unknown> = refreshToken
-      ? this.http.post(`${this.apiUrl}/auth/logout`, { refresh_token: refreshToken })
-      : of(null);
-
-    request$
-      .pipe(
-        catchError(() => of(null)),
-        finalize(() => {
-          this.clearTokens();
-          this.router.navigate(['/login']);
-        }),
-      )
-      .subscribe();
+    this.clearTokens();
+    this.router.navigate(['/login']);
   }
 
   logoutRemoto(): void {
-    this.logout();
+    const refreshToken = this.getRefreshToken();
+    this.inactivity.stop();
+
+    if (refreshToken) {
+      this.http
+        .post(`${this.apiUrl}/auth/logout`, { refresh_token: refreshToken })
+        .pipe(catchError(() => of(null)))
+        .subscribe();
+    }
+
+    this.clearTokens();
+    this.router.navigate(['/login']);
   }
 
   onSessionClosedByInactivity(): void {
@@ -348,7 +346,80 @@ export class AuthService {
       this.perfilMedico.set(null);
       this.tenantService.clearTenant();
       this.inactivity.stop();
+
+      // Purgar cualquier dato clínico de CU17 en sessionStorage y localStorage (CU17 / CU23)
+      this.purgeClinicalData();
     }
+  }
+
+  /**
+   * Elimina cualquier dato clínico de CU17 retenido en sessionStorage y localStorage.
+   * Purga notas, horas efectivas y payloads clínicos al cerrar la sesión,
+   * preservando únicamente los marcadores mínimos opacos (cu17_recovery_*).
+   */
+  private purgeClinicalData(): void {
+    const isClinicalEntry = (key: string, rawVal: string | null): boolean => {
+      // Claves de operación pendiente de dosis
+      if (key.startsWith('pending_dose_')) return true;
+
+      // El marcador mínimo de recuperación opaco (sin payload ni datos clínicos) se preserva
+      if (key.startsWith('cu17_recovery_')) return false;
+
+      // Claves de sistema a preservar
+      if (
+        key === 'access_token' ||
+        key === 'refresh_token' ||
+        key === 'user_profile' ||
+        key === 'remember_me' ||
+        key.startsWith('tenant_') ||
+        key.startsWith('selected_tenant_')
+      ) {
+        return false;
+      }
+
+      if (!rawVal) return false;
+
+      // Detectar contenido con datos clínicos legibles o campos de carga clínica
+      const lower = rawVal.toLowerCase();
+      return (
+        lower.includes('"payload"') ||
+        lower.includes('"nota"') ||
+        lower.includes('"efectiva_en"') ||
+        lower.includes('"raw_hora_efectiva"') ||
+        lower.includes('"medicamento_nombre"') ||
+        lower.includes('"indicaciones"')
+      );
+    };
+
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const sessionKeys: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const k = sessionStorage.key(i);
+          if (k) sessionKeys.push(k);
+        }
+        for (const k of sessionKeys) {
+          if (isClinicalEntry(k, sessionStorage.getItem(k))) {
+            sessionStorage.removeItem(k);
+          }
+        }
+      }
+    } catch {}
+
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const localKeys: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k) localKeys.push(k);
+        }
+        for (const k of localKeys) {
+          if (isClinicalEntry(k, localStorage.getItem(k))) {
+            localStorage.removeItem(k);
+          }
+        }
+      }
+    } catch {}
   }
 
   getRememberMe(): boolean {

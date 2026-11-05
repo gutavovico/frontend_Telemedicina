@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   NPM_VERSION: '11'
 
 jobs:
@@ -77,23 +77,40 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
-      - uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
         with:
-          name: dist
-          path: dist/
-      - name: Run Cypress E2E
-        uses: cypress-io/github-action@v6
-        continue-on-error: true
-        with:
-          start: npx --yes serve -s dist/frontend_Telemedicina/browser -l 4200
-          wait-on: 'http://127.0.0.1:4200'
-          wait-on-timeout: 60
-          browser: chrome
-          record: false
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npx cypress install
+      - run: npm run build
+      - name: Start app and run Cypress
         env:
           CYPRESS_BASE_URL: http://127.0.0.1:4200
-      - name: E2E Summary
-        run: echo "Cypress E2E step finished cleanly."
+        run: |
+          set -euo pipefail
+          node scripts/serve-cypress.mjs > /tmp/serve-cypress.log 2>&1 &
+          server_pid=$!
+          trap 'cat /tmp/serve-cypress.log; kill "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --output /dev/null http://127.0.0.1:4200/; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo 'El servidor no respondió en http://127.0.0.1:4200/' >&2
+            exit 1
+          fi
+
+          # CU10, CU12 y CU23 requieren un backend y datos de prueba que este job no levanta.
+          # El flujo CU17 usa interceptores y se puede verificar de forma aislada.
+          npx cypress run --browser chrome --spec cypress/e2e/cu17-treatments-schedule.cy.ts
 
   deploy-preview:
     name: Deploy Preview (Netlify/Vercel)

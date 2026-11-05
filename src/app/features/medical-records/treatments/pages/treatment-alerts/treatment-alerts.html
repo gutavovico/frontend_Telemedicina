@@ -1,0 +1,237 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Migas hacia tratamientos -->
+    <nav class="flex items-center gap-2 text-sm text-[#293954]" aria-label="Migas de pan">
+      <a routerLink="/tratamientos" class="inline-flex items-center gap-1.5 font-medium hover:text-[#049CAB] transition-colors">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        <span>Tratamientos</span>
+      </a>
+      <span class="material-symbols-outlined text-[16px] text-gray-400" aria-hidden="true">chevron_right</span>
+      <span class="font-semibold text-[#049CAB]">Bandeja de avisos</span>
+    </nav>
+
+    <!-- Encabezado con Filtro -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold">
+          <span class="material-symbols-outlined text-[28px]">notifications_active</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-[#293954]">Bandeja Web de Avisos</h1>
+          <p class="text-sm text-gray-500">
+            Recordatorios preventivos de toma, alertas de omisión y riesgo de abandono terapéutico
+          </p>
+        </div>
+      </div>
+
+      <!-- Filtro: Todos los avisos vs Solo no leídos -->
+      <div class="flex items-center bg-[#F0F5FB] p-1 rounded-xl border border-[#E8EDF4] self-start sm:self-auto">
+        <button
+          type="button"
+          (click)="setFilter(false)"
+          [class.bg-white]="!soloNoLeidos()"
+          [class.text-[#293954]]="!soloNoLeidos()"
+          [class.shadow-sm]="!soloNoLeidos()"
+          [class.text-gray-500]="soloNoLeidos()"
+          class="px-4 py-2 rounded-lg text-xs font-semibold transition"
+        >
+          Todos los avisos
+        </button>
+        <button
+          type="button"
+          (click)="setFilter(true)"
+          [class.bg-white]="soloNoLeidos()"
+          [class.text-[#293954]]="soloNoLeidos()"
+          [class.shadow-sm]="soloNoLeidos()"
+          [class.text-gray-500]="!soloNoLeidos()"
+          class="px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+        >
+          <span>Solo no leídos</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-start gap-3">
+        <span class="material-symbols-outlined text-[22px] text-rose-600 mt-0.5">error</span>
+        <div class="flex-1 text-sm font-medium">
+          {{ errorMessage() }}
+        </div>
+        <button
+          type="button"
+          (click)="loadAvisos(page())"
+          class="text-xs font-semibold underline hover:text-rose-900"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-[#E8EDF4] shadow-sm">
+        <div class="w-10 h-10 border-4 border-t-[#049CAB] border-gray-200 rounded-full animate-spin mb-3"></div>
+        <p class="text-sm font-medium text-gray-500">Cargando avisos de medicación...</p>
+      </div>
+    } @else {
+      <!-- Empty State -->
+      @if (avisos().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-[#E8EDF4] shadow-sm text-center">
+          <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-gray-400 mb-4">
+            <span class="material-symbols-outlined text-[36px]">notifications_off</span>
+          </div>
+          <h2 class="text-lg font-bold text-[#293954] mb-1">
+            {{ soloNoLeidos() ? 'No tienes avisos pendientes' : 'No hay avisos registrados' }}
+          </h2>
+          <p class="text-sm text-gray-500 max-w-md mb-4">
+            {{ soloNoLeidos() ? 'Todas tus alertas y recordatorios de medicación se encuentran al día.' : 'Aquí aparecerán los recordatorios de toma (30 min antes), omisiones (60 min después) y alertas de abandono.' }}
+          </p>
+          @if (soloNoLeidos()) {
+            <button
+              type="button"
+              (click)="setFilter(false)"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#293954] text-sm font-medium transition"
+            >
+              Ver todos los avisos
+            </button>
+          }
+        </div>
+      } @else {
+        <!-- Lista de Tarjetas de Aviso -->
+        <div class="space-y-4">
+          @for (aviso of avisos(); track aviso.id_aviso) {
+            @let cfg = getTipoConfig(aviso.tipo);
+            <div
+              class="bg-white p-5 rounded-2xl shadow-sm border border-[#E8EDF4] {{ cfg.cardBorderClass }} flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:shadow-md"
+            >
+              <div class="flex items-start gap-4">
+                <!-- Icono de tipo según especificación -->
+                <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 {{ cfg.iconBgClass }}">
+                  <span class="material-symbols-outlined text-[24px]">{{ cfg.icon }}</span>
+                </div>
+
+                <!-- Info principal -->
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <!-- Insignia de tipo con estilo acorde -->
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ cfg.badgeClass }}">
+                      {{ cfg.label }}
+                    </span>
+
+                    <!-- Insignia Leído / Nuevo -->
+                    @if (aviso.leida_en) {
+                      <span class="inline-flex items-center gap-1 text-xs text-gray-400">
+                        <span class="material-symbols-outlined text-[14px]">done_all</span>
+                        <span>Leído</span>
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Nuevo
+                      </span>
+                    }
+
+                    <!-- Fecha y hora del aviso -->
+                    <span class="text-xs text-gray-400 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">schedule</span>
+                      <span>{{ (aviso.enviada_en || aviso.programada_en) | date:'dd/MM/yyyy HH:mm' }}</span>
+                    </span>
+                  </div>
+
+                  <!-- Título y Mensaje explicativo -->
+                  <h3 class="text-base font-bold text-[#293954]">
+                    {{ aviso.titulo }}
+                  </h3>
+                  <p class="text-sm text-gray-600 leading-relaxed max-w-2xl">
+                    {{ aviso.mensaje }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Acciones del aviso -->
+              <div class="flex items-center gap-2.5 self-end md:self-center shrink-0">
+                <!-- Botón "Marcar como leído" para avisos no leídos (leida_en === null) -->
+                @if (aviso.leida_en === null) {
+                  <button
+                    type="button"
+                    (click)="marcarLeido(aviso)"
+                    [disabled]="marcandoIds().has(aviso.id_aviso)"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E8EDF4] bg-white hover:bg-slate-50 text-[#293954] text-xs font-semibold transition disabled:opacity-50"
+                  >
+                    @if (marcandoIds().has(aviso.id_aviso)) {
+                      <div class="w-3.5 h-3.5 border-2 border-t-[#049CAB] border-gray-300 rounded-full animate-spin"></div>
+                      <span>Marcando...</span>
+                    } @else {
+                      <span class="material-symbols-outlined text-[16px] text-[#049CAB]">mark_email_read</span>
+                      <span>Marcar como leído</span>
+                    }
+                  </button>
+                }
+
+                <!-- Enlace al tratamiento asociado: /tratamientos/${aviso.id_tratamiento} -->
+                <a
+                  [routerLink]="['/tratamientos', aviso.id_tratamiento]"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#049CAB] hover:bg-[#038795] text-white text-xs font-semibold transition shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
+                  <span>Ver tratamiento</span>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 text-sm text-gray-600">
+            <span>Mostrar</span>
+            <select
+              [ngModel]="limit()"
+              (ngModelChange)="onLimitChange($event)"
+              class="px-2.5 py-1.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-lg text-sm text-[#293954] focus:outline-none focus:ring-1 focus:ring-[#049CAB]"
+            >
+              <option [ngValue]="5">5</option>
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="20">20</option>
+            </select>
+            <span>por página</span>
+            <span class="text-gray-300">|</span>
+            <span>Total: <strong class="text-[#293954]">{{ total() }}</strong> avisos</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500 mr-2">
+              Página {{ page() }} de {{ totalPages() }}
+            </span>
+
+            <button
+              type="button"
+              (click)="prevPage()"
+              [disabled]="page() <= 1"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8EDF4] bg-white text-sm font-medium text-[#293954] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+              <span>Anterior</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="nextPage()"
+              [disabled]="page() >= totalPages()"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8EDF4] bg-white text-sm font-medium text-[#293954] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <span>Siguiente</span>
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+  </div>
+</main>
+
+<app-footer></app-footer>

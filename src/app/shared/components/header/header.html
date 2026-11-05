@@ -491,6 +491,19 @@
               <span>Reportes</span>
             </a>
           }
+          @if (canSeeTratamientos()) {
+            <a
+              routerLink="/tratamientos"
+              (click)="closeMobileMenu()"
+              class="flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors w-full text-left"
+              [ngClass]="
+                isTratamientosRoute() ? ['text-primary', 'bg-primary-fixed/30'] : ['text-on-surface']
+              "
+            >
+              <span class="material-symbols-outlined text-[20px] text-primary">pill</span>
+              <span>Tratamientos</span>
+            </a>
+          }
           @if (canSeeRecetas()) {
             <a
               routerLink="/recetas"

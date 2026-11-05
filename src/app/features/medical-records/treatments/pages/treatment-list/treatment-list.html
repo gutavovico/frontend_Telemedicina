@@ -1,0 +1,328 @@
+<app-header></app-header>
+
+<main class="min-h-[calc(100vh-140px)] bg-[#F0F5FB] py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Migas: Solo visible si es paciente -->
+    @if (authService.isPaciente()) {
+      <nav class="flex items-center gap-2 text-sm text-[#293954]" aria-label="Migas de pan">
+        <a routerLink="/" class="inline-flex items-center gap-1.5 font-medium hover:text-[#049CAB] transition-colors">
+          <span class="material-symbols-outlined text-[18px]">home</span>
+          <span>Mi salud</span>
+        </a>
+        <span class="material-symbols-outlined text-[16px] text-gray-400" aria-hidden="true">chevron_right</span>
+        <span class="font-semibold text-[#049CAB]">Mis tratamientos</span>
+      </nav>
+    }
+
+    <!-- Encabezado de la página -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-[#049CAB] flex items-center justify-center font-bold">
+          <span class="material-symbols-outlined text-[28px]">pill</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-[#293954]">
+            {{ authService.isPaciente() ? 'Mis Tratamientos' : 'Planes de Tratamiento' }}
+          </h1>
+          <p class="text-sm text-gray-500">
+            {{ authService.isDoctor() ? 'Gestión, supervisión y adherencia de esquemas terapéuticos' : 'Control y seguimiento de tu medicación y adherencia' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Enlace en header de la página hacia "Avisos de medicación" (/tratamientos/avisos) -->
+        <a
+          routerLink="/tratamientos/avisos"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8EDF4] bg-white hover:bg-slate-50 text-[#293954] text-sm font-semibold transition"
+          title="Ver bandeja de avisos y recordatorios"
+        >
+          <span class="material-symbols-outlined text-[20px] text-[#049CAB]">notifications</span>
+          <span>Avisos de medicación</span>
+        </a>
+
+        <!-- Si es médico: Botón "Emitir nuevo plan" que navega a /tratamientos/crear -->
+        @if (authService.isDoctor()) {
+          <button
+            type="button"
+            (click)="goToCreate()"
+            class="inline-flex items-center gap-2 bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition shadow-sm"
+          >
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span>Emitir nuevo plan</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Barra de Filtros -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-[#E8EDF4]" role="search" aria-label="Filtros de tratamientos">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-4 items-end">
+        <!-- Filtro Estado -->
+        <div class="sm:col-span-1 md:col-span-4">
+          <label for="filtro-estado" class="block text-xs font-semibold text-[#293954] mb-1.5">
+            Estado
+          </label>
+          <select
+            id="filtro-estado"
+            [ngModel]="estadoFiltro()"
+            (ngModelChange)="estadoFiltro.set($event); onSearch()"
+            class="w-full px-3.5 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+          >
+            <option value="">Todos los estados</option>
+            <option value="ACTIVO">ACTIVO</option>
+            <option value="FINALIZADO">FINALIZADO</option>
+            <option value="SUSPENDIDO_POR_RECETA">SUSPENDIDO_POR_RECETA</option>
+          </select>
+        </div>
+
+        <!-- Filtro por Paciente ID (Solo para médico) -->
+        @if (authService.isDoctor()) {
+          <div class="sm:col-span-1 md:col-span-4">
+            <label for="filtro-paciente" class="block text-xs font-semibold text-[#293954] mb-1.5">
+              Paciente ID
+            </label>
+            <div class="relative">
+              <input
+                id="filtro-paciente"
+                type="number"
+                min="1"
+                placeholder="Ej. 1024"
+                [ngModel]="idPacienteFiltro()"
+                (ngModelChange)="idPacienteFiltro.set($event)"
+                (keyup.enter)="onSearch()"
+                class="w-full px-3.5 py-2.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-xl text-sm text-[#293954] focus:outline-none focus:ring-2 focus:ring-[#049CAB] focus:bg-white transition"
+              />
+            </div>
+          </div>
+        }
+
+        <!-- Acciones de Filtro -->
+        <div class="sm:col-span-2 md:col-span-4 flex items-center gap-2">
+          <button
+            type="button"
+            (click)="onSearch()"
+            class="flex-1 inline-flex items-center justify-center gap-2 bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-4 py-2.5 font-semibold text-sm transition"
+          >
+            <span class="material-symbols-outlined text-[18px]">search</span>
+            <span>Filtrar</span>
+          </button>
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E8EDF4] bg-white hover:bg-slate-50 text-gray-600 text-sm font-semibold transition"
+            title="Limpiar filtros"
+          >
+            <span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
+            <span class="hidden sm:inline">Limpiar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-start gap-3">
+        <span class="material-symbols-outlined text-[22px] text-rose-600 mt-0.5">error</span>
+        <div class="flex-1 text-sm font-medium">
+          {{ errorMessage() }}
+        </div>
+        <button
+          type="button"
+          (click)="loadPlans(page())"
+          class="text-xs font-semibold underline hover:text-rose-900"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- Loading Skeleton / Spinner -->
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-[#E8EDF4] shadow-sm">
+        <div class="w-10 h-10 border-4 border-t-[#049CAB] border-gray-200 rounded-full animate-spin mb-3"></div>
+        <p class="text-sm font-medium text-gray-500">Cargando planes de tratamiento...</p>
+      </div>
+    } @else {
+      <!-- Empty State -->
+      @if (planes().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-[#E8EDF4] shadow-sm text-center">
+          <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-gray-400 mb-4">
+            <span class="material-symbols-outlined text-[36px]">folder_off</span>
+          </div>
+          <h2 class="text-lg font-bold text-[#293954] mb-1">No se encontraron tratamientos</h2>
+          <p class="text-sm text-gray-500 max-w-md mb-6">
+            {{ estadoFiltro() || idPacienteFiltro() ? 'No hay tratamientos que coincidan con los filtros aplicados.' : 'Actualmente no hay planes de tratamiento registrados en el sistema.' }}
+          </p>
+          @if (estadoFiltro() || idPacienteFiltro()) {
+            <button
+              type="button"
+              (click)="clearFilters()"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#293954] text-sm font-medium transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">clear_all</span>
+              Limpiar filtros
+            </button>
+          } @else if (authService.isDoctor()) {
+            <button
+              type="button"
+              (click)="goToCreate()"
+              class="inline-flex items-center gap-2 bg-[#049CAB] hover:bg-[#038795] text-white rounded-xl px-4 py-2 font-semibold text-sm transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              Emitir nuevo plan
+            </button>
+          }
+        </div>
+      } @else {
+        <!-- Tarjetas de Plan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          @for (plan of planes(); track plan.id_tratamiento) {
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div class="space-y-4">
+                <!-- Top Row: ID, Badges (Estado & Adherencia) -->
+                <div class="flex items-start justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-400">
+                      Plan #{{ plan.id_tratamiento }}
+                    </span>
+                    @if (plan.id_paciente) {
+                      <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium">
+                        Paciente #{{ plan.id_paciente }}
+                      </span>
+                    }
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Insignia de Estado -->
+                    @let badgeEstado = getEstadoBadge(plan.estado);
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {{ badgeEstado.class }}"
+                    >
+                      {{ badgeEstado.label }}
+                    </span>
+
+                    <!-- Insignia de Adherencia con porcentaje y nivel -->
+                    @let badgeAdh = getAdherenciaBadge(plan.adherencia.nivel);
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border {{ badgeAdh.class }}"
+                      title="Nivel de adherencia: {{ badgeAdh.label }}"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">insights</span>
+                      <span>{{ plan.adherencia.porcentaje !== null && plan.adherencia.porcentaje !== undefined ? (plan.adherencia.porcentaje + '%') : '--' }}</span>
+                      <span class="opacity-75 font-normal">({{ badgeAdh.label }})</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Diagnóstico (CIE y descripción) -->
+                <div>
+                  <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+                    Diagnóstico
+                  </div>
+                  <h3 class="text-base font-bold text-[#293954] flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] text-[#049CAB]">clinical_notes</span>
+                    <span>{{ getDiagnosticoTexto(plan) }}</span>
+                  </h3>
+                </div>
+
+                <!-- Detalles: Fechas vigentes y conteo de medicamentos -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 text-sm">
+                  <div class="flex items-center gap-2 text-gray-600">
+                    <span class="material-symbols-outlined text-[18px] text-gray-400">calendar_month</span>
+                    <div>
+                      <span class="text-xs text-gray-400 block">Vigencia</span>
+                      <span class="font-medium text-[#293954]">
+                        {{ plan.fecha_inicio | date:'dd/MM/yyyy' }} — {{ plan.fecha_fin | date:'dd/MM/yyyy' }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 text-gray-600">
+                    <span class="material-symbols-outlined text-[18px] text-gray-400">medication</span>
+                    <div>
+                      <span class="text-xs text-gray-400 block">Medicamentos</span>
+                      <span class="font-medium text-[#293954]">
+                        {{ plan.medicamentos.length || 0 }} {{ (plan.medicamentos.length === 1) ? 'medicamento' : 'medicamentos' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer de la Card: Botones de Acción -->
+              <div class="mt-6 pt-4 border-t border-[#E8EDF4] flex items-center justify-end gap-2.5">
+                <!-- Botón Cronograma / Tomas -->
+                <a
+                  [routerLink]="['/tratamientos', plan.id_tratamiento, 'cronograma']"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E8EDF4] bg-white hover:bg-slate-50 text-[#293954] text-xs font-semibold transition"
+                >
+                  <span class="material-symbols-outlined text-[16px] text-[#049CAB]">schedule</span>
+                  <span>Cronograma / Tomas</span>
+                </a>
+
+                <!-- Botón Ver Detalle -->
+                <a
+                  [routerLink]="['/tratamientos', plan.id_tratamiento]"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#049CAB] hover:bg-[#038795] text-white text-xs font-semibold transition shadow-sm"
+                >
+                  <span class="material-symbols-outlined text-[16px]">visibility</span>
+                  <span>Ver Detalle</span>
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación: skip/limit con selector o botones Siguiente / Anterior -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-[#E8EDF4] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 text-sm text-gray-600">
+            <span>Mostrar</span>
+            <select
+              [ngModel]="limit()"
+              (ngModelChange)="onLimitChange($event)"
+              class="px-2.5 py-1.5 bg-[#F0F5FB]/50 border border-[#E8EDF4] rounded-lg text-sm text-[#293954] focus:outline-none focus:ring-1 focus:ring-[#049CAB]"
+            >
+              <option [ngValue]="5">5</option>
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="20">20</option>
+            </select>
+            <span>por página</span>
+            <span class="text-gray-300">|</span>
+            <span>Total: <strong class="text-[#293954]">{{ total() }}</strong> tratamientos</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500 mr-2">
+              Página {{ page() }} de {{ totalPages() }}
+            </span>
+
+            <button
+              type="button"
+              (click)="prevPage()"
+              [disabled]="page() <= 1"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8EDF4] bg-white text-sm font-medium text-[#293954] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+              <span>Anterior</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="nextPage()"
+              [disabled]="page() >= totalPages()"
+              class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[#E8EDF4] bg-white text-sm font-medium text-[#293954] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <span>Siguiente</span>
+              <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+  </div>
+</main>
+
+<app-footer></app-footer>
