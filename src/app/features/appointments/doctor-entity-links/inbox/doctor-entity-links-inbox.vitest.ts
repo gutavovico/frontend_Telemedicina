@@ -48,12 +48,19 @@ describe('CU29 bandeja médica', () => {
       aceptarInvitacion: vi.fn(() => of(link('ACTIVO'))),
       rechazarInvitacion: vi.fn(),
     };
-    const component = setup(service);
+    const tenantService = {
+      selectedTenantId: signal<number | null>(null),
+      setSelectedTenant: vi.fn(),
+      loadTenantContext: vi.fn(() => of(null)),
+      clearTenant: vi.fn(),
+    };
+    const component = setup(service, tenantService);
     expect(component.links()[0].estado).toBe('INVITADO');
     component.accept(component.links()[0]);
     expect(service.aceptarInvitacion).toHaveBeenCalledWith(1);
     expect(component.links()[0].estado).toBe('ACTIVO');
     expect(component.successMessage()).toContain('aceptada');
+    expect(tenantService.loadTenantContext).toHaveBeenCalled();
   });
 
   it('carga las entidades con vínculo activo para el selector', () => {

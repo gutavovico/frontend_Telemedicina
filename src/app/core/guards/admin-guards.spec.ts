@@ -99,6 +99,14 @@ describe('Guards multitenant (/admin)', () => {
     };
     expect(res.commands).toEqual(['/clinica-inactiva']);
   });
+
+  it('clinicaGuard envía al médico con invitación pendiente a /mis-vinculaciones-medico', () => {
+    currentTenant.set(makeTenant({ clinica_id: null, clinica_estado: null, rol: 'MEDICO' }));
+    const res = runGuard(() => clinicaGuard(null as never, null as never)) as {
+      commands: unknown[];
+    };
+    expect(res.commands).toEqual(['/mis-vinculaciones-medico']);
+  });
 });
 
 describe('Guards del panel condicionado', () => {

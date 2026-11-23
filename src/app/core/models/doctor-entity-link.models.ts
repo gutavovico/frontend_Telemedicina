@@ -37,6 +37,14 @@ export interface DoctorEntitySpecialty {
   es_principal: boolean;
 }
 
+/** Sede del catálogo de CU33 que puede asignarse a un vínculo. */
+export interface DoctorEntitySede {
+  id: number;
+  nombre: string;
+  ubicacion: string;
+  activa: boolean;
+}
+
 export interface DoctorEntityAssignments {
   roles: number[];
   id_rol_principal: number;
@@ -44,7 +52,6 @@ export interface DoctorEntityAssignments {
     id_especialidad: number;
     es_principal: boolean;
   }>;
-  /** CU33 todavía no está disponible en el contrato desplegado. */
   sedes: number[];
 }
 
