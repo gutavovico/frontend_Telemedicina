@@ -99,6 +99,9 @@ export class DoctorEntityLinksInbox implements OnInit {
       next: (updated) => {
         this.actionLoading.set(null); this.successMessage.set('Invitación aceptada. El vínculo ya está activo.');
         this.replace(updated);
+        // Refrescar el contexto: sin esto el guard sigue viendo clinica_id null
+        // en localStorage y "Panel Médico" vuelve a redirigir aquí.
+        this.tenantService.loadTenantContext().subscribe();
       },
       error: (error: unknown) => { this.actionLoading.set(null); this.errorMessage.set(this.mapError(error, 'No fue posible aceptar la invitación.')); },
     });

@@ -228,7 +228,13 @@ export class AuthService {
     } else if (role.includes('RECEP')) {
       this.router.navigate(['/admin/agenda']);
     } else if (role.includes('MEDIC') || role.includes('DOCTOR')) {
-      this.router.navigate(['/admin/agenda']);
+      // Sin clínica asignada todavía no es una clínica inactiva: el médico
+      // tiene una invitación CU29 pendiente y debe aceptarla primero.
+      if (!tenant?.clinica_id) {
+        this.router.navigate(['/mis-vinculaciones-medico']);
+      } else {
+        this.router.navigate(['/admin/agenda']);
+      }
     } else {
       this.router.navigate(['/']);
     }
