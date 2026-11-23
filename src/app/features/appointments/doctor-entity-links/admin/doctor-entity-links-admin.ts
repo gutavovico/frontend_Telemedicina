@@ -9,12 +9,14 @@ import {
   DoctorEntityLinkHistory,
   DoctorEntityLinkState,
   DoctorEntitySearchCriterion,
+  DoctorEntitySede,
 } from '../../../../core/models/doctor-entity-link.models';
 import { DoctorEntityLinkService } from '../../../../core/services/doctor-entity-link.service';
 import { MedicoService } from '../../../../core/services/medico.service';
 import { Role } from '../../../../core/models/role.models';
 import { EspecialidadResponse } from '../../../../core/models/medico.models';
 import { RolesService } from '../../../../core/services/roles.service';
+import { ConfigurationService } from '../../../tenants/entity-configuration/services/configuration.service';
 
 type AdminAction = 'SUSPENDIDO' | 'ACTIVO' | 'BAJA';
 
@@ -27,11 +29,13 @@ export class DoctorEntityLinksAdmin implements OnInit {
   private readonly linksService = inject(DoctorEntityLinkService);
   private readonly rolesService = inject(RolesService);
   private readonly medicosService = inject(MedicoService);
+  private readonly configurationService = inject(ConfigurationService);
   private readonly fb = inject(FormBuilder);
 
   readonly links = signal<DoctorEntityLink[]>([]);
   readonly roles = signal<Role[]>([]);
   readonly specialties = signal<EspecialidadResponse[]>([]);
+  readonly sedes = signal<DoctorEntitySede[]>([]);
   readonly candidate = signal<DoctorEntityCandidate | null>(null);
   readonly detail = signal<DoctorEntityLink | null>(null);
   readonly history = signal<DoctorEntityLinkHistory[]>([]);
@@ -61,17 +65,19 @@ export class DoctorEntityLinksAdmin implements OnInit {
     nombres: [''], apellidos: [''], correo: ['', Validators.email], telefono: [''], documento_identidad: [''],
     roles: [[] as number[], Validators.required], idRolPrincipal: [0, Validators.required],
     especialidades: [[] as number[]], idEspecialidadPrincipal: [0],
+    sedes: [[] as number[]],
   });
   readonly assignmentForm = this.fb.nonNullable.group({
     roles: [[] as number[], Validators.required], idRolPrincipal: [0, Validators.required],
     especialidades: [[] as number[]], idEspecialidadPrincipal: [0],
+    sedes: [[] as number[]],
   });
   readonly actionForm = this.fb.nonNullable.group({
     motivo: ['', [Validators.minLength(3), Validators.maxLength(500)]],
   });
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.perPage)));
 
-  ngOnInit(): void { this.loadCatalogs(); this.loadLinks(); }
+  ngOnInit(): void { this.loadCatalogs(); this.loadSedes(); this.loadLinks(); }
 
   loadCatalogs(): void {
     forkJoin({ roles: this.rolesService.getRoles(), specialties: this.medicosService.listarEspecialidades() }).subscribe({
@@ -80,6 +86,14 @@ export class DoctorEntityLinksAdmin implements OnInit {
         this.specialties.set(specialties.filter((item) => item.estado.toUpperCase() === 'ACTIVO'));
       },
       error: (error: unknown) => this.errorMessage.set(this.mapError(error, 'No fue posible cargar los catálogos de roles y especialidades.')),
+    });
+  }
+
+  loadSedes(): void {
+    // Las sedes pertenecen al catálogo de CU33; si no está disponible se omite.
+    this.configurationService.leer().subscribe({
+      next: (configuracion) => this.sedes.set(configuracion.sedes.filter((sede) => sede.activa)),
+      error: () => this.sedes.set([]),
     });
   }
 
@@ -123,6 +137,17 @@ export class DoctorEntityLinksAdmin implements OnInit {
   toggleSpecialty(id: number, checked: boolean): void {
     const ids = this.inviteForm.controls.especialidades.value; this.selectSpecialties(checked ? [...ids, id] : ids.filter((item) => item !== id));
   }
+  toggleSede(id: number, checked: boolean): void {
+    const ids = this.inviteForm.controls.sedes.value;
+    this.inviteForm.controls.sedes.setValue(checked ? [...ids, id] : ids.filter((item) => item !== id));
+  }
+  toggleAssignmentSede(id: number, checked: boolean): void {
+    const ids = this.assignmentForm.controls.sedes.value;
+    this.assignmentForm.controls.sedes.setValue(checked ? [...ids, id] : ids.filter((item) => item !== id));
+  }
+  sedeNombre(id: number): string {
+    return this.sedes().find((sede) => sede.id === id)?.nombre ?? `Sede ${id}`;
+  }
 
   invite(): void {
     this.inviteForm.markAllAsTouched();
@@ -145,14 +170,14 @@ export class DoctorEntityLinksAdmin implements OnInit {
       asignaciones: {
         roles: value.roles, id_rol_principal: value.idRolPrincipal,
         especialidades: value.especialidades.map((id) => ({ id_especialidad: id, es_principal: id === value.idEspecialidadPrincipal })),
-        sedes: [],
+        sedes: value.sedes,
       },
     };
     this.linksService.crearVinculacion(payload).subscribe({
       next: (response) => {
         this.submitting.set(false); this.credential.set(response.credencial_temporal);
         this.successMessage.set('Invitación creada correctamente.'); this.candidate.set(null);
-        this.inviteForm.reset({ modo: 'EXISTENTE', nombres: '', apellidos: '', correo: '', telefono: '', documento_identidad: '', roles: [], idRolPrincipal: 0, especialidades: [], idEspecialidadPrincipal: 0 });
+        this.inviteForm.reset({ modo: 'EXISTENTE', nombres: '', apellidos: '', correo: '', telefono: '', documento_identidad: '', roles: [], idRolPrincipal: 0, especialidades: [], idEspecialidadPrincipal: 0, sedes: [] });
         this.loadLinks(1);
       },
       error: (error: unknown) => { this.errorMessage.set(this.mapError(error, 'No fue posible crear la invitación.')); this.submitting.set(false); },
@@ -177,6 +202,7 @@ export class DoctorEntityLinksAdmin implements OnInit {
       idRolPrincipal: link.roles.find((role) => role.es_principal)?.id_rol ?? link.roles[0]?.id_rol ?? 0,
       especialidades: link.especialidades.map((specialty) => specialty.id_especialidad),
       idEspecialidadPrincipal: link.especialidades.find((specialty) => specialty.es_principal)?.id_especialidad ?? link.especialidades[0]?.id_especialidad ?? 0,
+      sedes: link.sedes,
     });
   }
   toggleAssignmentRole(id: number, checked: boolean): void {
@@ -198,9 +224,9 @@ export class DoctorEntityLinksAdmin implements OnInit {
     this.linksService.reemplazarAsignaciones(link.id_vinculacion, {
       roles: value.roles, id_rol_principal: value.idRolPrincipal,
       especialidades: value.especialidades.map((id) => ({ id_especialidad: id, es_principal: id === value.idEspecialidadPrincipal })),
-      sedes: [], row_version: link.row_version,
+      sedes: value.sedes, row_version: link.row_version,
     }).subscribe({
-      next: (updated) => { this.actionLoading.set(false); this.detail.set(updated); this.successMessage.set('Roles y especialidades actualizados.'); this.loadLinks(this.page()); this.openDetail(updated); },
+      next: (updated) => { this.actionLoading.set(false); this.detail.set(updated); this.successMessage.set('Roles, especialidades y sedes actualizados.'); this.loadLinks(this.page()); this.openDetail(updated); },
       error: (error: unknown) => { this.actionError.set(this.mapError(error, 'No fue posible reemplazar las asignaciones.')); this.actionLoading.set(false); },
     });
   }

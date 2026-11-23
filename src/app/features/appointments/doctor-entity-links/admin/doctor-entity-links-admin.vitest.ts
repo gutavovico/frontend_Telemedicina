@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { DoctorEntityLinkService } from '../../../../core/services/doctor-entity-link.service';
 import { RolesService } from '../../../../core/services/roles.service';
 import { MedicoService } from '../../../../core/services/medico.service';
+import { ConfigurationService } from '../../../tenants/entity-configuration/services/configuration.service';
 import { DoctorEntityLinksAdmin } from './doctor-entity-links-admin';
 import type { DoctorEntityLink } from '../../../../core/models/doctor-entity-link.models';
 
@@ -36,6 +37,18 @@ describe('CU29 administración de vínculos', () => {
         { provide: DoctorEntityLinkService, useValue: service },
         { provide: RolesService, useValue: { getRoles: vi.fn(() => of([{ id_rol: 2, nombre: 'Médico', estado: 'ACTIVO' }])) } },
         { provide: MedicoService, useValue: { listarEspecialidades: vi.fn(() => of([])) } },
+        {
+          provide: ConfigurationService,
+          useValue: {
+            leer: vi.fn(() => of({
+              identidad: { principal: '#000', secundario: '#fff', logo: null },
+              direccion: null,
+              sedes: [{ id: 1, nombre: 'Sede Central', ubicacion: 'Centro', activa: true }],
+              servicios: [],
+              horarios: [],
+            })),
+          },
+        },
       ],
     });
     const component = TestBed.inject(DoctorEntityLinksAdmin);
@@ -70,6 +83,17 @@ describe('CU29 administración de vínculos', () => {
     component.confirmAction();
     expect(service.cambiarEstado).toHaveBeenCalledTimes(1);
     expect(component.actionError()).toContain('no se reintentará');
+  });
+
+  it('envía las sedes asignadas al reemplazar asignaciones', () => {
+    const { component, service } = setup();
+    component.openDetail(link());
+    component.editAssignments();
+    component.toggleAssignmentSede(1, true);
+    component.saveAssignments();
+    expect(service.reemplazarAsignaciones).toHaveBeenCalledWith(1, {
+      roles: [2], id_rol_principal: 2, especialidades: [], sedes: [1], row_version: 3,
+    });
   });
 
   it('reemplaza las asignaciones con la versión actual', () => {
